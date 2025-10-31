@@ -14,6 +14,10 @@
 - Spring과 Serverless 개념 비교
 - 로컬 개발 및 AWS 배포 방법
 
+**npm install 오류가 발생하나요?**
+
+🔧 **[문제 해결 가이드](./TROUBLESHOOTING.md)** - EACCES 권한 오류, ERESOLVE 충돌 등 해결 방법
+
 ## 📋 프로젝트 개요
 
 이 프로젝트는 AWS Lambda와 DynamoDB를 사용하여 웨딩 관련 정보(웨딩홀, 스튜디오, 드레스샵)를 웹에서 스크래핑하고 API로 제공하는 서버리스 애플리케이션입니다.

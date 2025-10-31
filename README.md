@@ -16,6 +16,10 @@ This guide covers:
 - Comparison between Spring and Serverless concepts
 - Local development and AWS deployment
 
+**Having npm install errors?**
+
+🔧 **[Troubleshooting Guide](./TROUBLESHOOTING.md)** - Solutions for EACCES, ERESOLVE errors
+
 ## 🚀 Overview
 
 This is a serverless application that scrapes wedding-related information (wedding halls, studios, dress shops) from the web and provides them through REST APIs using AWS Lambda and DynamoDB.
