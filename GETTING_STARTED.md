@@ -144,11 +144,26 @@ npm install
 # yarn install
 ```
 
+> 💡 **Tip**: 프로젝트에 `.npmrc` 파일이 포함되어 있어 peer dependency 경고를 자동으로 처리합니다.
+
 **실행 결과:**
 - `node_modules/` 디렉토리 생성 (Maven의 `.m2/repository`와 유사)
 - `package-lock.json` 생성 (dependency lock 파일)
 
 > ⚠️ **주의**: `node_modules/`는 `.gitignore`에 포함되어 있어 Git에 커밋되지 않습니다.
+
+**만약 ERESOLVE 오류가 발생한다면:**
+```bash
+# 방법 1: legacy-peer-deps 옵션 사용
+npm install --legacy-peer-deps
+
+# 방법 2: force 옵션 사용
+npm install --force
+
+# 방법 3: .npmrc 파일 확인 (이미 포함되어 있음)
+cat .npmrc
+# legacy-peer-deps=true 가 있어야 함
+```
 
 ### 3.2 설치된 패키지 확인
 
