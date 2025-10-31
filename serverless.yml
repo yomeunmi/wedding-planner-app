@@ -1,0 +1,126 @@
+service: wedding-planner-app
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: ap-northeast-2  # 서울 리전
+  stage: ${opt:stage, 'dev'}
+  memorySize: 512
+  timeout: 30
+
+  environment:
+    DYNAMODB_TABLE: ${self:service}-${self:provider.stage}
+    STAGE: ${self:provider.stage}
+
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:Query
+            - dynamodb:Scan
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+          Resource:
+            - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.DYNAMODB_TABLE}"
+
+functions:
+  # 웨딩홀 스크래핑 Lambda 함수
+  scrapeWeddingHalls:
+    handler: src/handlers/weddingHalls.scrape
+    description: 웨딩홀 정보를 스크래핑하여 DB에 저장
+    events:
+      - schedule: rate(1 day)  # 매일 실행
+    timeout: 300  # 5분
+
+  # 스튜디오 스크래핑 Lambda 함수
+  scrapeStudios:
+    handler: src/handlers/studios.scrape
+    description: 스튜디오 정보를 스크래핑하여 DB에 저장
+    events:
+      - schedule: rate(1 day)
+    timeout: 300
+
+  # 드레스샵 스크래핑 Lambda 함수
+  scrapeDress:
+    handler: src/handlers/dress.scrape
+    description: 드레스샵 정보를 스크래핑하여 DB에 저장
+    events:
+      - schedule: rate(1 day)
+    timeout: 300
+
+  # 웨딩홀 검색 API
+  searchWeddingHalls:
+    handler: src/handlers/search.weddingHalls
+    description: 웨딩홀 검색 API
+    events:
+      - http:
+          path: /api/wedding-halls
+          method: get
+          cors: true
+
+  # 스튜디오 검색 API
+  searchStudios:
+    handler: src/handlers/search.studios
+    description: 스튜디오 검색 API
+    events:
+      - http:
+          path: /api/studios
+          method: get
+          cors: true
+
+  # 드레스샵 검색 API
+  searchDress:
+    handler: src/handlers/search.dress
+    description: 드레스샵 검색 API
+    events:
+      - http:
+          path: /api/dress
+          method: get
+          cors: true
+
+resources:
+  Resources:
+    WeddingPlannerTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.DYNAMODB_TABLE}
+        AttributeDefinitions:
+          - AttributeName: pk
+            AttributeType: S
+          - AttributeName: sk
+            AttributeType: S
+          - AttributeName: category
+            AttributeType: S
+        KeySchema:
+          - AttributeName: pk
+            KeyType: HASH
+          - AttributeName: sk
+            KeyType: RANGE
+        GlobalSecondaryIndexes:
+          - IndexName: category-index
+            KeySchema:
+              - AttributeName: category
+                KeyType: HASH
+              - AttributeName: sk
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+            ProvisionedThroughput:
+              ReadCapacityUnits: 5
+              WriteCapacityUnits: 5
+        BillingMode: PROVISIONED
+        ProvisionedThroughput:
+          ReadCapacityUnits: 5
+          WriteCapacityUnits: 5
+
+plugins:
+  - serverless-offline
+
+custom:
+  serverless-offline:
+    httpPort: 3000

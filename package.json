@@ -1,0 +1,36 @@
+{
+  "name": "wedding-planner-app",
+  "version": "1.0.0",
+  "description": "서버리스 웨딩플래너 앱 - 웹 스크래핑 기반 웨딩 정보 제공 서비스",
+  "main": "index.js",
+  "scripts": {
+    "deploy": "serverless deploy",
+    "deploy:dev": "serverless deploy --stage dev",
+    "deploy:prod": "serverless deploy --stage prod",
+    "offline": "serverless offline",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "remove": "serverless remove"
+  },
+  "keywords": [
+    "wedding",
+    "planner",
+    "serverless",
+    "lambda",
+    "scraping"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.6.0",
+    "cheerio": "^1.0.0-rc.12",
+    "puppeteer-core": "^21.5.0",
+    "chromium": "^3.0.3",
+    "aws-sdk": "^2.1490.0"
+  },
+  "devDependencies": {
+    "serverless": "^3.38.0",
+    "serverless-offline": "^13.3.0",
+    "jest": "^29.7.0"
+  }
+}
