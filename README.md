@@ -4,6 +4,18 @@
 
 [한국어 문서](./README_KO.md)
 
+## 🎯 First Time Here?
+
+**Are you a Java/Spring developer?** If you're new to Node.js and Serverless, start with this guide!
+
+👉 **[Getting Started Guide for Java/Spring Developers](./GETTING_STARTED.md)** 👈
+
+This guide covers:
+- Node.js installation and setup
+- How to download and run the project
+- Comparison between Spring and Serverless concepts
+- Local development and AWS deployment
+
 ## 🚀 Overview
 
 This is a serverless application that scrapes wedding-related information (wedding halls, studios, dress shops) from the web and provides them through REST APIs using AWS Lambda and DynamoDB.
