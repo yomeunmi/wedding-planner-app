@@ -3,6 +3,10 @@
   "version": "1.0.0",
   "description": "서버리스 웨딩플래너 앱 - 웹 스크래핑 기반 웨딩 정보 제공 서비스",
   "main": "index.js",
+  "engines": {
+    "node": ">=18.0.0 <19.0.0",
+    "npm": ">=9.0.0"
+  },
   "scripts": {
     "deploy": "serverless deploy",
     "deploy:dev": "serverless deploy --stage dev",

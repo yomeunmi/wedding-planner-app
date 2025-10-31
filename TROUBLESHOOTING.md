@@ -93,26 +93,116 @@ npm config set registry https://registry.npmjs.org/
 npm install
 ```
 
-### 4️⃣ Node 버전 호환성 문제
+### 4️⃣ Node 버전 호환성 문제 ⚠️ 중요!
 
 **증상:**
 - 설치는 되지만 실행 시 오류
+- "ERR_REQUIRE_ASYNC_MODULE" 오류 (Node.js 22.x)
 - "node: --openssl-legacy-provider is not allowed" 오류
+
+**원인:**
+- **Node.js 22.x는 Serverless Framework v3와 호환되지 않습니다**
+- 권장 버전: **Node.js 18.x LTS**
 
 **해결 방법:**
 
+#### 방법 1: NVM 사용 (가장 권장) 🌟
+
+NVM(Node Version Manager)을 사용하면 여러 Node 버전을 쉽게 관리할 수 있습니다.
+
 ```bash
-# Node.js 버전 확인 (18.x 권장)
+# 1. 현재 Node.js 버전 확인
 node --version
+# v22.14.0 (문제!)
 
-# Node.js 18.x가 아니라면 업데이트
-# macOS (Homebrew)
-brew install node@18
-brew link --overwrite node@18
+# 2. NVM 설치 (아직 설치 안했다면)
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
 
-# 또는 공식 사이트에서 다운로드
-# https://nodejs.org/ko/
+# 3. 터미널 재시작 또는 설정 다시 로드
+source ~/.zshrc  # zsh 사용 시
+# 또는
+source ~/.bash_profile  # bash 사용 시
+
+# 4. Node.js 18 LTS 설치
+nvm install 18
+
+# 5. Node.js 18 사용
+nvm use 18
+
+# 6. 버전 확인
+node --version
+# v18.x.x (OK!)
+
+# 7. 프로젝트에서 항상 Node 18 사용하도록 설정 (선택사항)
+echo "18" > .nvmrc
+
+# 8. 재설치
+rm -rf node_modules package-lock.json
+npm install
+
+# 9. 실행
+npm run offline
 ```
+
+#### 방법 2: Homebrew로 Node.js 18 설치 (macOS)
+
+```bash
+# 1. 현재 Node.js 제거
+brew uninstall node
+
+# 2. Node.js 18 설치
+brew install node@18
+
+# 3. Node.js 18 링크
+brew link --overwrite --force node@18
+
+# 4. PATH 추가 (필요한 경우)
+echo 'export PATH="/usr/local/opt/node@18/bin:$PATH"' >> ~/.zshrc
+source ~/.zshrc
+
+# 5. 버전 확인
+node --version
+# v18.x.x (OK!)
+
+# 6. 프로젝트 재설치
+cd /path/to/wedding-planner-app
+rm -rf node_modules package-lock.json
+npm install
+
+# 7. 실행
+npm run offline
+```
+
+#### 방법 3: 공식 설치 프로그램 사용
+
+1. **Node.js 18.x LTS 다운로드:**
+   - https://nodejs.org/ko/
+   - "18.x.x LTS" 버전 다운로드 (추천)
+   - **주의:** "22.x.x Current" 버전이 아닌 "18.x.x LTS" 선택!
+
+2. **설치 후 버전 확인:**
+   ```bash
+   node --version
+   # v18.x.x 인지 확인
+   ```
+
+3. **프로젝트 재설치:**
+   ```bash
+   cd /path/to/wedding-planner-app
+   rm -rf node_modules package-lock.json
+   npm install
+   npm run offline
+   ```
+
+#### Node.js 버전별 호환성
+
+| Node.js 버전 | Serverless Framework v3 | 상태 |
+|-------------|------------------------|------|
+| 22.x | ❌ 호환 안됨 | ESM 오류 발생 |
+| 20.x | ⚠️ 부분 지원 | 일부 플러그인 문제 가능 |
+| 18.x LTS | ✅ 완벽 지원 | **권장** |
+| 16.x | ✅ 지원 | EOL 임박 |
+| 14.x 이하 | ❌ 미지원 | 너무 오래됨 |
 
 ---
 

@@ -33,11 +33,19 @@ This is a serverless application that scrapes wedding-related information (weddi
 
 ## 🏗️ Tech Stack
 
-- **Runtime**: Node.js 18.x
+- **Runtime**: Node.js 18.x LTS ⚠️ **Important: Node.js 22.x is not compatible!**
 - **Framework**: Serverless Framework
 - **Cloud Provider**: AWS (Lambda, DynamoDB, API Gateway)
 - **Scraping**: Axios + Cheerio
 - **Database**: DynamoDB
+
+## ⚙️ Prerequisites
+
+- **Node.js 18.x LTS** (NOT 22.x!)
+  - Download: https://nodejs.org/
+  - Recommended: Use NVM - `nvm install 18 && nvm use 18`
+- AWS CLI configured
+- AWS Account with appropriate permissions
 
 ## 📦 Quick Start
 

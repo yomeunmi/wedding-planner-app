@@ -54,7 +54,10 @@
 
 ### 사전 요구사항
 
-- Node.js 18.x 이상
+- **Node.js 18.x LTS** ⚠️ **중요: Node.js 22.x는 호환되지 않습니다!**
+  - 권장: Node.js 18.x LTS
+  - 다운로드: https://nodejs.org/ko/ (18.x.x LTS 버전 선택)
+  - NVM 사용 권장: `nvm install 18 && nvm use 18`
 - AWS CLI 설정
 - AWS 계정 및 적절한 권한
 
