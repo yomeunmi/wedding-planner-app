@@ -248,17 +248,72 @@ class WeddingPlannerApp {
     createTimelineItem(item) {
         const div = document.createElement('div');
         div.className = `timeline-item ${item.completed ? 'completed' : ''}`;
-        div.onclick = () => this.showItemDetail(item.id);
+
+        // 날짜를 ISO 형식으로 변환 (YYYY-MM-DD)
+        const dateISO = item.date.toISOString().split('T')[0];
 
         div.innerHTML = `
             <div class="timeline-icon">${item.icon}</div>
             <div class="timeline-content">
-                <div class="timeline-title">${item.title}</div>
-                <div class="timeline-date">${this.timeline.formatDate(item.date)}</div>
+                <div class="timeline-title">
+                    ${item.title}
+                    ${item.completed ? '<span style="margin-left: 10px; color: var(--dark-pink);">✓ 완료</span>' : ''}
+                </div>
+                <div class="timeline-date-wrapper">
+                    <div class="timeline-date-display">
+                        <span class="timeline-date">${this.timeline.formatDate(item.date)}</span>
+                        <button class="btn-edit-date" data-item-id="${item.id}">✏️ 수정</button>
+                    </div>
+                    <div class="timeline-date-edit" data-item-id="${item.id}">
+                        <input type="date" class="date-edit-input" value="${dateISO}" data-item-id="${item.id}">
+                        <button class="btn-save-date" data-item-id="${item.id}">저장</button>
+                        <button class="btn-cancel-date" data-item-id="${item.id}">취소</button>
+                    </div>
+                </div>
                 <div class="timeline-desc">${item.description}</div>
             </div>
-            <div class="timeline-status">${item.completed ? '✓' : '→'}</div>
+            <div class="timeline-status" onclick="event.stopPropagation();">
+                <span style="font-size: 1.5em;">${item.completed ? '✓' : '→'}</span>
+            </div>
         `;
+
+        // 날짜 편집 버튼 이벤트
+        const editBtn = div.querySelector('.btn-edit-date');
+        if (editBtn) {
+            editBtn.onclick = (e) => {
+                e.stopPropagation();
+                this.toggleDateEdit(item.id, true);
+            };
+        }
+
+        // 날짜 저장 버튼 이벤트
+        const saveBtn = div.querySelector('.btn-save-date');
+        if (saveBtn) {
+            saveBtn.onclick = (e) => {
+                e.stopPropagation();
+                this.saveDateEdit(item.id);
+            };
+        }
+
+        // 날짜 취소 버튼 이벤트
+        const cancelBtn = div.querySelector('.btn-cancel-date');
+        if (cancelBtn) {
+            cancelBtn.onclick = (e) => {
+                e.stopPropagation();
+                this.toggleDateEdit(item.id, false);
+            };
+        }
+
+        // 타임라인 아이템 클릭 이벤트 (상세보기)
+        div.addEventListener('click', (e) => {
+            // 버튼이나 입력창 클릭이 아닐 때만 상세보기
+            if (!e.target.classList.contains('btn-edit-date') &&
+                !e.target.classList.contains('btn-save-date') &&
+                !e.target.classList.contains('btn-cancel-date') &&
+                !e.target.classList.contains('date-edit-input')) {
+                this.showItemDetail(item.id);
+            }
+        });
 
         return div;
     }
@@ -451,6 +506,50 @@ class WeddingPlannerApp {
         }
     }
 
+    // 날짜 편집 관련 메서드들
+
+    toggleDateEdit(itemId, show) {
+        const displayElement = document.querySelector(`.timeline-date-display`);
+        const editElements = document.querySelectorAll(`.timeline-date-edit`);
+
+        editElements.forEach(el => {
+            const elItemId = el.getAttribute('data-item-id');
+            if (elItemId === itemId) {
+                el.style.display = show ? 'flex' : 'none';
+                const displaySibling = el.previousElementSibling;
+                if (displaySibling) {
+                    displaySibling.style.display = show ? 'none' : 'flex';
+                }
+            }
+        });
+    }
+
+    saveDateEdit(itemId) {
+        const input = document.querySelector(`.date-edit-input[data-item-id="${itemId}"]`);
+        if (!input) return;
+
+        const newDate = input.value;
+        if (!newDate) {
+            this.showToast('날짜를 선택해주세요');
+            return;
+        }
+
+        // 타임라인에서 해당 항목 찾기
+        const item = this.timeline.getItemById(itemId);
+        if (!item) return;
+
+        // 날짜 업데이트
+        item.date = new Date(newDate);
+
+        // 저장
+        this.timeline.save();
+
+        // UI 업데이트
+        this.renderTimeline();
+
+        this.showToast(`${item.title} 일정이 ${this.timeline.formatDate(item.date)}로 변경되었습니다! 📅`);
+    }
+
     // 마이페이지 관련 메서드들
 
     showMyPage() {
@@ -595,10 +694,15 @@ class WeddingPlannerApp {
 
             itemDiv.innerHTML = `
                 <div class="checklist-item-info">
-                    <div class="checklist-item-title">${item.icon} ${item.title}</div>
+                    <div class="checklist-item-title">
+                        ${item.icon} ${item.title}
+                        ${item.completed ? '<span style="margin-left: 8px; color: var(--dark-pink); font-size: 0.9em;">✓ 완료</span>' : ''}
+                    </div>
                     <div class="checklist-item-date">${this.timeline.formatDate(item.date)}</div>
                 </div>
-                <div class="checklist-item-status">${item.completed ? '✓' : '◯'}</div>
+                <div class="checklist-item-status" style="font-size: 1.8em; color: ${item.completed ? 'var(--dark-pink)' : 'var(--text-light)'};">
+                    ${item.completed ? '✓' : '◯'}
+                </div>
             `;
 
             mypageChecklist.appendChild(itemDiv);

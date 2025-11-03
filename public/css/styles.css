@@ -254,11 +254,22 @@ body {
 
 .timeline-item.completed {
     background: var(--light-pink);
-    opacity: 0.8;
+    opacity: 0.9;
+    border-left-color: var(--dark-pink);
 }
 
 .timeline-item.completed .timeline-icon {
     background: var(--dark-pink);
+}
+
+.timeline-item.completed .timeline-title {
+    text-decoration: line-through;
+    color: var(--text-gray);
+}
+
+.timeline-item.completed .timeline-status {
+    color: var(--dark-pink);
+    font-weight: bold;
 }
 
 .timeline-icon {
@@ -300,6 +311,74 @@ body {
 .timeline-status {
     color: var(--text-light);
     font-size: 1.2em;
+}
+
+/* 날짜 편집 기능 */
+.timeline-date-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.timeline-date-edit {
+    display: none;
+    align-items: center;
+    gap: 8px;
+}
+
+.timeline-date-edit input[type="date"] {
+    padding: 5px 10px;
+    border: 2px solid var(--primary-pink);
+    border-radius: 8px;
+    font-size: 0.9em;
+    transition: all 0.3s ease;
+}
+
+.timeline-date-edit input[type="date"]:focus {
+    outline: none;
+    border-color: var(--dark-pink);
+    box-shadow: 0 0 0 2px var(--shadow);
+}
+
+.btn-edit-date {
+    background: transparent;
+    border: none;
+    color: var(--dark-pink);
+    cursor: pointer;
+    padding: 3px 8px;
+    border-radius: 5px;
+    font-size: 0.9em;
+    transition: all 0.3s ease;
+}
+
+.btn-edit-date:hover {
+    background: var(--light-pink);
+}
+
+.btn-save-date,
+.btn-cancel-date {
+    background: var(--primary-pink);
+    color: var(--bg-white);
+    border: none;
+    padding: 5px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.85em;
+    transition: all 0.3s ease;
+}
+
+.btn-save-date:hover {
+    background: var(--dark-pink);
+}
+
+.btn-cancel-date {
+    background: var(--bg-white);
+    color: var(--dark-pink);
+    border: 2px solid var(--primary-pink);
+}
+
+.btn-cancel-date:hover {
+    background: var(--light-pink);
 }
 
 /* 상세 정보 */
@@ -621,6 +700,11 @@ body {
 .mypage-checklist-item.completed {
     border-left-color: var(--dark-pink);
     background: var(--light-pink);
+}
+
+.mypage-checklist-item.completed .checklist-item-title {
+    text-decoration: line-through;
+    color: var(--text-gray);
 }
 
 .checklist-item-info {
