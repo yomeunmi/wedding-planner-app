@@ -2,7 +2,7 @@
 :root {
     --primary-pink: #FFB6C1;
     --light-pink: #FFE4E1;
-    --dark-pink: #FF69B4;
+    --dark-pink: #f0768b;
     --accent-pink: #FFC0CB;
     --bg-white: #FFFFFF;
     --bg-cream: #FFF8F0;
@@ -10,8 +10,8 @@
     --text-gray: #666666;
     --text-light: #999999;
     --border-color: #FFD4D8;
-    --shadow: rgba(255, 105, 180, 0.1);
-    --shadow-hover: rgba(255, 105, 180, 0.2);
+    --shadow: rgba(240, 118, 139, 0.1);
+    --shadow-hover: rgba(240, 118, 139, 0.2);
 }
 
 /* 기본 스타일 */
