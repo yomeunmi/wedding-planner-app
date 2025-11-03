@@ -1,9 +1,13 @@
 const { getItemsByCategory } = require('../utils/dynamodb');
 const { success, error } = require('../utils/response');
 const { CATEGORIES } = require('../config/constants');
+const KakaoLocalApi = require('../services/kakaoLocalApi');
 
 // 로컬 개발 환경 감지
 const isOffline = process.env.IS_OFFLINE || process.env.NODE_ENV === 'development';
+
+// Kakao API 인스턴스 생성
+const kakaoApi = new KakaoLocalApi();
 
 // 로컬 개발용 모의 데이터
 const mockWeddingHalls = [
@@ -119,7 +123,7 @@ const mockMakeupShops = [
  */
 module.exports.weddingHalls = async (event) => {
   try {
-    const { limit = 50 } = event.queryStringParameters || {};
+    const { region, limit = 15 } = event.queryStringParameters || {};
 
     // 로컬 환경에서는 모의 데이터 반환
     if (isOffline) {
@@ -133,13 +137,17 @@ module.exports.weddingHalls = async (event) => {
       });
     }
 
-    const items = await getItemsByCategory(
-      CATEGORIES.WEDDING_HALL,
-      parseInt(limit)
-    );
+    // region 파라미터가 없으면 에러 반환
+    if (!region) {
+      return error('region 파라미터가 필요합니다. 예: ?region=강남', 400);
+    }
+
+    // Kakao Local API로 웨딩홀 검색
+    const items = await kakaoApi.searchWeddingHalls(region, parseInt(limit));
 
     return success({
       category: 'wedding-halls',
+      region,
       count: items.length,
       items
     });
@@ -154,7 +162,7 @@ module.exports.weddingHalls = async (event) => {
  */
 module.exports.studios = async (event) => {
   try {
-    const { limit = 50 } = event.queryStringParameters || {};
+    const { region, limit = 15 } = event.queryStringParameters || {};
 
     // 로컬 환경에서는 모의 데이터 반환
     if (isOffline) {
@@ -168,13 +176,17 @@ module.exports.studios = async (event) => {
       });
     }
 
-    const items = await getItemsByCategory(
-      CATEGORIES.STUDIO,
-      parseInt(limit)
-    );
+    // region 파라미터가 없으면 에러 반환
+    if (!region) {
+      return error('region 파라미터가 필요합니다. 예: ?region=강남', 400);
+    }
+
+    // Kakao Local API로 스튜디오 검색
+    const items = await kakaoApi.searchStudios(region, parseInt(limit));
 
     return success({
       category: 'studios',
+      region,
       count: items.length,
       items
     });
@@ -189,7 +201,7 @@ module.exports.studios = async (event) => {
  */
 module.exports.dress = async (event) => {
   try {
-    const { limit = 50 } = event.queryStringParameters || {};
+    const { region, limit = 15 } = event.queryStringParameters || {};
 
     // 로컬 환경에서는 모의 데이터 반환
     if (isOffline) {
@@ -203,13 +215,17 @@ module.exports.dress = async (event) => {
       });
     }
 
-    const items = await getItemsByCategory(
-      CATEGORIES.DRESS,
-      parseInt(limit)
-    );
+    // region 파라미터가 없으면 에러 반환
+    if (!region) {
+      return error('region 파라미터가 필요합니다. 예: ?region=강남', 400);
+    }
+
+    // Kakao Local API로 드레스샵 검색
+    const items = await kakaoApi.searchDressShops(region, parseInt(limit));
 
     return success({
       category: 'dress-shops',
+      region,
       count: items.length,
       items
     });
@@ -224,7 +240,7 @@ module.exports.dress = async (event) => {
  */
 module.exports.makeup = async (event) => {
   try {
-    const { limit = 50 } = event.queryStringParameters || {};
+    const { region, limit = 15 } = event.queryStringParameters || {};
 
     // 로컬 환경에서는 모의 데이터 반환
     if (isOffline) {
@@ -238,13 +254,17 @@ module.exports.makeup = async (event) => {
       });
     }
 
-    const items = await getItemsByCategory(
-      CATEGORIES.MAKEUP,
-      parseInt(limit)
-    );
+    // region 파라미터가 없으면 에러 반환
+    if (!region) {
+      return error('region 파라미터가 필요합니다. 예: ?region=강남', 400);
+    }
+
+    // Kakao Local API로 메이크업샵 검색
+    const items = await kakaoApi.searchMakeupShops(region, parseInt(limit));
 
     return success({
       category: 'makeup-shops',
+      region,
       count: items.length,
       items
     });
