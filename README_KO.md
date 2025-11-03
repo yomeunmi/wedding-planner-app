@@ -18,6 +18,10 @@
 
 🔧 **[문제 해결 가이드](./TROUBLESHOOTING.md)** - EACCES 권한 오류, ERESOLVE 충돌 등 해결 방법
 
+**AWS Lambda에 배포할 준비가 되셨나요?**
+
+🚀 **[AWS Lambda 배포 가이드](./AWS_LAMBDA_DEPLOYMENT.md)** - 완벽한 배포 단계별 안내
+
 ## 📋 프로젝트 개요
 
 이 프로젝트는 AWS Lambda와 DynamoDB를 사용하여 웨딩 관련 정보(웨딩홀, 스튜디오, 드레스샵)를 웹에서 스크래핑하고 API로 제공하는 서버리스 애플리케이션입니다.

@@ -20,6 +20,10 @@ This guide covers:
 
 🔧 **[Troubleshooting Guide](./TROUBLESHOOTING.md)** - Solutions for EACCES, ERESOLVE errors
 
+**Ready to deploy to AWS Lambda?**
+
+🚀 **[AWS Lambda Deployment Guide](./AWS_LAMBDA_DEPLOYMENT.md)** - Complete deployment walkthrough
+
 ## 🚀 Overview
 
 This is a serverless application that scrapes wedding-related information (wedding halls, studios, dress shops) from the web and provides them through REST APIs using AWS Lambda and DynamoDB.
