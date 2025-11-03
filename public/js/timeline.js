@@ -234,6 +234,8 @@ class WeddingTimeline {
                 ...item,
                 date: new Date(item.date)
             }));
+            // 완료 상태 복원
+            this.loadCompletionStatus();
             return true;
         }
         return false;

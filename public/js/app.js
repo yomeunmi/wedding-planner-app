@@ -85,6 +85,10 @@ class WeddingPlannerApp {
         if (backFromMypage) {
             backFromMypage.addEventListener('click', () => {
                 this.showScreen(this.previousScreen);
+                // 타임라인 화면으로 돌아갈 때는 타임라인 다시 렌더링
+                if (this.previousScreen === 'timeline-screen') {
+                    this.renderTimeline();
+                }
             });
         }
 
