@@ -22,7 +22,7 @@
 }
 
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'Gugi', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background: linear-gradient(135deg, var(--bg-white) 0%, var(--light-pink) 100%);
     color: var(--text-dark);
     min-height: 100vh;
