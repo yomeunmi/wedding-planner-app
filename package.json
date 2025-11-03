@@ -8,6 +8,8 @@
     "npm": ">=9.0.0"
   },
   "scripts": {
+    "dev": "node local-server.js",
+    "start": "node local-server.js",
     "deploy": "serverless deploy",
     "deploy:dev": "serverless deploy --stage dev",
     "deploy:prod": "serverless deploy --stage prod",
@@ -28,7 +30,8 @@
   "dependencies": {
     "aws-sdk": "^2.1490.0",
     "axios": "^1.6.0",
-    "cheerio": "^1.0.0-rc.12"
+    "cheerio": "^1.0.0-rc.12",
+    "express": "^4.21.2"
   },
   "devDependencies": {
     "jest": "^29.7.0",
