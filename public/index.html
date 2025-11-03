@@ -10,6 +10,9 @@
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
+    <!-- 마이페이지 버튼 (전역) -->
+    <button id="mypage-btn" class="mypage-btn">👤 마이페이지</button>
+
     <div class="container">
         <!-- 날짜 입력 화면 -->
         <div id="date-input-screen" class="screen active">
@@ -104,6 +107,81 @@
                     <div class="detail-actions">
                         <button id="mark-completed" class="btn btn-primary">완료 표시</button>
                         <button id="search-more" class="btn btn-secondary">더 많은 장소 보기</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 마이페이지 화면 -->
+        <div id="mypage-screen" class="screen">
+            <div class="header">
+                <button id="back-from-mypage" class="btn-icon">← 뒤로</button>
+                <h1>👤 마이페이지</h1>
+            </div>
+
+            <div class="card">
+                <div class="mypage-profile">
+                    <div class="profile-section">
+                        <h2>내 정보</h2>
+                        <div class="profile-info">
+                            <div class="profile-avatar">
+                                <span class="avatar-icon">👰</span>
+                            </div>
+                            <div class="profile-details">
+                                <div class="nickname-display" id="nickname-display">
+                                    <span id="current-nickname">닉네임을 설정해주세요</span>
+                                    <button id="edit-nickname-btn" class="btn-icon-small">✏️</button>
+                                </div>
+                                <div class="nickname-edit" id="nickname-edit" style="display: none;">
+                                    <input type="text" id="nickname-input" placeholder="닉네임을 입력하세요" maxlength="20">
+                                    <button id="save-nickname-btn" class="btn-icon-small">✓</button>
+                                    <button id="cancel-nickname-btn" class="btn-icon-small">✕</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mypage-section">
+                        <h2>나의 웨딩 준비</h2>
+                        <div id="mypage-wedding-info" class="wedding-info">
+                            <!-- 저장된 일정 정보가 없을 때 -->
+                            <div id="no-timeline-message" class="empty-message">
+                                <p>아직 저장된 일정이 없습니다.</p>
+                                <p>메인 화면에서 결혼 준비 일정을 만들어보세요!</p>
+                            </div>
+
+                            <!-- 저장된 일정 정보가 있을 때 -->
+                            <div id="timeline-info" style="display: none;">
+                                <div class="info-row">
+                                    <span class="info-label">💒 결혼식 날짜</span>
+                                    <span class="info-value" id="mypage-wedding-date">-</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">📅 준비 시작일</span>
+                                    <span class="info-value" id="mypage-start-date">-</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">⏰ D-Day</span>
+                                    <span class="info-value" id="mypage-dday">-</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">✅ 진행률</span>
+                                    <span class="info-value" id="mypage-progress">0%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mypage-section">
+                        <h2>체크리스트 요약</h2>
+                        <div id="mypage-checklist" class="mypage-checklist">
+                            <!-- 동적으로 생성될 체크리스트 -->
+                        </div>
+                    </div>
+
+                    <div class="mypage-actions">
+                        <button id="go-to-timeline" class="btn btn-primary">일정 보러가기</button>
+                        <button id="reset-data" class="btn btn-secondary">데이터 초기화</button>
                     </div>
                 </div>
             </div>

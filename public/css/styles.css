@@ -436,6 +436,220 @@ body {
     }
 }
 
+/* 마이페이지 버튼 (전역) */
+.mypage-btn {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: linear-gradient(135deg, var(--primary-pink) 0%, var(--dark-pink) 100%);
+    color: var(--bg-white);
+    border: none;
+    padding: 12px 24px;
+    border-radius: 25px;
+    font-size: 1em;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 15px var(--shadow);
+    transition: all 0.3s ease;
+    z-index: 1000;
+}
+
+.mypage-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px var(--shadow-hover);
+}
+
+/* 마이페이지 프로필 */
+.mypage-profile {
+    padding: 20px 0;
+}
+
+.profile-section {
+    margin-bottom: 30px;
+}
+
+.profile-info {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    background: var(--bg-cream);
+    padding: 20px;
+    border-radius: 15px;
+    border: 2px solid var(--light-pink);
+}
+
+.profile-avatar {
+    flex-shrink: 0;
+}
+
+.avatar-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, var(--primary-pink) 0%, var(--dark-pink) 100%);
+    border-radius: 50%;
+    font-size: 3em;
+    box-shadow: 0 4px 15px var(--shadow);
+}
+
+.profile-details {
+    flex: 1;
+}
+
+.nickname-display {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.nickname-display span {
+    font-size: 1.5em;
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+.btn-icon-small {
+    background: var(--bg-white);
+    border: 2px solid var(--primary-pink);
+    color: var(--dark-pink);
+    padding: 6px 12px;
+    border-radius: 15px;
+    cursor: pointer;
+    font-size: 1em;
+    transition: all 0.3s ease;
+}
+
+.btn-icon-small:hover {
+    background: var(--light-pink);
+    border-color: var(--dark-pink);
+}
+
+.nickname-edit {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.nickname-edit input {
+    flex: 1;
+    padding: 12px;
+    border: 2px solid var(--border-color);
+    border-radius: 10px;
+    font-size: 1em;
+    transition: all 0.3s ease;
+}
+
+.nickname-edit input:focus {
+    outline: none;
+    border-color: var(--dark-pink);
+    box-shadow: 0 0 0 3px var(--shadow);
+}
+
+/* 마이페이지 섹션 */
+.mypage-section {
+    margin-bottom: 30px;
+}
+
+.mypage-section h2 {
+    color: var(--dark-pink);
+    font-size: 1.5em;
+    margin-bottom: 15px;
+}
+
+.wedding-info {
+    background: var(--bg-cream);
+    padding: 20px;
+    border-radius: 15px;
+    border: 2px solid var(--light-pink);
+}
+
+.empty-message {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-gray);
+}
+
+.empty-message p {
+    margin-bottom: 10px;
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    background: var(--bg-white);
+    border-radius: 10px;
+    margin-bottom: 10px;
+    border-left: 4px solid var(--primary-pink);
+}
+
+.info-label {
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+.info-value {
+    color: var(--dark-pink);
+    font-weight: 600;
+}
+
+/* 마이페이지 체크리스트 */
+.mypage-checklist {
+    display: grid;
+    gap: 15px;
+}
+
+.mypage-checklist-item {
+    background: var(--bg-cream);
+    padding: 15px;
+    border-radius: 10px;
+    border-left: 4px solid var(--primary-pink);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.3s ease;
+}
+
+.mypage-checklist-item:hover {
+    transform: translateX(5px);
+    box-shadow: 0 3px 10px var(--shadow);
+}
+
+.mypage-checklist-item.completed {
+    border-left-color: var(--dark-pink);
+    background: var(--light-pink);
+}
+
+.checklist-item-info {
+    flex: 1;
+}
+
+.checklist-item-title {
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 5px;
+}
+
+.checklist-item-date {
+    font-size: 0.9em;
+    color: var(--text-gray);
+}
+
+.checklist-item-status {
+    font-size: 1.5em;
+}
+
+/* 마이페이지 액션 */
+.mypage-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-top: 30px;
+}
+
 /* 반응형 디자인 */
 @media (max-width: 768px) {
     .container {
@@ -468,5 +682,39 @@ body {
 
     .places-grid {
         grid-template-columns: 1fr;
+    }
+
+    /* 마이페이지 반응형 */
+    .mypage-btn {
+        top: 10px;
+        right: 10px;
+        padding: 10px 20px;
+        font-size: 0.9em;
+    }
+
+    .profile-info {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .avatar-icon {
+        width: 60px;
+        height: 60px;
+        font-size: 2.5em;
+    }
+
+    .nickname-display {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .mypage-actions {
+        grid-template-columns: 1fr;
+    }
+
+    .info-row {
+        flex-direction: column;
+        gap: 5px;
+        text-align: center;
     }
 }

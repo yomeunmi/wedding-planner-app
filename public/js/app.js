@@ -4,6 +4,7 @@ class WeddingPlannerApp {
     constructor() {
         this.timeline = new WeddingTimeline();
         this.currentScreen = 'date-input-screen';
+        this.previousScreen = 'date-input-screen';
         this.currentDetailItem = null;
         this.apiBaseUrl = window.location.hostname === 'localhost'
             ? 'http://localhost:3000'
@@ -72,6 +73,76 @@ class WeddingPlannerApp {
         if (searchMore) {
             searchMore.addEventListener('click', () => this.searchMorePlaces());
         }
+
+        // 마이페이지 버튼
+        const mypageBtn = document.getElementById('mypage-btn');
+        if (mypageBtn) {
+            mypageBtn.addEventListener('click', () => this.showMyPage());
+        }
+
+        // 마이페이지 뒤로가기
+        const backFromMypage = document.getElementById('back-from-mypage');
+        if (backFromMypage) {
+            backFromMypage.addEventListener('click', () => {
+                this.showScreen(this.previousScreen);
+            });
+        }
+
+        // 닉네임 수정 버튼
+        const editNicknameBtn = document.getElementById('edit-nickname-btn');
+        if (editNicknameBtn) {
+            editNicknameBtn.addEventListener('click', () => this.toggleNicknameEdit(true));
+        }
+
+        // 닉네임 저장 버튼
+        const saveNicknameBtn = document.getElementById('save-nickname-btn');
+        if (saveNicknameBtn) {
+            saveNicknameBtn.addEventListener('click', () => this.saveNickname());
+        }
+
+        // 닉네임 취소 버튼
+        const cancelNicknameBtn = document.getElementById('cancel-nickname-btn');
+        if (cancelNicknameBtn) {
+            cancelNicknameBtn.addEventListener('click', () => this.toggleNicknameEdit(false));
+        }
+
+        // 닉네임 입력 엔터키
+        const nicknameInput = document.getElementById('nickname-input');
+        if (nicknameInput) {
+            nicknameInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    this.saveNickname();
+                }
+            });
+        }
+
+        // 일정 보러가기 버튼
+        const goToTimeline = document.getElementById('go-to-timeline');
+        if (goToTimeline) {
+            goToTimeline.addEventListener('click', () => {
+                if (this.timeline.hasSavedData()) {
+                    this.showScreen('timeline-screen');
+                    this.renderTimeline();
+                } else {
+                    this.showToast('먼저 결혼 준비 일정을 만들어주세요!');
+                    this.showScreen('date-input-screen');
+                }
+            });
+        }
+
+        // 데이터 초기화 버튼
+        const resetData = document.getElementById('reset-data');
+        if (resetData) {
+            resetData.addEventListener('click', () => {
+                if (confirm('모든 데이터가 삭제됩니다. 정말 초기화하시겠습니까?')) {
+                    localStorage.clear();
+                    this.showToast('데이터가 초기화되었습니다');
+                    this.showScreen('date-input-screen');
+                    this.setMinDates();
+                    location.reload();
+                }
+            });
+        }
     }
 
     setMinDates() {
@@ -129,6 +200,10 @@ class WeddingPlannerApp {
         const targetScreen = document.getElementById(screenId);
         if (targetScreen) {
             targetScreen.classList.add('active');
+            // 마이페이지가 아닐 때만 previousScreen 업데이트
+            if (screenId !== 'mypage-screen') {
+                this.previousScreen = this.currentScreen;
+            }
             this.currentScreen = screenId;
         }
     }
@@ -372,6 +447,160 @@ class WeddingPlannerApp {
                 toast.classList.remove('show');
             }, 3000);
         }
+    }
+
+    // 마이페이지 관련 메서드들
+
+    showMyPage() {
+        this.renderMyPage();
+        this.showScreen('mypage-screen');
+    }
+
+    renderMyPage() {
+        // 닉네임 로드
+        this.loadNickname();
+
+        // 웨딩 정보 렌더링
+        if (this.timeline.hasSavedData()) {
+            this.timeline.load();
+            this.renderWeddingInfo();
+            this.renderMypageChecklist();
+        } else {
+            this.showNoTimeline();
+        }
+    }
+
+    loadNickname() {
+        const nickname = localStorage.getItem('wedding-nickname') || '';
+        const nicknameDisplay = document.getElementById('current-nickname');
+
+        if (nicknameDisplay) {
+            if (nickname) {
+                nicknameDisplay.textContent = nickname;
+            } else {
+                nicknameDisplay.textContent = '닉네임을 설정해주세요';
+            }
+        }
+    }
+
+    toggleNicknameEdit(show) {
+        const nicknameDisplay = document.getElementById('nickname-display');
+        const nicknameEdit = document.getElementById('nickname-edit');
+        const nicknameInput = document.getElementById('nickname-input');
+
+        if (show) {
+            if (nicknameDisplay) nicknameDisplay.style.display = 'none';
+            if (nicknameEdit) nicknameEdit.style.display = 'flex';
+
+            // 현재 닉네임을 입력창에 설정
+            const currentNickname = localStorage.getItem('wedding-nickname') || '';
+            if (nicknameInput) {
+                nicknameInput.value = currentNickname;
+                nicknameInput.focus();
+            }
+        } else {
+            if (nicknameDisplay) nicknameDisplay.style.display = 'flex';
+            if (nicknameEdit) nicknameEdit.style.display = 'none';
+        }
+    }
+
+    saveNickname() {
+        const nicknameInput = document.getElementById('nickname-input');
+        if (!nicknameInput) return;
+
+        const nickname = nicknameInput.value.trim();
+
+        if (!nickname) {
+            this.showToast('닉네임을 입력해주세요');
+            return;
+        }
+
+        if (nickname.length > 20) {
+            this.showToast('닉네임은 20자 이하로 입력해주세요');
+            return;
+        }
+
+        // 닉네임 저장
+        localStorage.setItem('wedding-nickname', nickname);
+
+        // 화면 업데이트
+        this.loadNickname();
+        this.toggleNicknameEdit(false);
+
+        this.showToast('닉네임이 저장되었습니다! 👤');
+    }
+
+    showNoTimeline() {
+        const noTimelineMessage = document.getElementById('no-timeline-message');
+        const timelineInfo = document.getElementById('timeline-info');
+        const mypageChecklist = document.getElementById('mypage-checklist');
+
+        if (noTimelineMessage) noTimelineMessage.style.display = 'block';
+        if (timelineInfo) timelineInfo.style.display = 'none';
+        if (mypageChecklist) mypageChecklist.innerHTML = '<p style="text-align: center; color: var(--text-gray);">저장된 일정이 없습니다.</p>';
+    }
+
+    renderWeddingInfo() {
+        const noTimelineMessage = document.getElementById('no-timeline-message');
+        const timelineInfo = document.getElementById('timeline-info');
+
+        if (noTimelineMessage) noTimelineMessage.style.display = 'none';
+        if (timelineInfo) timelineInfo.style.display = 'block';
+
+        // 결혼식 날짜
+        const mypageWeddingDate = document.getElementById('mypage-wedding-date');
+        if (mypageWeddingDate) {
+            mypageWeddingDate.textContent = this.timeline.formatDate(this.timeline.weddingDate);
+        }
+
+        // 준비 시작일
+        const mypageStartDate = document.getElementById('mypage-start-date');
+        if (mypageStartDate) {
+            mypageStartDate.textContent = this.timeline.formatDate(this.timeline.startDate);
+        }
+
+        // D-Day
+        const mypageDday = document.getElementById('mypage-dday');
+        if (mypageDday) {
+            const dDay = this.timeline.getDDay();
+            mypageDday.textContent = dDay > 0 ? `D-${dDay}` : dDay === 0 ? 'D-Day!' : `D+${Math.abs(dDay)}`;
+        }
+
+        // 진행률
+        const mypageProgress = document.getElementById('mypage-progress');
+        if (mypageProgress) {
+            const completed = this.timeline.getCompletedCount();
+            const total = this.timeline.timeline.length;
+            const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+            mypageProgress.textContent = `${percentage}% (${completed}/${total})`;
+        }
+    }
+
+    renderMypageChecklist() {
+        const mypageChecklist = document.getElementById('mypage-checklist');
+        if (!mypageChecklist) return;
+
+        mypageChecklist.innerHTML = '';
+
+        if (!this.timeline.timeline || this.timeline.timeline.length === 0) {
+            mypageChecklist.innerHTML = '<p style="text-align: center; color: var(--text-gray);">저장된 일정이 없습니다.</p>';
+            return;
+        }
+
+        this.timeline.timeline.forEach(item => {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = `mypage-checklist-item ${item.completed ? 'completed' : ''}`;
+
+            itemDiv.innerHTML = `
+                <div class="checklist-item-info">
+                    <div class="checklist-item-title">${item.icon} ${item.title}</div>
+                    <div class="checklist-item-date">${this.timeline.formatDate(item.date)}</div>
+                </div>
+                <div class="checklist-item-status">${item.completed ? '✓' : '◯'}</div>
+            `;
+
+            mypageChecklist.appendChild(itemDiv);
+        });
     }
 }
 
