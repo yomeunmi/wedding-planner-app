@@ -13,7 +13,7 @@ provider:
   environment:
     DYNAMODB_TABLE: ${self:service}-${self:provider.stage}
     STAGE: ${self:provider.stage}
-    KAKAO_API_KEY: ${env:KAKAO_API_KEY}
+    KAKAO_API_KEY: ${env:KAKAO_API_KEY, 'temp_key_for_offline_mode'}
 
   iam:
     role:
