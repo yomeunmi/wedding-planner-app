@@ -200,10 +200,12 @@ class WeddingPlannerApp {
         const targetScreen = document.getElementById(screenId);
         if (targetScreen) {
             targetScreen.classList.add('active');
-            // 마이페이지가 아닐 때만 previousScreen 업데이트
-            if (screenId !== 'mypage-screen') {
+
+            // 마이페이지로 이동할 때는 현재 화면을 previousScreen에 저장
+            if (screenId === 'mypage-screen') {
                 this.previousScreen = this.currentScreen;
             }
+
             this.currentScreen = screenId;
         }
     }
