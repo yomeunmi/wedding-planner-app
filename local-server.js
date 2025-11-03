@@ -72,9 +72,16 @@ app.get('/api/makeup', async (req, res) => {
   }
 });
 
-// SPA 라우팅 (모든 경로를 index.html로)
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+// SPA 라우팅 (API가 아닌 모든 경로를 index.html로)
+// Express의 static 미들웨어가 먼저 처리하고,
+// 파일이 없으면 index.html을 반환
+app.use((req, res) => {
+  // API 요청이 아닌 경우에만 index.html 반환
+  if (!req.path.startsWith('/api/')) {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  } else {
+    res.status(404).json({ error: 'API endpoint not found' });
+  }
 });
 
 // 서버 시작
