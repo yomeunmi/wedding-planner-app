@@ -19,20 +19,40 @@ class WeddingTimeline {
         this.timeline = [];
         const totalDays = this.getDaysBetween(this.startDate, this.weddingDate);
 
-        // 각 항목별 권장 시기 (결혼식 기준 역순으로 계산)
+        // 웨딩홀 투어일 계산: 준비 시작일로부터 7일 뒤 주말
+        const getNextWeekend = (startDate) => {
+            const date = new Date(startDate);
+            date.setDate(date.getDate() + 7); // 7일 뒤
+
+            const dayOfWeek = date.getDay(); // 0(일) ~ 6(토)
+
+            // 이미 토요일(6) 또는 일요일(0)이면 그대로 사용
+            if (dayOfWeek === 6 || dayOfWeek === 0) {
+                return date;
+            }
+
+            // 월~금요일이면 다음 토요일로
+            const daysUntilSaturday = 6 - dayOfWeek;
+            date.setDate(date.getDate() + daysUntilSaturday);
+            return date;
+        };
+
+        const weddingHallTourDate = getNextWeekend(this.startDate);
+
+        // 각 항목별 권장 시기
         const milestones = [
             {
-                id: 'wedding-hall',
-                title: '웨딩홀 계약',
+                id: 'wedding-hall-tour',
+                title: '웨딩홀 투어',
                 icon: '🏛️',
-                description: '예식장을 방문하고 견적을 비교한 후 계약합니다. 인기 있는 날짜는 빨리 예약되므로 여유있게 준비하세요.',
-                daysBeforeWedding: Math.min(totalDays - 30, 180), // 6개월 전 또는 준비 시작 후 1개월
+                description: '여러 웨딩홀을 방문하여 비교해보세요. 주말에 실제 예식이 진행되는 모습을 보면 더 좋습니다.',
+                customDate: weddingHallTourDate, // 커스텀 날짜 사용
                 category: 'wedding-halls',
                 tips: [
                     '최소 3~4곳의 웨딩홀을 방문하여 비교해보세요',
-                    '주말과 주중 가격 차이를 확인하세요',
+                    '주말 예식 현장을 직접 보면 분위기를 파악하기 좋습니다',
                     '식사 메뉴와 품질을 꼭 시식해보세요',
-                    '계약서의 취소 및 환불 조항을 꼼꼼히 확인하세요',
+                    '계약은 서두르지 말고 충분히 비교 후 결정하세요',
                     '하객 규모를 미리 예상하여 홀 크기를 선택하세요'
                 ]
             },
@@ -52,7 +72,7 @@ class WeddingTimeline {
                 ]
             },
             {
-                id: 'dress',
+                id: 'dress-tour',
                 title: '드레스 투어',
                 icon: '👗',
                 description: '웨딩드레스와 턱시도를 선택합니다. 여러 곳을 방문하여 다양한 스타일을 착용해보세요.',
@@ -64,6 +84,23 @@ class WeddingTimeline {
                     '체형에 맞는 드레스 라인을 전문가와 상담하세요',
                     '수선 비용과 기간을 확인하세요',
                     '액세서리와 소품 포함 여부를 확인하세요'
+                ]
+            },
+            {
+                id: 'dress-fitting',
+                title: '본식 드레스 가봉',
+                icon: '✂️',
+                description: '결혼식 한 달 전, 마지막 드레스 피팅입니다. 이 시기까지 목표 체중을 유지하는 것이 중요합니다.',
+                daysBeforeWedding: 30, // 결혼식 한 달 전
+                category: 'dress',
+                tips: [
+                    '가봉일 2주 전부터는 체중 변화가 없도록 유지하세요',
+                    '건강한 다이어트: 하루 1,200~1,500kcal 균형잡힌 식단',
+                    '주 3~4회 유산소 운동 (걷기, 수영, 필라테스)',
+                    '충분한 수면과 스트레스 관리가 중요합니다',
+                    '극단적인 다이어트는 피부와 건강에 해로우니 주의하세요',
+                    '드레스 라인이 예쁘게 나오도록 자세 교정 운동도 도움이 됩니다',
+                    '가봉 시 실제 착용할 속옷을 꼭 챙겨가세요'
                 ]
             },
             {
@@ -85,8 +122,16 @@ class WeddingTimeline {
 
         // 각 마일스톤의 날짜 계산
         milestones.forEach(milestone => {
-            const itemDate = new Date(this.weddingDate);
-            itemDate.setDate(itemDate.getDate() - milestone.daysBeforeWedding);
+            let itemDate;
+
+            // 커스텀 날짜가 있으면 사용
+            if (milestone.customDate) {
+                itemDate = new Date(milestone.customDate);
+            } else {
+                // 결혼식 기준으로 역산
+                itemDate = new Date(this.weddingDate);
+                itemDate.setDate(itemDate.getDate() - milestone.daysBeforeWedding);
+            }
 
             // 시작일보다 이른 경우 시작일로 조정
             if (itemDate < this.startDate) {
