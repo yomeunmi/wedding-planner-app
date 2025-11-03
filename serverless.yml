@@ -102,6 +102,30 @@ functions:
           method: get
           cors: true
 
+  # 프론트엔드 서빙 - 정적 파일
+  serveStatic:
+    handler: src/handlers/frontend.serveStatic
+    description: 정적 파일(CSS, JS) 서빙
+    events:
+      - http:
+          path: /css/{file}
+          method: get
+      - http:
+          path: /js/{file}
+          method: get
+
+  # 프론트엔드 서빙 - SPA 라우팅
+  serveSPA:
+    handler: src/handlers/frontend.serveSPA
+    description: SPA 프론트엔드 서빙 (index.html)
+    events:
+      - http:
+          path: /
+          method: get
+      - http:
+          path: /{proxy+}
+          method: get
+
 resources:
   Resources:
     WeddingPlannerTable:

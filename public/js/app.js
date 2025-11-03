@@ -1,0 +1,381 @@
+// 웨딩 플래너 앱 메인 로직
+
+class WeddingPlannerApp {
+    constructor() {
+        this.timeline = new WeddingTimeline();
+        this.currentScreen = 'date-input-screen';
+        this.currentDetailItem = null;
+        this.apiBaseUrl = window.location.hostname === 'localhost'
+            ? 'http://localhost:3000'
+            : ''; // 프로덕션에서는 API Gateway URL로 변경
+
+        this.init();
+    }
+
+    init() {
+        this.setupEventListeners();
+
+        // 저장된 데이터가 있으면 타임라인 화면으로 이동
+        if (this.timeline.hasSavedData()) {
+            this.timeline.load();
+            this.showScreen('timeline-screen');
+            this.renderTimeline();
+        } else {
+            this.setMinDates();
+        }
+    }
+
+    setupEventListeners() {
+        // 날짜 입력 폼
+        const dateForm = document.getElementById('date-form');
+        if (dateForm) {
+            dateForm.addEventListener('submit', (e) => this.handleDateSubmit(e));
+        }
+
+        // 뒤로가기 버튼들
+        const backToInput = document.getElementById('back-to-input');
+        if (backToInput) {
+            backToInput.addEventListener('click', () => {
+                if (confirm('입력한 정보가 초기화됩니다. 처음으로 돌아가시겠습니까?')) {
+                    localStorage.clear();
+                    this.showScreen('date-input-screen');
+                    this.setMinDates();
+                }
+            });
+        }
+
+        const backToTimeline = document.getElementById('back-to-timeline');
+        if (backToTimeline) {
+            backToTimeline.addEventListener('click', () => {
+                this.showScreen('timeline-screen');
+                this.renderTimeline();
+            });
+        }
+
+        // 일정 저장 버튼
+        const saveTimeline = document.getElementById('save-timeline');
+        if (saveTimeline) {
+            saveTimeline.addEventListener('click', () => {
+                this.timeline.save();
+                this.showToast('일정이 저장되었습니다! 📋');
+            });
+        }
+
+        // 완료 표시 버튼
+        const markCompleted = document.getElementById('mark-completed');
+        if (markCompleted) {
+            markCompleted.addEventListener('click', () => this.toggleItemCompleted());
+        }
+
+        // 더 많은 장소 보기 버튼
+        const searchMore = document.getElementById('search-more');
+        if (searchMore) {
+            searchMore.addEventListener('click', () => this.searchMorePlaces());
+        }
+    }
+
+    setMinDates() {
+        const today = new Date().toISOString().split('T')[0];
+        const weddingDateInput = document.getElementById('wedding-date');
+        const startDateInput = document.getElementById('start-date');
+
+        if (weddingDateInput) {
+            weddingDateInput.min = today;
+        }
+        if (startDateInput) {
+            startDateInput.min = today;
+            startDateInput.value = today;
+        }
+
+        // 결혼식 날짜 변경 시 준비 시작일 제한
+        if (weddingDateInput) {
+            weddingDateInput.addEventListener('change', (e) => {
+                if (startDateInput) {
+                    startDateInput.max = e.target.value;
+                }
+            });
+        }
+    }
+
+    handleDateSubmit(e) {
+        e.preventDefault();
+
+        const weddingDate = document.getElementById('wedding-date').value;
+        const startDate = document.getElementById('start-date').value;
+
+        if (!weddingDate || !startDate) {
+            this.showToast('모든 날짜를 입력해주세요');
+            return;
+        }
+
+        if (new Date(startDate) > new Date(weddingDate)) {
+            this.showToast('준비 시작일은 결혼식 날짜보다 이전이어야 합니다');
+            return;
+        }
+
+        // 타임라인 계산
+        this.timeline.setDates(weddingDate, startDate);
+        this.timeline.save();
+
+        // 타임라인 화면으로 전환
+        this.showScreen('timeline-screen');
+        this.renderTimeline();
+    }
+
+    showScreen(screenId) {
+        const screens = document.querySelectorAll('.screen');
+        screens.forEach(screen => screen.classList.remove('active'));
+
+        const targetScreen = document.getElementById(screenId);
+        if (targetScreen) {
+            targetScreen.classList.add('active');
+            this.currentScreen = screenId;
+        }
+    }
+
+    renderTimeline() {
+        // 날짜 범위 표시
+        const dateRangeDisplay = document.getElementById('date-range-display');
+        if (dateRangeDisplay) {
+            dateRangeDisplay.textContent = `${this.timeline.formatDate(this.timeline.startDate)} ~ ${this.timeline.formatDate(this.timeline.weddingDate)}`;
+        }
+
+        // D-Day 표시
+        const dDayCount = document.getElementById('d-day-count');
+        if (dDayCount) {
+            const dDay = this.timeline.getDDay();
+            dDayCount.textContent = dDay > 0 ? `D-${dDay}` : dDay === 0 ? 'D-Day!' : `D+${Math.abs(dDay)}`;
+        }
+
+        // 준비 기간 표시
+        const prepPeriod = document.getElementById('prep-period');
+        if (prepPeriod) {
+            prepPeriod.textContent = this.timeline.getPrepPeriod();
+        }
+
+        // 완료 항목 표시
+        this.updateCompletedCount();
+
+        // 타임라인 리스트 렌더링
+        const timelineList = document.getElementById('timeline-list');
+        if (timelineList) {
+            timelineList.innerHTML = '';
+
+            this.timeline.timeline.forEach(item => {
+                const itemElement = this.createTimelineItem(item);
+                timelineList.appendChild(itemElement);
+            });
+        }
+    }
+
+    createTimelineItem(item) {
+        const div = document.createElement('div');
+        div.className = `timeline-item ${item.completed ? 'completed' : ''}`;
+        div.onclick = () => this.showItemDetail(item.id);
+
+        div.innerHTML = `
+            <div class="timeline-icon">${item.icon}</div>
+            <div class="timeline-content">
+                <div class="timeline-title">${item.title}</div>
+                <div class="timeline-date">${this.timeline.formatDate(item.date)}</div>
+                <div class="timeline-desc">${item.description}</div>
+            </div>
+            <div class="timeline-status">${item.completed ? '✓' : '→'}</div>
+        `;
+
+        return div;
+    }
+
+    showItemDetail(itemId) {
+        const item = this.timeline.getItemById(itemId);
+        if (!item) return;
+
+        this.currentDetailItem = item;
+
+        // 제목 설정
+        const detailTitle = document.getElementById('detail-title');
+        if (detailTitle) {
+            detailTitle.textContent = `${item.icon} ${item.title}`;
+        }
+
+        // 날짜 설정
+        const detailDate = document.getElementById('detail-date');
+        if (detailDate) {
+            detailDate.textContent = `권장 일정: ${this.timeline.formatDate(item.date)}`;
+        }
+
+        // 설명 설정
+        const detailDescription = document.getElementById('detail-description');
+        if (detailDescription) {
+            detailDescription.textContent = item.description;
+        }
+
+        // 팁 렌더링
+        const detailTips = document.getElementById('detail-tips');
+        if (detailTips) {
+            detailTips.innerHTML = '';
+            item.tips.forEach(tip => {
+                const li = document.createElement('li');
+                li.textContent = tip;
+                detailTips.appendChild(li);
+            });
+        }
+
+        // 완료 버튼 상태 업데이트
+        const markCompleted = document.getElementById('mark-completed');
+        if (markCompleted) {
+            markCompleted.textContent = item.completed ? '완료 취소' : '완료 표시';
+        }
+
+        // 장소 로딩
+        this.loadPlaces(item.category);
+
+        // 상세 화면으로 전환
+        this.showScreen('detail-screen');
+    }
+
+    async loadPlaces(category) {
+        const detailPlaces = document.getElementById('detail-places');
+        if (!detailPlaces) return;
+
+        // 로딩 표시
+        detailPlaces.innerHTML = '<div class="loading"></div>';
+
+        try {
+            // API 호출
+            const endpoint = `${this.apiBaseUrl}/api/${category}`;
+            const response = await fetch(endpoint);
+
+            if (!response.ok) {
+                throw new Error('데이터를 불러올 수 없습니다');
+            }
+
+            const data = await response.json();
+
+            // 장소 카드 렌더링
+            detailPlaces.innerHTML = '';
+
+            if (data.items && data.items.length > 0) {
+                data.items.slice(0, 6).forEach(place => {
+                    const placeCard = this.createPlaceCard(place);
+                    detailPlaces.appendChild(placeCard);
+                });
+            } else {
+                detailPlaces.innerHTML = '<p style="text-align: center; color: var(--text-gray);">추천 장소를 준비 중입니다.</p>';
+            }
+        } catch (error) {
+            console.error('Error loading places:', error);
+
+            // 에러 시 샘플 데이터 표시
+            detailPlaces.innerHTML = '';
+            const samplePlaces = this.getSamplePlaces(category);
+            samplePlaces.forEach(place => {
+                const placeCard = this.createPlaceCard(place);
+                detailPlaces.appendChild(placeCard);
+            });
+        }
+    }
+
+    createPlaceCard(place) {
+        const div = document.createElement('div');
+        div.className = 'place-card';
+
+        const name = place.name || place.place_name || '장소명';
+        const address = place.address || place.address_name || place.road_address_name || '주소 정보 없음';
+        const phone = place.phone || place.phone_number || '전화번호 정보 없음';
+
+        div.innerHTML = `
+            <div class="place-name">${name}</div>
+            <div class="place-address">📍 ${address}</div>
+            <div class="place-phone">📞 ${phone}</div>
+        `;
+
+        return div;
+    }
+
+    getSamplePlaces(category) {
+        const samples = {
+            'wedding-halls': [
+                { name: '그랜드 웨딩홀', address: '서울시 강남구 테헤란로 123', phone: '02-1234-5678' },
+                { name: '로맨틱 가든', address: '서울시 서초구 서초대로 456', phone: '02-2345-6789' },
+                { name: '엘레강스 홀', address: '서울시 송파구 올림픽로 789', phone: '02-3456-7890' }
+            ],
+            'studios': [
+                { name: '로맨틱 스튜디오', address: '서울시 강남구 논현로 234', phone: '02-4567-8901' },
+                { name: '드림 포토', address: '서울시 강남구 강남대로 567', phone: '02-5678-9012' },
+                { name: '퓨어 스튜디오', address: '서울시 서초구 반포대로 890', phone: '02-6789-0123' }
+            ],
+            'dress': [
+                { name: '웨딩드레스 부티크', address: '서울시 강남구 선릉로 345', phone: '02-7890-1234' },
+                { name: '로즈 드레스', address: '서울시 강남구 역삼로 678', phone: '02-8901-2345' },
+                { name: '엘레강스 드레스', address: '서울시 서초구 서초중앙로 901', phone: '02-9012-3456' }
+            ],
+            'makeup': [
+                { name: '뷰티살롱 로즈', address: '서울시 강남구 테헤란로 456', phone: '02-1111-2222' },
+                { name: '메이크업 스튜디오', address: '서울시 강남구 강남대로 789', phone: '02-2222-3333' },
+                { name: '브라이덜 뷰티', address: '서울시 서초구 서초대로 012', phone: '02-3333-4444' }
+            ]
+        };
+
+        return samples[category] || [];
+    }
+
+    toggleItemCompleted() {
+        if (!this.currentDetailItem) return;
+
+        const completed = this.timeline.toggleCompleted(this.currentDetailItem.id);
+
+        // 버튼 텍스트 업데이트
+        const markCompleted = document.getElementById('mark-completed');
+        if (markCompleted) {
+            markCompleted.textContent = completed ? '완료 취소' : '완료 표시';
+        }
+
+        // 완료 상태에 따라 메시지 표시
+        if (completed) {
+            this.showToast(`${this.currentDetailItem.title} 완료! 🎉`);
+        } else {
+            this.showToast(`${this.currentDetailItem.title} 완료 취소`);
+        }
+
+        // 완료 카운트 업데이트
+        this.updateCompletedCount();
+    }
+
+    updateCompletedCount() {
+        const completedCount = document.getElementById('completed-count');
+        if (completedCount) {
+            const completed = this.timeline.getCompletedCount();
+            const total = this.timeline.timeline.length;
+            completedCount.textContent = `${completed}/${total}`;
+        }
+    }
+
+    searchMorePlaces() {
+        if (!this.currentDetailItem) return;
+
+        // 실제로는 더 많은 장소를 보여주는 페이지로 이동
+        // 여기서는 간단히 토스트 메시지만 표시
+        this.showToast('더 많은 장소를 검색 중입니다... 🔍');
+
+        // API 재호출
+        this.loadPlaces(this.currentDetailItem.category);
+    }
+
+    showToast(message) {
+        const toast = document.getElementById('toast');
+        if (toast) {
+            toast.textContent = message;
+            toast.classList.add('show');
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+    }
+}
+
+// DOM 로드 완료 후 앱 초기화
+document.addEventListener('DOMContentLoaded', () => {
+    new WeddingPlannerApp();
+});
