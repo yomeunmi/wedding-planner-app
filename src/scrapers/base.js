@@ -1,5 +1,6 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
+const fs = require('fs').promises;
 
 /**
  * 기본 스크래퍼 클래스
@@ -7,6 +8,7 @@ const cheerio = require('cheerio');
 class BaseScraper {
   constructor(url) {
     this.url = url;
+    this.isLocalFile = this.url.includes('.html') || this.url.startsWith('/');
     this.axiosConfig = {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
@@ -16,12 +18,20 @@ class BaseScraper {
   }
 
   /**
-   * HTML 가져오기
+   * HTML 가져오기 (URL 또는 로컬 파일)
    */
   async fetchHTML() {
     try {
-      const response = await axios.get(this.url, this.axiosConfig);
-      return response.data;
+      if (this.isLocalFile) {
+        // 로컬 HTML 파일 읽기
+        console.log(`Reading local file: ${this.url}`);
+        const html = await fs.readFile(this.url, 'utf-8');
+        return html;
+      } else {
+        // HTTP로 웹페이지 가져오기
+        const response = await axios.get(this.url, this.axiosConfig);
+        return response.data;
+      }
     } catch (error) {
       console.error(`Failed to fetch ${this.url}:`, error.message);
       throw error;
@@ -51,6 +61,14 @@ class BaseScraper {
       ...data,
       scrapedAt: new Date().toISOString()
     };
+  }
+
+  /**
+   * 텍스트 정제 (공백 제거 등)
+   */
+  cleanText(text) {
+    if (!text) return '';
+    return text.replace(/\s+/g, ' ').trim();
   }
 }
 

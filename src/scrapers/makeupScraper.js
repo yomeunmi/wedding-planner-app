@@ -2,21 +2,21 @@ const BaseScraper = require('./base');
 const { CATEGORIES } = require('../config/constants');
 
 /**
- * 드레스샵 스크래퍼
+ * 메이크업 스크래퍼
  */
-class DressScraper extends BaseScraper {
+class MakeupScraper extends BaseScraper {
   constructor(url) {
     super(url);
   }
 
   /**
-   * 드레스샵 정보 스크래핑
+   * 메이크업 정보 스크래핑
    */
   async scrape() {
     try {
       const html = await this.fetchHTML();
       const $ = this.parseHTML(html);
-      const dressShops = [];
+      const makeupShops = [];
 
       // 테스트 HTML 구조에 맞춘 셀렉터
       $('.product-item').each((index, element) => {
@@ -24,7 +24,7 @@ class DressScraper extends BaseScraper {
 
         const name = this.cleanText($elem.find('.product-name').text());
         const location = this.cleanText($elem.find('.product-location').text());
-        const brand = this.cleanText($elem.find('.product-brand').text());
+        const specialty = this.cleanText($elem.find('.product-specialty').text());
         const price = this.cleanText($elem.find('.product-price').text());
         const rating = this.cleanText($elem.find('.star-rating').text());
         const reviewCount = this.cleanText($elem.find('.review-count').text());
@@ -33,13 +33,13 @@ class DressScraper extends BaseScraper {
         const detailUrl = $elem.find('.product-link').attr('href');
 
         if (name) {
-          dressShops.push(this.cleanData({
-            pk: `${CATEGORIES.DRESS}#${Date.now()}#${index}`,
+          makeupShops.push(this.cleanData({
+            pk: `${CATEGORIES.MAKEUP}#${Date.now()}#${index}`,
             sk: name,
-            category: CATEGORIES.DRESS,
+            category: CATEGORIES.MAKEUP,
             name,
             location,
-            brand,
+            specialty,
             price,
             rating: rating ? parseFloat(rating) : null,
             reviewCount,
@@ -51,13 +51,13 @@ class DressScraper extends BaseScraper {
         }
       });
 
-      console.log(`✅ Scraped ${dressShops.length} dress shops from ${this.url}`);
-      return dressShops;
+      console.log(`✅ Scraped ${makeupShops.length} makeup shops from ${this.url}`);
+      return makeupShops;
     } catch (error) {
-      console.error('❌ Dress shop scraping error:', error);
+      console.error('❌ Makeup shop scraping error:', error);
       return [];
     }
   }
 }
 
-module.exports = DressScraper;
+module.exports = MakeupScraper;

@@ -87,6 +87,33 @@ const mockDressShops = [
   }
 ];
 
+const mockMakeupShops = [
+  {
+    pk: 'makeup#1',
+    sk: '뷰티살롱 에스테',
+    category: 'makeup',
+    name: '뷰티살롱 에스테',
+    location: '서울 강남구 청담동',
+    specialty: '본식 메이크업, 피부관리',
+    price: '본식: 50만원~, 리허설: 30만원~',
+    imageUrl: 'https://example.com/makeup1.jpg',
+    description: '고급스럽고 화사한 웨딩 메이크업 전문입니다.',
+    createdAt: new Date().toISOString()
+  },
+  {
+    pk: 'makeup#2',
+    sk: '나츄럴 뷰티 살롱',
+    category: 'makeup',
+    name: '나츄럴 뷰티 살롱',
+    location: '서울 강남구 논현동',
+    specialty: '자연스러운 메이크업, 헤어',
+    price: '본식: 45만원~, 리허설: 25만원~',
+    imageUrl: 'https://example.com/makeup2.jpg',
+    description: '자연스러운 본연의 아름다움을 살려드립니다.',
+    createdAt: new Date().toISOString()
+  }
+];
+
 /**
  * 웨딩홀 검색 API
  */
@@ -189,5 +216,40 @@ module.exports.dress = async (event) => {
   } catch (err) {
     console.error('Error fetching dress shops:', err);
     return error('Failed to fetch dress shops');
+  }
+};
+
+/**
+ * 메이크업 검색 API
+ */
+module.exports.makeup = async (event) => {
+  try {
+    const { limit = 50 } = event.queryStringParameters || {};
+
+    // 로컬 환경에서는 모의 데이터 반환
+    if (isOffline) {
+      console.log('🔧 Running in offline mode - returning mock data');
+      return success({
+        category: 'makeup-shops',
+        count: mockMakeupShops.length,
+        items: mockMakeupShops.slice(0, parseInt(limit)),
+        isOffline: true,
+        message: '로컬 개발 환경입니다. 모의 데이터를 반환합니다.'
+      });
+    }
+
+    const items = await getItemsByCategory(
+      CATEGORIES.MAKEUP,
+      parseInt(limit)
+    );
+
+    return success({
+      category: 'makeup-shops',
+      count: items.length,
+      items
+    });
+  } catch (err) {
+    console.error('Error fetching makeup shops:', err);
+    return error('Failed to fetch makeup shops');
   }
 };

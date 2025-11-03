@@ -53,6 +53,14 @@ functions:
       - schedule: rate(1 day)
     timeout: 300
 
+  # 메이크업 스크래핑 Lambda 함수
+  scrapeMakeup:
+    handler: src/handlers/makeup.scrape
+    description: 메이크업 정보를 스크래핑하여 DB에 저장
+    events:
+      - schedule: rate(1 day)
+    timeout: 300
+
   # 웨딩홀 검색 API
   searchWeddingHalls:
     handler: src/handlers/search.weddingHalls
@@ -80,6 +88,16 @@ functions:
     events:
       - http:
           path: /api/dress
+          method: get
+          cors: true
+
+  # 메이크업 검색 API
+  searchMakeup:
+    handler: src/handlers/search.makeup
+    description: 메이크업 검색 API
+    events:
+      - http:
+          path: /api/makeup
           method: get
           cors: true
 

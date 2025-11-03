@@ -18,15 +18,19 @@ class StudioScraper extends BaseScraper {
       const $ = this.parseHTML(html);
       const studios = [];
 
-      // TODO: 실제 웹사이트 구조에 맞게 셀렉터 수정 필요
-      // 예시 구조입니다
-      $('.studio-item').each((index, element) => {
-        const name = $(element).find('.studio-name').text().trim();
-        const location = $(element).find('.studio-location').text().trim();
-        const style = $(element).find('.studio-style').text().trim();
-        const price = $(element).find('.studio-price').text().trim();
-        const imageUrl = $(element).find('.studio-image img').attr('src');
-        const detailUrl = $(element).find('a').attr('href');
+      // 테스트 HTML 구조에 맞춘 셀렉터
+      $('.product-item').each((index, element) => {
+        const $elem = $(element);
+
+        const name = this.cleanText($elem.find('.product-name').text());
+        const location = this.cleanText($elem.find('.product-location').text());
+        const style = this.cleanText($elem.find('.product-style').text());
+        const price = this.cleanText($elem.find('.product-price').text());
+        const rating = this.cleanText($elem.find('.star-rating').text());
+        const reviewCount = this.cleanText($elem.find('.review-count').text());
+        const description = this.cleanText($elem.find('.product-desc').text());
+        const imageUrl = $elem.find('.product-image img').attr('src');
+        const detailUrl = $elem.find('.product-link').attr('href');
 
         if (name) {
           studios.push(this.cleanData({
@@ -37,6 +41,9 @@ class StudioScraper extends BaseScraper {
             location,
             style,
             price,
+            rating: rating ? parseFloat(rating) : null,
+            reviewCount,
+            description,
             imageUrl,
             detailUrl,
             source: this.url
@@ -44,10 +51,10 @@ class StudioScraper extends BaseScraper {
         }
       });
 
-      console.log(`Scraped ${studios.length} studios from ${this.url}`);
+      console.log(`✅ Scraped ${studios.length} studios from ${this.url}`);
       return studios;
     } catch (error) {
-      console.error('Studio scraping error:', error);
+      console.error('❌ Studio scraping error:', error);
       return [];
     }
   }
