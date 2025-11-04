@@ -24,6 +24,18 @@ export default function DateInputScreen({ navigation, timeline }) {
     return `${year}.${month}.${day}`;
   };
 
+  const handleWeddingDateChange = (event, selectedDate) => {
+    const currentDate = selectedDate || weddingDate;
+    setShowWeddingPicker(false);
+    setWeddingDate(currentDate);
+  };
+
+  const handleStartDateChange = (event, selectedDate) => {
+    const currentDate = selectedDate || startDate;
+    setShowStartPicker(false);
+    setStartDate(currentDate);
+  };
+
   const handleCreateTimeline = async () => {
     if (startDate >= weddingDate) {
       Alert.alert('오류', '결혼식 날짜는 준비 시작일보다 이후여야 합니다.');
@@ -55,13 +67,8 @@ export default function DateInputScreen({ navigation, timeline }) {
               <DateTimePicker
                 value={weddingDate}
                 mode="date"
-                display="default"
-                onChange={(event, selectedDate) => {
-                  setShowWeddingPicker(Platform.OS === 'ios');
-                  if (selectedDate) {
-                    setWeddingDate(selectedDate);
-                  }
-                }}
+                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                onChange={handleWeddingDateChange}
               />
             )}
           </View>
@@ -79,13 +86,8 @@ export default function DateInputScreen({ navigation, timeline }) {
               <DateTimePicker
                 value={startDate}
                 mode="date"
-                display="default"
-                onChange={(event, selectedDate) => {
-                  setShowStartPicker(Platform.OS === 'ios');
-                  if (selectedDate) {
-                    setStartDate(selectedDate);
-                  }
-                }}
+                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                onChange={handleStartDateChange}
               />
             )}
           </View>

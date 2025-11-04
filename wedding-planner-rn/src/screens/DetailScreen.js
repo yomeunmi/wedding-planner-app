@@ -23,18 +23,14 @@ export default function DetailScreen({ route, navigation, timeline }) {
     Alert.alert('알림', completed ? `${currentItem.title} 완료! 🎉` : `${currentItem.title} 완료 취소`);
   };
 
-  const handleDateChange = (event, selectedDate) => {
-    setShowDatePicker(Platform.OS === 'ios');
+  const handleDateChange = async (event, selectedDate) => {
+    setShowDatePicker(false);
     if (selectedDate) {
       setTempDate(selectedDate);
+      await timeline.updateItemDate(currentItem.id, selectedDate);
+      setCurrentItem({ ...currentItem, date: selectedDate });
+      Alert.alert('알림', '날짜가 변경되었습니다.');
     }
-  };
-
-  const handleSaveDate = async () => {
-    await timeline.updateItemDate(currentItem.id, tempDate);
-    setCurrentItem({ ...currentItem, date: tempDate });
-    setShowDatePicker(false);
-    Alert.alert('알림', '날짜가 변경되었습니다.');
   };
 
   return (
@@ -59,19 +55,12 @@ export default function DetailScreen({ route, navigation, timeline }) {
             <Text style={styles.editIcon}>✏️</Text>
           </TouchableOpacity>
           {showDatePicker && (
-            <>
-              <DateTimePicker
-                value={tempDate}
-                mode="date"
-                display="default"
-                onChange={handleDateChange}
-              />
-              {Platform.OS === 'ios' && (
-                <TouchableOpacity style={styles.saveDateButton} onPress={handleSaveDate}>
-                  <Text style={styles.saveDateText}>날짜 저장</Text>
-                </TouchableOpacity>
-              )}
-            </>
+            <DateTimePicker
+              value={tempDate}
+              mode="date"
+              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+              onChange={handleDateChange}
+            />
           )}
         </View>
 
