@@ -54,24 +54,6 @@ export default function DateInputScreen({ navigation, timeline }) {
         <Text style={styles.subtitle}>결혼 준비 일정 설정</Text>
 
         <View style={styles.form}>
-          {/* 결혼식 날짜 */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>결혼식 날짜</Text>
-            <TouchableOpacity
-              style={styles.dateButton}
-              onPress={() => setShowWeddingPicker(true)}
-            >
-              <Text style={styles.dateText}>{formatDate(weddingDate)}</Text>
-            </TouchableOpacity>
-            {showWeddingPicker && (
-              <DateTimePicker
-                value={weddingDate}
-                mode="date"
-                onChange={handleWeddingDateChange}
-              />
-            )}
-          </View>
-
           {/* 준비 시작일 */}
           <View style={styles.inputGroup}>
             <Text style={styles.label}>준비 시작일</Text>
@@ -90,6 +72,24 @@ export default function DateInputScreen({ navigation, timeline }) {
             )}
           </View>
 
+          {/* 결혼식 날짜 */}
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>결혼식 날짜</Text>
+            <TouchableOpacity
+              style={styles.dateButton}
+              onPress={() => setShowWeddingPicker(true)}
+            >
+              <Text style={styles.dateText}>{formatDate(weddingDate)}</Text>
+            </TouchableOpacity>
+            {showWeddingPicker && (
+              <DateTimePicker
+                value={weddingDate}
+                mode="date"
+                onChange={handleWeddingDateChange}
+              />
+            )}
+          </View>
+
           {/* 일정 만들기 버튼 */}
           <TouchableOpacity
             style={styles.submitButton}
@@ -101,7 +101,7 @@ export default function DateInputScreen({ navigation, timeline }) {
 
         <View style={styles.infoBox}>
           <Text style={styles.infoText}>
-            💡 결혼식 날짜와 준비를 시작하는 날짜를 입력하면,{'\n'}
+            💡 준비를 시작하는 날짜와 결혼식 날짜를 입력하면,{'\n'}
             맞춤형 웨딩 준비 일정을 자동으로 만들어드립니다!
           </Text>
         </View>
@@ -124,7 +124,7 @@ const styles = StyleSheet.create({
     fontFamily: 'PoorStory_400Regular',
     color: COLORS.darkPink,
     textAlign: 'center',
-    marginTop: 40,
+    marginTop: 80,
     marginBottom: 8,
   },
   subtitle: {
