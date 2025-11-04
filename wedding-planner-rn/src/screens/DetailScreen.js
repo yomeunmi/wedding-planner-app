@@ -5,7 +5,6 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Platform,
   Alert,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -70,11 +69,13 @@ export default function DetailScreen({ route, navigation, timeline }) {
         </View>
 
         {/* 팁 */}
-        <View style={styles.section}>
+        <View style={styles.tipsSection}>
           <Text style={styles.sectionTitle}>💡 준비 팁</Text>
           {currentItem.tips.map((tip, index) => (
-            <View key={index} style={styles.tipItem}>
-              <Text style={styles.tipBullet}>•</Text>
+            <View key={index} style={styles.tipCard}>
+              <View style={styles.tipNumber}>
+                <Text style={styles.tipNumberText}>{index + 1}</Text>
+              </View>
               <Text style={styles.tipText}>{tip}</Text>
             </View>
           ))}
@@ -130,6 +131,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
+    fontFamily: 'Gugi_400Regular',
     color: COLORS.darkPink,
     textAlign: 'center',
     marginBottom: 24,
@@ -139,9 +141,15 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   dateLabel: {
     fontSize: 14,
+    fontFamily: 'Gugi_400Regular',
     color: COLORS.textGray,
     marginBottom: 8,
   },
@@ -149,64 +157,83 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    borderWidth: 1,
+    borderWidth: 2,
     borderColor: COLORS.darkPink,
     borderRadius: 8,
     padding: 12,
   },
   dateText: {
     fontSize: 16,
+    fontFamily: 'Gugi_400Regular',
     color: COLORS.textDark,
-    fontWeight: '600',
   },
   editIcon: {
     fontSize: 16,
-  },
-  saveDateButton: {
-    backgroundColor: COLORS.darkPink,
-    borderRadius: 8,
-    padding: 12,
-    marginTop: 12,
-  },
-  saveDateText: {
-    color: COLORS.white,
-    fontSize: 16,
-    fontWeight: '600',
-    textAlign: 'center',
   },
   section: {
     backgroundColor: COLORS.white,
     borderRadius: 12,
     padding: 20,
     marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
-    color: COLORS.textDark,
-    marginBottom: 12,
+    fontFamily: 'Gugi_400Regular',
+    color: COLORS.darkPink,
+    marginBottom: 16,
   },
   description: {
     fontSize: 15,
+    fontFamily: 'Gugi_400Regular',
     color: COLORS.textDark,
-    lineHeight: 24,
+    lineHeight: 28,
   },
-  tipItem: {
-    flexDirection: 'row',
+  tipsSection: {
+    marginBottom: 16,
+  },
+  tipCard: {
+    backgroundColor: COLORS.white,
+    borderRadius: 12,
+    padding: 16,
     marginBottom: 12,
-    paddingRight: 8,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    borderLeftWidth: 4,
+    borderLeftColor: COLORS.darkPink,
   },
-  tipBullet: {
-    fontSize: 16,
-    color: COLORS.darkPink,
-    marginRight: 8,
+  tipNumber: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: COLORS.darkPink,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
     marginTop: 2,
+  },
+  tipNumberText: {
+    color: COLORS.white,
+    fontSize: 14,
+    fontWeight: 'bold',
+    fontFamily: 'Gugi_400Regular',
   },
   tipText: {
     flex: 1,
     fontSize: 14,
+    fontFamily: 'Gugi_400Regular',
     color: COLORS.textDark,
-    lineHeight: 22,
+    lineHeight: 24,
   },
   completedButton: {
     backgroundColor: COLORS.darkPink,
@@ -214,6 +241,11 @@ const styles = StyleSheet.create({
     padding: 18,
     marginTop: 8,
     marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+    elevation: 5,
   },
   completedButtonActive: {
     backgroundColor: COLORS.textGray,
@@ -222,11 +254,12 @@ const styles = StyleSheet.create({
     color: COLORS.white,
     fontSize: 18,
     fontWeight: 'bold',
+    fontFamily: 'Gugi_400Regular',
     textAlign: 'center',
   },
   backButton: {
     backgroundColor: COLORS.white,
-    borderWidth: 1,
+    borderWidth: 2,
     borderColor: COLORS.darkPink,
     borderRadius: 12,
     padding: 16,
@@ -235,7 +268,7 @@ const styles = StyleSheet.create({
   backButtonText: {
     color: COLORS.darkPink,
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: 'Gugi_400Regular',
     textAlign: 'center',
   },
 });
