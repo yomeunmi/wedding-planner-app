@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { StatusBar } from 'expo-status-bar';
 import { WeddingTimeline } from './src/utils/WeddingTimeline';
 
 import DateInputScreen from './src/screens/DateInputScreen';
@@ -34,15 +33,13 @@ export default function App() {
   }
 
   return (
-    <>
-      <StatusBar style="dark" />
-      <NavigationContainer>
-        <Stack.Navigator
-          initialRouteName={initialRoute}
-          screenOptions={{
-            headerShown: false,
-          }}
-        >
+    <NavigationContainer>
+      <Stack.Navigator
+        initialRouteName={initialRoute}
+        screenOptions={{
+          headerShown: false,
+        }}
+      >
           <Stack.Screen name="DateInput">
             {(props) => <DateInputScreen {...props} timeline={timeline} />}
           </Stack.Screen>
@@ -57,6 +54,5 @@ export default function App() {
           </Stack.Screen>
         </Stack.Navigator>
       </NavigationContainer>
-    </>
   );
 }
