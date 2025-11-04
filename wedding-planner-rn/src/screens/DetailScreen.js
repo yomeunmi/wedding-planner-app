@@ -58,7 +58,6 @@ export default function DetailScreen({ route, navigation, timeline }) {
             <DateTimePicker
               value={tempDate}
               mode="date"
-              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
               onChange={handleDateChange}
             />
           )}

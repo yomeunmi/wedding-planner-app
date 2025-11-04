@@ -67,7 +67,6 @@ export default function DateInputScreen({ navigation, timeline }) {
               <DateTimePicker
                 value={weddingDate}
                 mode="date"
-                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
                 onChange={handleWeddingDateChange}
               />
             )}
@@ -86,7 +85,6 @@ export default function DateInputScreen({ navigation, timeline }) {
               <DateTimePicker
                 value={startDate}
                 mode="date"
-                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
                 onChange={handleStartDateChange}
               />
             )}
