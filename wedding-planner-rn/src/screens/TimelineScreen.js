@@ -157,10 +157,12 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 24,
     fontWeight: 'bold',
+    fontFamily: 'Gugi_400Regular',
     color: COLORS.darkPink,
   },
   myPageButton: {
     fontSize: 14,
+    fontFamily: 'Gugi_400Regular',
     color: COLORS.darkPink,
     fontWeight: '600',
   },
@@ -169,6 +171,7 @@ const styles = StyleSheet.create({
   },
   dateRangeText: {
     fontSize: 14,
+    fontFamily: 'Gugi_400Regular',
     color: COLORS.textGray,
   },
   statsRow: {
@@ -184,22 +187,26 @@ const styles = StyleSheet.create({
   },
   dDayLabel: {
     fontSize: 12,
+    fontFamily: 'Gugi_400Regular',
     color: COLORS.textGray,
     marginBottom: 4,
   },
   dDayValue: {
     fontSize: 20,
     fontWeight: 'bold',
+    fontFamily: 'Gugi_400Regular',
     color: COLORS.darkPink,
   },
   completedLabel: {
     fontSize: 12,
+    fontFamily: 'Gugi_400Regular',
     color: COLORS.textGray,
     marginBottom: 4,
   },
   completedValue: {
     fontSize: 20,
     fontWeight: 'bold',
+    fontFamily: 'Gugi_400Regular',
     color: COLORS.darkPink,
   },
   listContent: {
@@ -244,6 +251,7 @@ const styles = StyleSheet.create({
   timelineTitle: {
     fontSize: 16,
     fontWeight: '600',
+    fontFamily: 'Gugi_400Regular',
     color: COLORS.textDark,
   },
   completedText: {
@@ -252,11 +260,13 @@ const styles = StyleSheet.create({
   },
   checkMark: {
     fontSize: 14,
+    fontFamily: 'Gugi_400Regular',
     color: COLORS.darkPink,
     marginLeft: 8,
   },
   timelineDate: {
     fontSize: 14,
+    fontFamily: 'Gugi_400Regular',
     color: COLORS.textGray,
   },
   arrow: {
@@ -280,6 +290,7 @@ const styles = StyleSheet.create({
     color: COLORS.darkPink,
     fontSize: 16,
     fontWeight: '600',
+    fontFamily: 'Gugi_400Regular',
     textAlign: 'center',
   },
 });

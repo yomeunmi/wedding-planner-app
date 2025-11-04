@@ -206,6 +206,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
+    fontFamily: 'Gugi_400Regular',
     color: COLORS.darkPink,
   },
   section: {
@@ -213,10 +214,16 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 20,
     marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
+    fontFamily: 'Gugi_400Regular',
     color: COLORS.textDark,
     marginBottom: 16,
   },
@@ -227,6 +234,7 @@ const styles = StyleSheet.create({
   },
   nicknameText: {
     fontSize: 16,
+    fontFamily: 'Gugi_400Regular',
     color: COLORS.textDark,
   },
   editButton: {
@@ -235,6 +243,7 @@ const styles = StyleSheet.create({
   },
   editButtonText: {
     fontSize: 14,
+    fontFamily: 'Gugi_400Regular',
     color: COLORS.darkPink,
     fontWeight: '600',
   },
@@ -247,6 +256,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
+    fontFamily: 'Gugi_400Regular',
   },
   editButtons: {
     flexDirection: 'row',
@@ -262,6 +272,7 @@ const styles = StyleSheet.create({
     color: COLORS.white,
     fontSize: 16,
     fontWeight: '600',
+    fontFamily: 'Gugi_400Regular',
     textAlign: 'center',
   },
   cancelButton: {
@@ -276,6 +287,7 @@ const styles = StyleSheet.create({
     color: COLORS.darkPink,
     fontSize: 16,
     fontWeight: '600',
+    fontFamily: 'Gugi_400Regular',
     textAlign: 'center',
   },
   infoRow: {
@@ -287,11 +299,13 @@ const styles = StyleSheet.create({
   },
   infoLabel: {
     fontSize: 15,
+    fontFamily: 'Gugi_400Regular',
     color: COLORS.textGray,
   },
   infoValue: {
     fontSize: 15,
     fontWeight: '600',
+    fontFamily: 'Gugi_400Regular',
     color: COLORS.textDark,
   },
   dDayValue: {
@@ -305,6 +319,7 @@ const styles = StyleSheet.create({
   },
   completedSummary: {
     fontSize: 14,
+    fontFamily: 'Gugi_400Regular',
     color: COLORS.darkPink,
     fontWeight: '600',
   },
@@ -330,6 +345,7 @@ const styles = StyleSheet.create({
   checklistTitle: {
     fontSize: 15,
     fontWeight: '600',
+    fontFamily: 'Gugi_400Regular',
     color: COLORS.textDark,
   },
   completedText: {
@@ -338,11 +354,13 @@ const styles = StyleSheet.create({
   },
   checklistCompleted: {
     fontSize: 13,
+    fontFamily: 'Gugi_400Regular',
     color: COLORS.darkPink,
     marginLeft: 8,
   },
   checklistDate: {
     fontSize: 13,
+    fontFamily: 'Gugi_400Regular',
     color: COLORS.textGray,
   },
   checklistStatus: {
@@ -354,7 +372,7 @@ const styles = StyleSheet.create({
   },
   backButton: {
     backgroundColor: COLORS.white,
-    borderWidth: 1,
+    borderWidth: 2,
     borderColor: COLORS.darkPink,
     borderRadius: 12,
     padding: 16,
@@ -364,6 +382,7 @@ const styles = StyleSheet.create({
     color: COLORS.darkPink,
     fontSize: 16,
     fontWeight: '600',
+    fontFamily: 'Gugi_400Regular',
     textAlign: 'center',
   },
 });

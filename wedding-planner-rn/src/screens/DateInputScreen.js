@@ -121,6 +121,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontWeight: 'bold',
+    fontFamily: 'Gugi_400Regular',
     color: COLORS.darkPink,
     textAlign: 'center',
     marginTop: 40,
@@ -128,6 +129,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 18,
+    fontFamily: 'Gugi_400Regular',
     color: COLORS.textGray,
     textAlign: 'center',
     marginBottom: 40,
@@ -148,6 +150,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     fontWeight: '600',
+    fontFamily: 'Gugi_400Regular',
     color: COLORS.textDark,
     marginBottom: 12,
   },
@@ -160,6 +163,7 @@ const styles = StyleSheet.create({
   },
   dateText: {
     fontSize: 18,
+    fontFamily: 'Gugi_400Regular',
     color: COLORS.textDark,
     textAlign: 'center',
   },
@@ -168,11 +172,17 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 18,
     marginTop: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+    elevation: 5,
   },
   submitButtonText: {
     color: COLORS.white,
     fontSize: 18,
     fontWeight: 'bold',
+    fontFamily: 'Gugi_400Regular',
     textAlign: 'center',
   },
   infoBox: {
@@ -183,7 +193,8 @@ const styles = StyleSheet.create({
   },
   infoText: {
     fontSize: 14,
+    fontFamily: 'Gugi_400Regular',
     color: COLORS.textDark,
-    lineHeight: 22,
+    lineHeight: 24,
   },
 });
