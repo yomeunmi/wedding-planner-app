@@ -63,7 +63,7 @@ export default function MyPageScreen({ navigation, timeline }) {
       <View style={styles.content}>
         {/* 헤더 */}
         <View style={styles.header}>
-          <Text style={styles.title}>👤 마이페이지</Text>
+          <Text style={styles.title}>마이페이지</Text>
         </View>
 
         {/* 닉네임 섹션 */}
@@ -198,7 +198,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 20,
-    paddingTop: 60,
+    paddingTop: 80,
   },
   header: {
     marginBottom: 24,
