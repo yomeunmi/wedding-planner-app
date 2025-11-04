@@ -131,7 +131,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    fontFamily: 'Gugi_400Regular',
+    fontFamily: 'PoorStory_400Regular',
     color: COLORS.darkPink,
     textAlign: 'center',
     marginBottom: 24,
@@ -149,7 +149,7 @@ const styles = StyleSheet.create({
   },
   dateLabel: {
     fontSize: 14,
-    fontFamily: 'Gugi_400Regular',
+    fontFamily: 'PoorStory_400Regular',
     color: COLORS.textGray,
     marginBottom: 8,
   },
@@ -164,7 +164,7 @@ const styles = StyleSheet.create({
   },
   dateText: {
     fontSize: 16,
-    fontFamily: 'Gugi_400Regular',
+    fontFamily: 'PoorStory_400Regular',
     color: COLORS.textDark,
   },
   editIcon: {
@@ -184,13 +184,13 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    fontFamily: 'Gugi_400Regular',
+    fontFamily: 'PoorStory_400Regular',
     color: COLORS.darkPink,
     marginBottom: 16,
   },
   description: {
     fontSize: 15,
-    fontFamily: 'Gugi_400Regular',
+    fontFamily: 'PoorStory_400Regular',
     color: COLORS.textDark,
     lineHeight: 28,
   },
@@ -226,12 +226,12 @@ const styles = StyleSheet.create({
     color: COLORS.white,
     fontSize: 14,
     fontWeight: 'bold',
-    fontFamily: 'Gugi_400Regular',
+    fontFamily: 'PoorStory_400Regular',
   },
   tipText: {
     flex: 1,
     fontSize: 14,
-    fontFamily: 'Gugi_400Regular',
+    fontFamily: 'PoorStory_400Regular',
     color: COLORS.textDark,
     lineHeight: 24,
   },
@@ -254,7 +254,7 @@ const styles = StyleSheet.create({
     color: COLORS.white,
     fontSize: 18,
     fontWeight: 'bold',
-    fontFamily: 'Gugi_400Regular',
+    fontFamily: 'PoorStory_400Regular',
     textAlign: 'center',
   },
   backButton: {
@@ -268,7 +268,7 @@ const styles = StyleSheet.create({
   backButtonText: {
     color: COLORS.darkPink,
     fontSize: 16,
-    fontFamily: 'Gugi_400Regular',
+    fontFamily: 'PoorStory_400Regular',
     textAlign: 'center',
   },
 });

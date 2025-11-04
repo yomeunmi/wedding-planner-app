@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { View, ActivityIndicator } from 'react-native';
-import { useFonts, Gugi_400Regular } from '@expo-google-fonts/gugi';
+import { useFonts, PoorStory_400Regular } from '@expo-google-fonts/poor-story';
 import { WeddingTimeline } from './src/utils/WeddingTimeline';
 
 import DateInputScreen from './src/screens/DateInputScreen';
@@ -16,9 +16,9 @@ export default function App() {
   const [timeline] = useState(new WeddingTimeline());
   const [initialRoute, setInitialRoute] = useState(null);
 
-  // Gugi 폰트 로드
+  // Poor Story 폰트 로드
   const [fontsLoaded] = useFonts({
-    Gugi_400Regular,
+    PoorStory_400Regular,
   });
 
   useEffect(() => {
