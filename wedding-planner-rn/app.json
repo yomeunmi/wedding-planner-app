@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "wedding-planner-rn",
-    "slug": "wedding-planner-rn",
+    "name": "웨딩플래너",
+    "slug": "wedding-planner",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -12,13 +12,16 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.yomeunmi.weddingplanner",
+      "buildNumber": "1.0.0"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.yomeunmi.weddingplanner"
     },
     "web": {
       "favicon": "./assets/favicon.png"
