@@ -48,7 +48,7 @@ export default function DetailScreen({ route, navigation, timeline }) {
         if (savedHalls) setWeddingHalls(JSON.parse(savedHalls));
       }
 
-      if (currentItem.id === 'dress-tour') {
+      if (currentItem.id === 'dress-shop-selection' || currentItem.id === 'dress-tour') {
         const savedImages = await AsyncStorage.getItem(`dress-images-${currentItem.id}`);
         if (savedImages) setDressImages(JSON.parse(savedImages));
       }
@@ -65,7 +65,7 @@ export default function DetailScreen({ route, navigation, timeline }) {
         await AsyncStorage.setItem(`wedding-halls-${currentItem.id}`, JSON.stringify(weddingHalls));
       }
 
-      if (currentItem.id === 'dress-tour') {
+      if (currentItem.id === 'dress-shop-selection' || currentItem.id === 'dress-tour') {
         await AsyncStorage.setItem(`dress-images-${currentItem.id}`, JSON.stringify(dressImages));
       }
     } catch (error) {
@@ -253,8 +253,8 @@ export default function DetailScreen({ route, navigation, timeline }) {
           </View>
         )}
 
-        {/* 드레스 스크랩 - dress-tour일 때만 표시 */}
-        {currentItem.id === 'dress-tour' && (
+        {/* 드레스 스크랩 - dress-shop-selection 또는 dress-tour일 때 표시 */}
+        {(currentItem.id === 'dress-shop-selection' || currentItem.id === 'dress-tour') && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>📷 드레스 스크랩</Text>
