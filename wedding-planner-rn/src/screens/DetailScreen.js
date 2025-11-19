@@ -29,8 +29,8 @@ export default function DetailScreen({ route, navigation, timeline }) {
   const [tempMemo, setTempMemo] = useState('');
   const [isEditingMemo, setIsEditingMemo] = useState(false);
   const [weddingHalls, setWeddingHalls] = useState([
-    { id: 1, name: '', location: '', date: '', memo: '' },
-    { id: 2, name: '', location: '', date: '', memo: '' },
+    { id: 1, name: '', location: '', date: '', memo: '', isLocked: false, isSelected: false },
+    { id: 2, name: '', location: '', date: '', memo: '', isLocked: false, isSelected: false },
   ]);
   const [dressImages, setDressImages] = useState([]);
   const [studioImages, setStudioImages] = useState([]);
@@ -137,7 +137,7 @@ export default function DetailScreen({ route, navigation, timeline }) {
   // 웨딩홀 추가
   const addWeddingHall = () => {
     const newId = weddingHalls.length > 0 ? Math.max(...weddingHalls.map(h => h.id)) + 1 : 1;
-    setWeddingHalls([...weddingHalls, { id: newId, name: '', location: '', date: '', memo: '' }]);
+    setWeddingHalls([...weddingHalls, { id: newId, name: '', location: '', date: '', memo: '', isLocked: false, isSelected: false }]);
   };
 
   // 웨딩홀 삭제
@@ -154,6 +154,21 @@ export default function DetailScreen({ route, navigation, timeline }) {
     setWeddingHalls(weddingHalls.map(hall =>
       hall.id === id ? { ...hall, [field]: value } : hall
     ));
+  };
+
+  // 웨딩홀 잠금 토글
+  const toggleWeddingHallLock = (id) => {
+    setWeddingHalls(weddingHalls.map(hall =>
+      hall.id === id ? { ...hall, isLocked: !hall.isLocked } : hall
+    ));
+  };
+
+  // 웨딩홀 선택
+  const selectWeddingHall = (id) => {
+    setWeddingHalls(weddingHalls.map(hall =>
+      hall.id === id ? { ...hall, isSelected: true } : { ...hall, isSelected: false }
+    ));
+    Alert.alert('알림', '웨딩홀이 선택되었습니다! 🎊');
   };
 
   // 드레스 이미지 선택
@@ -300,43 +315,74 @@ export default function DetailScreen({ route, navigation, timeline }) {
               </View>
             </View>
             {weddingHalls.map((hall, index) => (
-              <View key={hall.id} style={styles.hallCard}>
+              <View key={hall.id} style={[
+                styles.hallCard,
+                hall.isSelected && styles.hallCardSelected,
+                hall.isLocked && styles.hallCardLocked,
+              ]}>
                 <View style={styles.hallHeader}>
-                  <Text style={styles.hallNumber}>{index + 1}번째 웨딩홀</Text>
-                  {weddingHalls.length > 1 && (
+                  <View style={styles.hallTitleRow}>
+                    <Text style={styles.hallNumber}>{index + 1}번째 웨딩홀</Text>
+                    {hall.isSelected && (
+                      <View style={styles.selectedBadge}>
+                        <Text style={styles.selectedBadgeText}>✓ 선택됨</Text>
+                      </View>
+                    )}
+                  </View>
+                  <View style={styles.hallActionButtons}>
                     <TouchableOpacity
-                      style={styles.removeButton}
-                      onPress={() => removeWeddingHall(hall.id)}
+                      style={[styles.lockButton, hall.isLocked && styles.lockButtonActive]}
+                      onPress={() => toggleWeddingHallLock(hall.id)}
                     >
-                      <Text style={styles.buttonText}>-</Text>
+                      <Text style={styles.lockButtonText}>{hall.isLocked ? '🔒' : '🔓'}</Text>
                     </TouchableOpacity>
-                  )}
+                    {weddingHalls.length > 1 && (
+                      <TouchableOpacity
+                        style={styles.removeButton}
+                        onPress={() => removeWeddingHall(hall.id)}
+                      >
+                        <Text style={styles.buttonText}>-</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
                 </View>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, hall.isLocked && styles.inputDisabled]}
                   placeholder="웨딩홀 이름"
                   value={hall.name}
                   onChangeText={(text) => updateWeddingHall(hall.id, 'name', text)}
+                  editable={!hall.isLocked}
                 />
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, hall.isLocked && styles.inputDisabled]}
                   placeholder="위치"
                   value={hall.location}
                   onChangeText={(text) => updateWeddingHall(hall.id, 'location', text)}
+                  editable={!hall.isLocked}
                 />
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, hall.isLocked && styles.inputDisabled]}
                   placeholder="투어 날짜 (예: 2025.01.15)"
                   value={hall.date}
                   onChangeText={(text) => updateWeddingHall(hall.id, 'date', text)}
+                  editable={!hall.isLocked}
                 />
                 <TextInput
-                  style={[styles.input, styles.memoInput]}
+                  style={[styles.input, styles.memoInput, hall.isLocked && styles.inputDisabled]}
                   placeholder="메모"
                   value={hall.memo}
                   onChangeText={(text) => updateWeddingHall(hall.id, 'memo', text)}
                   multiline
+                  editable={!hall.isLocked}
                 />
+                {!hall.isSelected && (
+                  <TouchableOpacity
+                    style={styles.selectHallButton}
+                    onPress={() => selectWeddingHall(hall.id)}
+                  >
+                    <Text style={styles.selectHallButtonText}>이 웨딩홀 선택하기</Text>
+                  </TouchableOpacity>
+                )}
               </View>
             ))}
           </View>
@@ -721,17 +767,61 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.lightPink,
   },
+  hallCardSelected: {
+    borderWidth: 2,
+    borderColor: COLORS.darkPink,
+    backgroundColor: '#FFF5F8',
+  },
+  hallCardLocked: {
+    opacity: 0.7,
+  },
   hallHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 8,
   },
+  hallTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   hallNumber: {
     fontSize: 16,
     fontWeight: 'bold',
     fontFamily: 'GowunDodum_400Regular',
     color: COLORS.darkPink,
+  },
+  selectedBadge: {
+    backgroundColor: COLORS.darkPink,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+  },
+  selectedBadgeText: {
+    color: COLORS.white,
+    fontSize: 11,
+    fontWeight: 'bold',
+    fontFamily: 'GowunDodum_400Regular',
+  },
+  hallActionButtons: {
+    flexDirection: 'row',
+    gap: 8,
+    alignItems: 'center',
+  },
+  lockButton: {
+    backgroundColor: COLORS.lightPink,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  lockButtonActive: {
+    backgroundColor: COLORS.darkPink,
+  },
+  lockButtonText: {
+    fontSize: 14,
   },
   input: {
     backgroundColor: COLORS.white,
@@ -744,9 +834,27 @@ const styles = StyleSheet.create({
     fontFamily: 'GowunDodum_400Regular',
     color: COLORS.textDark,
   },
+  inputDisabled: {
+    backgroundColor: COLORS.background,
+    opacity: 0.6,
+  },
   memoInput: {
     minHeight: 80,
     textAlignVertical: 'top',
+  },
+  selectHallButton: {
+    backgroundColor: COLORS.darkPink,
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    marginTop: 8,
+  },
+  selectHallButtonText: {
+    color: COLORS.white,
+    fontSize: 14,
+    fontWeight: 'bold',
+    fontFamily: 'GowunDodum_400Regular',
+    textAlign: 'center',
   },
   addImageButton: {
     backgroundColor: COLORS.darkPink,
