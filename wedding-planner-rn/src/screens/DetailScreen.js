@@ -18,6 +18,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { COLORS } from '../constants/colors';
+import ZoomableImage from '../components/ZoomableImage';
 
 export default function DetailScreen({ route, navigation, timeline }) {
   const { item } = route.params;
@@ -511,7 +512,7 @@ export default function DetailScreen({ route, navigation, timeline }) {
           })}
           renderItem={({ item }) => (
             <View style={styles.modalImageContainer}>
-              <Image source={{ uri: item.uri }} style={styles.modalImage} resizeMode="contain" />
+              <ZoomableImage uri={item.uri} />
             </View>
           )}
           keyExtractor={(item) => item.id.toString()}
