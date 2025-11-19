@@ -29,13 +29,17 @@ export default function DetailScreen({ route, navigation, timeline }) {
   const [tempMemo, setTempMemo] = useState('');
   const [isEditingMemo, setIsEditingMemo] = useState(false);
   const [weddingHalls, setWeddingHalls] = useState([
-    { id: 1, name: '', location: '', date: '', memo: '', isLocked: false, isSelected: false },
-    { id: 2, name: '', location: '', date: '', memo: '', isLocked: false, isSelected: false },
+    { id: 1, name: '', location: '', date: '', memo: '', isEditing: true, isSelected: false },
+    { id: 2, name: '', location: '', date: '', memo: '', isEditing: true, isSelected: false },
   ]);
+  const [tempWeddingHalls, setTempWeddingHalls] = useState({});
   const [dressShops, setDressShops] = useState([
-    { id: 1, name: '', location: '', date: '', memo: '', isLocked: false, isSelected: false },
-    { id: 2, name: '', location: '', date: '', memo: '', isLocked: false, isSelected: false },
+    { id: 1, name: '', location: '', date: '', memo: '', isEditing: true, isSelected: false },
+    { id: 2, name: '', location: '', date: '', memo: '', isEditing: true, isSelected: false },
   ]);
+  const [tempDressShops, setTempDressShops] = useState({});
+  const [selectedDressShop, setSelectedDressShop] = useState(null);
+  const [selectedWeddingHall, setSelectedWeddingHall] = useState(null);
   const [dressImages, setDressImages] = useState([]);
   const [studioImages, setStudioImages] = useState([]);
   const [makeupImages, setMakeupImages] = useState([]);
@@ -85,6 +89,18 @@ export default function DetailScreen({ route, navigation, timeline }) {
       if (currentItem.id === 'makeup') {
         const savedImages = await AsyncStorage.getItem(`makeup-images-${currentItem.id}`);
         if (savedImages) setMakeupImages(JSON.parse(savedImages));
+      }
+
+      // 본식 드레스 가봉 페이지에서 선택된 드레스샵 정보 로드
+      if (currentItem.id === 'dress-fitting') {
+        const savedDressShop = await AsyncStorage.getItem('selected-dress-shop');
+        if (savedDressShop) setSelectedDressShop(JSON.parse(savedDressShop));
+      }
+
+      // 결혼식 당일 페이지에서 선택된 웨딩홀 정보 로드
+      if (currentItem.id === 'wedding-day') {
+        const savedWeddingHall = await AsyncStorage.getItem('selected-wedding-hall');
+        if (savedWeddingHall) setSelectedWeddingHall(JSON.parse(savedWeddingHall));
       }
     } catch (error) {
       console.error('데이터 불러오기 실패:', error);
@@ -152,7 +168,7 @@ export default function DetailScreen({ route, navigation, timeline }) {
   // 웨딩홀 추가
   const addWeddingHall = () => {
     const newId = weddingHalls.length > 0 ? Math.max(...weddingHalls.map(h => h.id)) + 1 : 1;
-    setWeddingHalls([...weddingHalls, { id: newId, name: '', location: '', date: '', memo: '', isLocked: false, isSelected: false }]);
+    setWeddingHalls([...weddingHalls, { id: newId, name: '', location: '', date: '', memo: '', isEditing: true, isSelected: false }]);
   };
 
   // 웨딩홀 삭제
@@ -171,19 +187,58 @@ export default function DetailScreen({ route, navigation, timeline }) {
     ));
   };
 
-  // 웨딩홀 잠금 토글
-  const toggleWeddingHallLock = (id) => {
-    setWeddingHalls(weddingHalls.map(hall =>
-      hall.id === id ? { ...hall, isLocked: !hall.isLocked } : hall
+  // 웨딩홀 편집 시작
+  const startEditWeddingHall = (id) => {
+    const hall = weddingHalls.find(h => h.id === id);
+    setTempWeddingHalls({
+      ...tempWeddingHalls,
+      [id]: { ...hall }
+    });
+    setWeddingHalls(weddingHalls.map(h =>
+      h.id === id ? { ...h, isEditing: true } : h
     ));
   };
 
+  // 웨딩홀 편집 저장
+  const saveWeddingHall = (id) => {
+    const hall = weddingHalls.find(h => h.id === id);
+    if (!hall.name || !hall.date) {
+      Alert.alert('알림', '웨딩홀 이름과 투어 날짜는 필수 항목입니다.');
+      return;
+    }
+    setWeddingHalls(weddingHalls.map(h =>
+      h.id === id ? { ...h, isEditing: false } : h
+    ));
+    // 임시 데이터 제거
+    const newTemp = { ...tempWeddingHalls };
+    delete newTemp[id];
+    setTempWeddingHalls(newTemp);
+  };
+
+  // 웨딩홀 편집 취소
+  const cancelEditWeddingHall = (id) => {
+    const tempHall = tempWeddingHalls[id];
+    if (tempHall) {
+      // 임시 데이터로 복원
+      setWeddingHalls(weddingHalls.map(h =>
+        h.id === id ? { ...tempHall, isEditing: false } : h
+      ));
+      // 임시 데이터 제거
+      const newTemp = { ...tempWeddingHalls };
+      delete newTemp[id];
+      setTempWeddingHalls(newTemp);
+    }
+  };
+
   // 웨딩홀 선택
-  const selectWeddingHall = (id) => {
+  const selectWeddingHall = async (id) => {
+    const selectedHall = weddingHalls.find(h => h.id === id);
     setWeddingHalls(weddingHalls.map(hall =>
       hall.id === id ? { ...hall, isSelected: true } : { ...hall, isSelected: false }
     ));
-    Alert.alert('알림', '웨딩홀이 선택되었습니다! 🎊');
+    // AsyncStorage에 선택된 웨딩홀 정보 저장
+    await AsyncStorage.setItem('selected-wedding-hall', JSON.stringify(selectedHall));
+    Alert.alert('알림', '웨딩홀이 선택되었습니다! 🎊\n결혼식 당일 페이지에서 확인하실 수 있습니다.');
   };
 
   // 결혼식 날짜 변경
@@ -198,10 +253,19 @@ export default function DetailScreen({ route, navigation, timeline }) {
         // 타임라인 재계산
         await timeline.load();
 
-        Alert.alert('알림', `결혼식 날짜가 ${timeline.formatDate(selectedDate)}로 변경되었습니다. 🎉`);
-
-        // 화면 새로고침을 위해 navigation 이벤트 발생
-        navigation.navigate('Timeline');
+        Alert.alert(
+          '알림',
+          `결혼식 날짜가 ${timeline.formatDate(selectedDate)}로 변경되었습니다. 🎉`,
+          [
+            {
+              text: '확인',
+              onPress: () => {
+                // 타임라인 화면으로 이동하여 변경사항 반영
+                navigation.navigate('Timeline');
+              }
+            }
+          ]
+        );
       } catch (error) {
         console.error('날짜 변경 실패:', error);
         Alert.alert('오류', '날짜 변경에 실패했습니다.');
@@ -212,7 +276,7 @@ export default function DetailScreen({ route, navigation, timeline }) {
   // 드레스샵 추가
   const addDressShop = () => {
     const newId = dressShops.length > 0 ? Math.max(...dressShops.map(s => s.id)) + 1 : 1;
-    setDressShops([...dressShops, { id: newId, name: '', location: '', date: '', memo: '', isLocked: false, isSelected: false }]);
+    setDressShops([...dressShops, { id: newId, name: '', location: '', date: '', memo: '', isEditing: true, isSelected: false }]);
   };
 
   // 드레스샵 삭제
@@ -231,19 +295,58 @@ export default function DetailScreen({ route, navigation, timeline }) {
     ));
   };
 
-  // 드레스샵 잠금 토글
-  const toggleDressShopLock = (id) => {
-    setDressShops(dressShops.map(shop =>
-      shop.id === id ? { ...shop, isLocked: !shop.isLocked } : shop
+  // 드레스샵 편집 시작
+  const startEditDressShop = (id) => {
+    const shop = dressShops.find(s => s.id === id);
+    setTempDressShops({
+      ...tempDressShops,
+      [id]: { ...shop }
+    });
+    setDressShops(dressShops.map(s =>
+      s.id === id ? { ...s, isEditing: true } : s
     ));
   };
 
+  // 드레스샵 편집 저장
+  const saveDressShop = (id) => {
+    const shop = dressShops.find(s => s.id === id);
+    if (!shop.name || !shop.date) {
+      Alert.alert('알림', '드레스샵 이름과 투어 날짜는 필수 항목입니다.');
+      return;
+    }
+    setDressShops(dressShops.map(s =>
+      s.id === id ? { ...s, isEditing: false } : s
+    ));
+    // 임시 데이터 제거
+    const newTemp = { ...tempDressShops };
+    delete newTemp[id];
+    setTempDressShops(newTemp);
+  };
+
+  // 드레스샵 편집 취소
+  const cancelEditDressShop = (id) => {
+    const tempShop = tempDressShops[id];
+    if (tempShop) {
+      // 임시 데이터로 복원
+      setDressShops(dressShops.map(s =>
+        s.id === id ? { ...tempShop, isEditing: false } : s
+      ));
+      // 임시 데이터 제거
+      const newTemp = { ...tempDressShops };
+      delete newTemp[id];
+      setTempDressShops(newTemp);
+    }
+  };
+
   // 드레스샵 선택
-  const selectDressShop = (id) => {
+  const selectDressShop = async (id) => {
+    const selectedShop = dressShops.find(s => s.id === id);
     setDressShops(dressShops.map(shop =>
       shop.id === id ? { ...shop, isSelected: true } : { ...shop, isSelected: false }
     ));
-    Alert.alert('알림', '드레스샵이 선택되었습니다! 👗');
+    // AsyncStorage에 선택된 드레스샵 정보 저장
+    await AsyncStorage.setItem('selected-dress-shop', JSON.stringify(selectedShop));
+    Alert.alert('알림', '드레스샵이 선택되었습니다! 👗\n본식 드레스 가봉 페이지에서 확인하실 수 있습니다.');
   };
 
   // 드레스 이미지 선택
@@ -378,22 +481,76 @@ export default function DetailScreen({ route, navigation, timeline }) {
           ))}
         </View>
 
+        {/* 선택된 드레스샵 정보 표시 - dress-fitting일 때 */}
+        {currentItem.id === 'dress-fitting' && selectedDressShop && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>👗 선택한 드레스샵</Text>
+            <View style={styles.selectedShopInfo}>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>샵 이름:</Text>
+                <Text style={styles.infoValue}>{selectedDressShop.name}</Text>
+              </View>
+              {selectedDressShop.location && (
+                <View style={styles.infoRow}>
+                  <Text style={styles.infoLabel}>위치:</Text>
+                  <Text style={styles.infoValue}>{selectedDressShop.location}</Text>
+                </View>
+              )}
+              {selectedDressShop.date && (
+                <View style={styles.infoRow}>
+                  <Text style={styles.infoLabel}>투어 날짜:</Text>
+                  <Text style={styles.infoValue}>{selectedDressShop.date}</Text>
+                </View>
+              )}
+              {selectedDressShop.memo && (
+                <View style={styles.infoRow}>
+                  <Text style={styles.infoLabel}>메모:</Text>
+                  <Text style={styles.infoValue}>{selectedDressShop.memo}</Text>
+                </View>
+              )}
+            </View>
+          </View>
+        )}
+
+        {/* 선택된 웨딩홀 정보 표시 - wedding-day일 때 */}
+        {currentItem.id === 'wedding-day' && selectedWeddingHall && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>🏛️ 선택한 웨딩홀</Text>
+            <View style={styles.selectedShopInfo}>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>웨딩홀 이름:</Text>
+                <Text style={styles.infoValue}>{selectedWeddingHall.name}</Text>
+              </View>
+              {selectedWeddingHall.location && (
+                <View style={styles.infoRow}>
+                  <Text style={styles.infoLabel}>위치:</Text>
+                  <Text style={styles.infoValue}>{selectedWeddingHall.location}</Text>
+                </View>
+              )}
+              {selectedWeddingHall.date && (
+                <View style={styles.infoRow}>
+                  <Text style={styles.infoLabel}>투어 날짜:</Text>
+                  <Text style={styles.infoValue}>{selectedWeddingHall.date}</Text>
+                </View>
+              )}
+              {selectedWeddingHall.memo && (
+                <View style={styles.infoRow}>
+                  <Text style={styles.infoLabel}>메모:</Text>
+                  <Text style={styles.infoValue}>{selectedWeddingHall.memo}</Text>
+                </View>
+              )}
+            </View>
+          </View>
+        )}
+
         {/* 웨딩홀 투어 정보 입력 - wedding-hall-tour일 때만 표시 */}
         {currentItem.id === 'wedding-hall-tour' && (
           <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>🏛️ 투어 웨딩홀 정보</Text>
-              <View style={styles.buttonGroup}>
-                <TouchableOpacity style={styles.addButton} onPress={addWeddingHall}>
-                  <Text style={styles.buttonText}>+</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
+            <Text style={styles.sectionTitle}>🏛️ 투어 웨딩홀 정보</Text>
             {weddingHalls.map((hall, index) => (
               <View key={hall.id} style={[
                 styles.hallCard,
                 hall.isSelected && styles.hallCardSelected,
-                hall.isLocked && styles.hallCardLocked,
               ]}>
                 <View style={styles.hallHeader}>
                   <View style={styles.hallTitleRow}>
@@ -404,53 +561,62 @@ export default function DetailScreen({ route, navigation, timeline }) {
                       </View>
                     )}
                   </View>
-                  <View style={styles.hallActionButtons}>
-                    <TouchableOpacity
-                      style={[styles.lockButton, hall.isLocked && styles.lockButtonActive]}
-                      onPress={() => toggleWeddingHallLock(hall.id)}
-                    >
-                      <Text style={styles.lockButtonText}>{hall.isLocked ? '🔒' : '🔓'}</Text>
-                    </TouchableOpacity>
-                    {weddingHalls.length > 1 && (
+                  <View style={styles.editActionButtons}>
+                    {hall.isEditing ? (
+                      <>
+                        <TouchableOpacity
+                          style={styles.saveEditButton}
+                          onPress={() => saveWeddingHall(hall.id)}
+                        >
+                          <Text style={styles.editButtonText}>저장</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={styles.cancelEditButton}
+                          onPress={() => cancelEditWeddingHall(hall.id)}
+                        >
+                          <Text style={styles.editButtonText}>취소</Text>
+                        </TouchableOpacity>
+                      </>
+                    ) : (
                       <TouchableOpacity
-                        style={styles.removeButton}
-                        onPress={() => removeWeddingHall(hall.id)}
+                        style={styles.startEditButton}
+                        onPress={() => startEditWeddingHall(hall.id)}
                       >
-                        <Text style={styles.buttonText}>-</Text>
+                        <Text style={styles.editIconText}>✎</Text>
                       </TouchableOpacity>
                     )}
                   </View>
                 </View>
                 <TextInput
-                  style={[styles.input, hall.isLocked && styles.inputDisabled]}
-                  placeholder="웨딩홀 이름"
+                  style={[styles.input, !hall.isEditing && styles.inputDisabled]}
+                  placeholder="웨딩홀 이름 *"
                   value={hall.name}
                   onChangeText={(text) => updateWeddingHall(hall.id, 'name', text)}
-                  editable={!hall.isLocked}
+                  editable={hall.isEditing}
                 />
                 <TextInput
-                  style={[styles.input, hall.isLocked && styles.inputDisabled]}
+                  style={[styles.input, !hall.isEditing && styles.inputDisabled]}
                   placeholder="위치"
                   value={hall.location}
                   onChangeText={(text) => updateWeddingHall(hall.id, 'location', text)}
-                  editable={!hall.isLocked}
+                  editable={hall.isEditing}
                 />
                 <TextInput
-                  style={[styles.input, hall.isLocked && styles.inputDisabled]}
-                  placeholder="투어 날짜 (예: 2025.01.15)"
+                  style={[styles.input, !hall.isEditing && styles.inputDisabled]}
+                  placeholder="투어 날짜 (예: 2025.01.15) *"
                   value={hall.date}
                   onChangeText={(text) => updateWeddingHall(hall.id, 'date', text)}
-                  editable={!hall.isLocked}
+                  editable={hall.isEditing}
                 />
                 <TextInput
-                  style={[styles.input, styles.memoInput, hall.isLocked && styles.inputDisabled]}
+                  style={[styles.input, styles.memoInput, !hall.isEditing && styles.inputDisabled]}
                   placeholder="메모"
                   value={hall.memo}
                   onChangeText={(text) => updateWeddingHall(hall.id, 'memo', text)}
                   multiline
-                  editable={!hall.isLocked}
+                  editable={hall.isEditing}
                 />
-                {!hall.isSelected && (
+                {!hall.isSelected && !hall.isEditing && (
                   <TouchableOpacity
                     style={styles.selectHallButton}
                     onPress={() => selectWeddingHall(hall.id)}
@@ -460,6 +626,11 @@ export default function DetailScreen({ route, navigation, timeline }) {
                 )}
               </View>
             ))}
+
+            {/* 웨딩홀 추가 버튼 */}
+            <TouchableOpacity style={styles.addItemButton} onPress={addWeddingHall}>
+              <Text style={styles.addItemButtonText}>+ 웨딩홀 추가하기</Text>
+            </TouchableOpacity>
 
             {/* 결혼식 날짜 변경 버튼 */}
             <View style={styles.weddingDateChangeSection}>
@@ -492,19 +663,11 @@ export default function DetailScreen({ route, navigation, timeline }) {
         {/* 드레스샵 투어 정보 입력 - dress-tour일 때만 표시 */}
         {currentItem.id === 'dress-tour' && (
           <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>👗 투어 드레스샵 정보</Text>
-              <View style={styles.buttonGroup}>
-                <TouchableOpacity style={styles.addButton} onPress={addDressShop}>
-                  <Text style={styles.buttonText}>+</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
+            <Text style={styles.sectionTitle}>👗 투어 드레스샵 정보</Text>
             {dressShops.map((shop, index) => (
               <View key={shop.id} style={[
                 styles.hallCard,
                 shop.isSelected && styles.hallCardSelected,
-                shop.isLocked && styles.hallCardLocked,
               ]}>
                 <View style={styles.hallHeader}>
                   <View style={styles.hallTitleRow}>
@@ -515,53 +678,62 @@ export default function DetailScreen({ route, navigation, timeline }) {
                       </View>
                     )}
                   </View>
-                  <View style={styles.hallActionButtons}>
-                    <TouchableOpacity
-                      style={[styles.lockButton, shop.isLocked && styles.lockButtonActive]}
-                      onPress={() => toggleDressShopLock(shop.id)}
-                    >
-                      <Text style={styles.lockButtonText}>{shop.isLocked ? '🔒' : '🔓'}</Text>
-                    </TouchableOpacity>
-                    {dressShops.length > 1 && (
+                  <View style={styles.editActionButtons}>
+                    {shop.isEditing ? (
+                      <>
+                        <TouchableOpacity
+                          style={styles.saveEditButton}
+                          onPress={() => saveDressShop(shop.id)}
+                        >
+                          <Text style={styles.editButtonText}>저장</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={styles.cancelEditButton}
+                          onPress={() => cancelEditDressShop(shop.id)}
+                        >
+                          <Text style={styles.editButtonText}>취소</Text>
+                        </TouchableOpacity>
+                      </>
+                    ) : (
                       <TouchableOpacity
-                        style={styles.removeButton}
-                        onPress={() => removeDressShop(shop.id)}
+                        style={styles.startEditButton}
+                        onPress={() => startEditDressShop(shop.id)}
                       >
-                        <Text style={styles.buttonText}>-</Text>
+                        <Text style={styles.editIconText}>✎</Text>
                       </TouchableOpacity>
                     )}
                   </View>
                 </View>
                 <TextInput
-                  style={[styles.input, shop.isLocked && styles.inputDisabled]}
-                  placeholder="드레스샵 이름"
+                  style={[styles.input, !shop.isEditing && styles.inputDisabled]}
+                  placeholder="드레스샵 이름 *"
                   value={shop.name}
                   onChangeText={(text) => updateDressShop(shop.id, 'name', text)}
-                  editable={!shop.isLocked}
+                  editable={shop.isEditing}
                 />
                 <TextInput
-                  style={[styles.input, shop.isLocked && styles.inputDisabled]}
+                  style={[styles.input, !shop.isEditing && styles.inputDisabled]}
                   placeholder="위치"
                   value={shop.location}
                   onChangeText={(text) => updateDressShop(shop.id, 'location', text)}
-                  editable={!shop.isLocked}
+                  editable={shop.isEditing}
                 />
                 <TextInput
-                  style={[styles.input, shop.isLocked && styles.inputDisabled]}
-                  placeholder="투어 날짜 (예: 2025.01.15)"
+                  style={[styles.input, !shop.isEditing && styles.inputDisabled]}
+                  placeholder="투어 날짜 (예: 2025.01.15) *"
                   value={shop.date}
                   onChangeText={(text) => updateDressShop(shop.id, 'date', text)}
-                  editable={!shop.isLocked}
+                  editable={shop.isEditing}
                 />
                 <TextInput
-                  style={[styles.input, styles.memoInput, shop.isLocked && styles.inputDisabled]}
+                  style={[styles.input, styles.memoInput, !shop.isEditing && styles.inputDisabled]}
                   placeholder="메모"
                   value={shop.memo}
                   onChangeText={(text) => updateDressShop(shop.id, 'memo', text)}
                   multiline
-                  editable={!shop.isLocked}
+                  editable={shop.isEditing}
                 />
-                {!shop.isSelected && (
+                {!shop.isSelected && !shop.isEditing && (
                   <TouchableOpacity
                     style={styles.selectHallButton}
                     onPress={() => selectDressShop(shop.id)}
@@ -571,6 +743,11 @@ export default function DetailScreen({ route, navigation, timeline }) {
                 )}
               </View>
             ))}
+
+            {/* 드레스샵 추가 버튼 */}
+            <TouchableOpacity style={styles.addItemButton} onPress={addDressShop}>
+              <Text style={styles.addItemButtonText}>+ 드레스샵 추가하기</Text>
+            </TouchableOpacity>
           </View>
         )}
 
@@ -945,6 +1122,23 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
   },
+  addItemButton: {
+    backgroundColor: COLORS.white,
+    borderWidth: 2,
+    borderColor: COLORS.darkPink,
+    borderRadius: 8,
+    borderStyle: 'dashed',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginTop: 12,
+    alignItems: 'center',
+  },
+  addItemButtonText: {
+    color: COLORS.darkPink,
+    fontSize: 14,
+    fontWeight: 'bold',
+    fontFamily: 'GowunDodum_400Regular',
+  },
   hallCard: {
     backgroundColor: COLORS.background,
     borderRadius: 8,
@@ -1008,6 +1202,33 @@ const styles = StyleSheet.create({
   },
   lockButtonText: {
     fontSize: 14,
+  },
+  editActionButtons: {
+    flexDirection: 'row',
+    gap: 8,
+    alignItems: 'center',
+  },
+  saveEditButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+  },
+  cancelEditButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+  },
+  startEditButton: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  editButtonText: {
+    fontSize: 14,
+    fontFamily: 'GowunDodum_400Regular',
+    color: COLORS.darkPink,
+    fontWeight: '600',
+  },
+  editIconText: {
+    fontSize: 18,
+    color: COLORS.darkPink,
   },
   input: {
     backgroundColor: COLORS.white,
@@ -1077,6 +1298,26 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
     fontFamily: 'GowunDodum_400Regular',
+  },
+  selectedShopInfo: {
+    paddingVertical: 8,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    marginBottom: 12,
+  },
+  infoLabel: {
+    fontSize: 14,
+    fontFamily: 'GowunDodum_400Regular',
+    color: COLORS.textGray,
+    fontWeight: '600',
+    width: 100,
+  },
+  infoValue: {
+    flex: 1,
+    fontSize: 14,
+    fontFamily: 'GowunDodum_400Regular',
+    color: COLORS.textDark,
   },
   addImageButton: {
     backgroundColor: COLORS.darkPink,
