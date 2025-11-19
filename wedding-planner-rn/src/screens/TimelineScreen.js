@@ -233,6 +233,7 @@ const styles = StyleSheet.create({
   completedLabel: {
     fontSize: 12,
     fontFamily: 'GowunDodum_400Regular',
+    fontWeight: 'bold',
     color: COLORS.white,
     marginBottom: 4,
   },
@@ -283,7 +284,7 @@ const styles = StyleSheet.create({
   },
   timelineTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: 'bold',
     fontFamily: 'GowunDodum_400Regular',
     color: COLORS.textDark,
   },
@@ -293,12 +294,14 @@ const styles = StyleSheet.create({
   checkMark: {
     fontSize: 14,
     fontFamily: 'GowunDodum_400Regular',
+    fontWeight: 'bold',
     color: COLORS.darkPink,
     marginLeft: 8,
   },
   timelineDate: {
     fontSize: 14,
     fontFamily: 'GowunDodum_400Regular',
+    fontWeight: 'bold',
     color: COLORS.textGray,
   },
   arrow: {

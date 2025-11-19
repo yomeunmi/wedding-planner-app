@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,8 @@ import {
   Platform,
   Image,
   Modal,
+  FlatList,
+  Dimensions,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as ImagePicker from 'expo-image-picker';
@@ -30,7 +32,9 @@ export default function DetailScreen({ route, navigation, timeline }) {
     { id: 2, name: '', location: '', date: '', memo: '' },
   ]);
   const [dressImages, setDressImages] = useState([]);
-  const [selectedImage, setSelectedImage] = useState(null);
+  const [studioImages, setStudioImages] = useState([]);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(null);
+  const flatListRef = useRef(null);
 
   // 데이터 불러오기
   useEffect(() => {
@@ -40,7 +44,7 @@ export default function DetailScreen({ route, navigation, timeline }) {
   // 데이터 저장
   useEffect(() => {
     saveData();
-  }, [memo, weddingHalls, dressImages]);
+  }, [memo, weddingHalls, dressImages, studioImages]);
 
   const loadData = async () => {
     try {
@@ -59,6 +63,11 @@ export default function DetailScreen({ route, navigation, timeline }) {
         const savedImages = await AsyncStorage.getItem(`dress-images-${currentItem.id}`);
         if (savedImages) setDressImages(JSON.parse(savedImages));
       }
+
+      if (currentItem.id === 'wedding-studio-booking') {
+        const savedImages = await AsyncStorage.getItem(`studio-images-${currentItem.id}`);
+        if (savedImages) setStudioImages(JSON.parse(savedImages));
+      }
     } catch (error) {
       console.error('데이터 불러오기 실패:', error);
     }
@@ -74,6 +83,10 @@ export default function DetailScreen({ route, navigation, timeline }) {
 
       if (currentItem.id === 'dress-shop-selection' || currentItem.id === 'dress-tour') {
         await AsyncStorage.setItem(`dress-images-${currentItem.id}`, JSON.stringify(dressImages));
+      }
+
+      if (currentItem.id === 'wedding-studio-booking') {
+        await AsyncStorage.setItem(`studio-images-${currentItem.id}`, JSON.stringify(studioImages));
       }
     } catch (error) {
       console.error('데이터 저장 실패:', error);
@@ -133,7 +146,7 @@ export default function DetailScreen({ route, navigation, timeline }) {
   };
 
   // 드레스 이미지 선택
-  const pickImage = async () => {
+  const pickDressImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsMultipleSelection: true,
@@ -150,8 +163,30 @@ export default function DetailScreen({ route, navigation, timeline }) {
   };
 
   // 드레스 이미지 삭제
-  const removeImage = (id) => {
+  const removeDressImage = (id) => {
     setDressImages(dressImages.filter(img => img.id !== id));
+  };
+
+  // 스튜디오 이미지 선택
+  const pickStudioImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsMultipleSelection: true,
+      quality: 0.8,
+    });
+
+    if (!result.canceled) {
+      const newImages = result.assets.map((asset, index) => ({
+        id: Date.now() + index,
+        uri: asset.uri,
+      }));
+      setStudioImages([...studioImages, ...newImages]);
+    }
+  };
+
+  // 스튜디오 이미지 삭제
+  const removeStudioImage = (id) => {
+    setStudioImages(studioImages.filter(img => img.id !== id));
   };
 
   return (
@@ -213,13 +248,11 @@ export default function DetailScreen({ route, navigation, timeline }) {
         </View>
 
         {/* 팁 */}
-        <View style={styles.tipsSection}>
+        <View style={styles.section}>
           <Text style={styles.sectionTitle}>💡 준비 팁</Text>
           {currentItem.tips.map((tip, index) => (
-            <View key={index} style={styles.tipCard}>
-              <View style={styles.tipNumber}>
-                <Text style={styles.tipNumberText}>{index + 1}</Text>
-              </View>
+            <View key={index} style={styles.tipItem}>
+              <Text style={styles.tipNumber}>{index + 1}.</Text>
               <Text style={styles.tipText}>{tip}</Text>
             </View>
           ))}
@@ -284,19 +317,46 @@ export default function DetailScreen({ route, navigation, timeline }) {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>드레스 스크랩</Text>
-              <TouchableOpacity style={styles.addImageButton} onPress={pickImage}>
+              <TouchableOpacity style={styles.addImageButton} onPress={pickDressImage}>
                 <Text style={styles.addImageButtonText}>+ 사진 추가</Text>
               </TouchableOpacity>
             </View>
             <View style={styles.imageGrid}>
-              {dressImages.map((image) => (
+              {dressImages.map((image, index) => (
                 <View key={image.id} style={styles.imageContainer}>
-                  <TouchableOpacity onPress={() => setSelectedImage(image.uri)} activeOpacity={0.8}>
+                  <TouchableOpacity onPress={() => setSelectedImageIndex(index)} activeOpacity={0.8}>
                     <Image source={{ uri: image.uri }} style={styles.image} />
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={styles.deleteImageButton}
-                    onPress={() => removeImage(image.id)}
+                    onPress={() => removeDressImage(image.id)}
+                  >
+                    <Text style={styles.deleteImageText}>×</Text>
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
+
+        {/* 웨딩샵 스크랩 - wedding-studio-booking일 때 표시 */}
+        {currentItem.id === 'wedding-studio-booking' && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>웨딩샵 스크랩</Text>
+              <TouchableOpacity style={styles.addImageButton} onPress={pickStudioImage}>
+                <Text style={styles.addImageButtonText}>+ 사진 추가</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={styles.imageGrid}>
+              {studioImages.map((image, index) => (
+                <View key={image.id} style={styles.imageContainer}>
+                  <TouchableOpacity onPress={() => setSelectedImageIndex(index)} activeOpacity={0.8}>
+                    <Image source={{ uri: image.uri }} style={styles.image} />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.deleteImageButton}
+                    onPress={() => removeStudioImage(image.id)}
                   >
                     <Text style={styles.deleteImageText}>×</Text>
                   </TouchableOpacity>
@@ -311,8 +371,8 @@ export default function DetailScreen({ route, navigation, timeline }) {
           <Text style={styles.sectionTitle}>메모</Text>
           {!isEditingMemo ? (
             <View style={styles.memoDisplay}>
-              <Text style={styles.memoText}>
-                {memo || '메모를 입력하세요...'}
+              <Text style={[styles.memoText, !memo && styles.memoPlaceholder]}>
+                {memo || '메모를 입력하세요.'}
               </Text>
               <TouchableOpacity
                 style={styles.editButton}
@@ -327,7 +387,8 @@ export default function DetailScreen({ route, navigation, timeline }) {
                 style={styles.memoEditInput}
                 value={tempMemo}
                 onChangeText={setTempMemo}
-                placeholder="메모를 입력하세요..."
+                placeholder="메모를 입력하세요."
+                placeholderTextColor={COLORS.textLight}
                 multiline
                 numberOfLines={4}
                 textAlignVertical="top"
@@ -368,26 +429,43 @@ export default function DetailScreen({ route, navigation, timeline }) {
 
     {/* 이미지 크게 보기 Modal */}
     <Modal
-      visible={selectedImage !== null}
+      visible={selectedImageIndex !== null}
       transparent={true}
       animationType="fade"
-      onRequestClose={() => setSelectedImage(null)}
+      onRequestClose={() => setSelectedImageIndex(null)}
     >
-      <TouchableOpacity
-        style={styles.modalContainer}
-        activeOpacity={1}
-        onPress={() => setSelectedImage(null)}
-      >
-        <View style={styles.modalContent}>
-          <Image source={{ uri: selectedImage }} style={styles.modalImage} resizeMode="contain" />
-          <TouchableOpacity
-            style={styles.modalCloseButton}
-            onPress={() => setSelectedImage(null)}
-          >
-            <Text style={styles.modalCloseText}>✕</Text>
-          </TouchableOpacity>
+      <View style={styles.modalContainer}>
+        <FlatList
+          ref={flatListRef}
+          data={currentItem.id === 'wedding-studio-booking' ? studioImages : dressImages}
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          initialScrollIndex={selectedImageIndex}
+          getItemLayout={(data, index) => ({
+            length: Dimensions.get('window').width,
+            offset: Dimensions.get('window').width * index,
+            index,
+          })}
+          renderItem={({ item }) => (
+            <View style={styles.modalImageContainer}>
+              <Image source={{ uri: item.uri }} style={styles.modalImage} resizeMode="contain" />
+            </View>
+          )}
+          keyExtractor={(item) => item.id.toString()}
+        />
+        <TouchableOpacity
+          style={styles.modalCloseButton}
+          onPress={() => setSelectedImageIndex(null)}
+        >
+          <Text style={styles.modalCloseText}>✕</Text>
+        </TouchableOpacity>
+        <View style={styles.imageCounter}>
+          <Text style={styles.imageCounterText}>
+            {selectedImageIndex !== null ? selectedImageIndex + 1 : 0} / {currentItem.id === 'wedding-studio-booking' ? studioImages.length : dressImages.length}
+          </Text>
         </View>
-      </TouchableOpacity>
+      </View>
     </Modal>
     </KeyboardAvoidingView>
   );
@@ -503,45 +581,24 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontFamily: 'GowunDodum_400Regular',
     color: COLORS.textDark,
-    lineHeight: 20,
+    lineHeight: 18,
   },
-  tipsSection: {
-    marginBottom: 16,
-  },
-  tipCard: {
-    backgroundColor: COLORS.white,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
+  tipItem: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-    borderLeftWidth: 4,
-    borderLeftColor: COLORS.darkPink,
+    marginBottom: 8,
   },
   tipNumber: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: COLORS.darkPink,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-    marginTop: 2,
-  },
-  tipNumberText: {
-    color: COLORS.white,
-    fontSize: 14,
-    fontWeight: 'bold',
+    fontSize: 13,
     fontFamily: 'GowunDodum_400Regular',
+    color: COLORS.darkPink,
+    fontWeight: 'bold',
+    marginRight: 8,
+    minWidth: 20,
   },
   tipText: {
     flex: 1,
-    fontSize: 12,
+    fontSize: 13,
     fontFamily: 'GowunDodum_400Regular',
     color: COLORS.textDark,
     lineHeight: 18,
@@ -697,6 +754,9 @@ const styles = StyleSheet.create({
     fontFamily: 'GowunDodum_400Regular',
     color: COLORS.textDark,
   },
+  memoPlaceholder: {
+    color: COLORS.textLight,
+  },
   editButton: {
     paddingHorizontal: 16,
     paddingVertical: 8,
@@ -754,18 +814,16 @@ const styles = StyleSheet.create({
   modalContainer: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.9)',
-    justifyContent: 'center',
-    alignItems: 'center',
   },
-  modalContent: {
-    width: '100%',
-    height: '100%',
+  modalImageContainer: {
+    width: Dimensions.get('window').width,
+    height: Dimensions.get('window').height,
     justifyContent: 'center',
     alignItems: 'center',
   },
   modalImage: {
-    width: '90%',
-    height: '80%',
+    width: '100%',
+    height: '100%',
   },
   modalCloseButton: {
     position: 'absolute',
@@ -782,5 +840,19 @@ const styles = StyleSheet.create({
     fontSize: 24,
     color: COLORS.darkPink,
     fontWeight: 'bold',
+  },
+  imageCounter: {
+    position: 'absolute',
+    bottom: 60,
+    alignSelf: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  imageCounterText: {
+    color: COLORS.white,
+    fontSize: 14,
+    fontFamily: 'GowunDodum_400Regular',
   },
 });
