@@ -178,7 +178,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   headerTitle: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: '900',
     fontFamily: 'GowunDodum_400Regular',
     color: COLORS.darkPink,

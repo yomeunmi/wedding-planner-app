@@ -33,6 +33,7 @@ export default function DetailScreen({ route, navigation, timeline }) {
   ]);
   const [dressImages, setDressImages] = useState([]);
   const [studioImages, setStudioImages] = useState([]);
+  const [makeupImages, setMakeupImages] = useState([]);
   const [selectedImageIndex, setSelectedImageIndex] = useState(null);
   const flatListRef = useRef(null);
 
@@ -44,7 +45,7 @@ export default function DetailScreen({ route, navigation, timeline }) {
   // 데이터 저장
   useEffect(() => {
     saveData();
-  }, [memo, weddingHalls, dressImages, studioImages]);
+  }, [memo, weddingHalls, dressImages, studioImages, makeupImages]);
 
   const loadData = async () => {
     try {
@@ -68,6 +69,11 @@ export default function DetailScreen({ route, navigation, timeline }) {
         const savedImages = await AsyncStorage.getItem(`studio-images-${currentItem.id}`);
         if (savedImages) setStudioImages(JSON.parse(savedImages));
       }
+
+      if (currentItem.id === 'makeup') {
+        const savedImages = await AsyncStorage.getItem(`makeup-images-${currentItem.id}`);
+        if (savedImages) setMakeupImages(JSON.parse(savedImages));
+      }
     } catch (error) {
       console.error('데이터 불러오기 실패:', error);
     }
@@ -87,6 +93,10 @@ export default function DetailScreen({ route, navigation, timeline }) {
 
       if (currentItem.id === 'wedding-studio-booking') {
         await AsyncStorage.setItem(`studio-images-${currentItem.id}`, JSON.stringify(studioImages));
+      }
+
+      if (currentItem.id === 'makeup') {
+        await AsyncStorage.setItem(`makeup-images-${currentItem.id}`, JSON.stringify(makeupImages));
       }
     } catch (error) {
       console.error('데이터 저장 실패:', error);
@@ -189,6 +199,28 @@ export default function DetailScreen({ route, navigation, timeline }) {
     setStudioImages(studioImages.filter(img => img.id !== id));
   };
 
+  // 메이크업 이미지 선택
+  const pickMakeupImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsMultipleSelection: true,
+      quality: 0.8,
+    });
+
+    if (!result.canceled) {
+      const newImages = result.assets.map((asset, index) => ({
+        id: Date.now() + index,
+        uri: asset.uri,
+      }));
+      setMakeupImages([...makeupImages, ...newImages]);
+    }
+  };
+
+  // 메이크업 이미지 삭제
+  const removeMakeupImage = (id) => {
+    setMakeupImages(makeupImages.filter(img => img.id !== id));
+  };
+
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
@@ -209,6 +241,9 @@ export default function DetailScreen({ route, navigation, timeline }) {
 
           {/* 제목 */}
           <Text style={styles.title}>{currentItem.title}</Text>
+
+          {/* 설명 */}
+          <Text style={styles.description}>{currentItem.description}</Text>
 
           {/* 날짜 - 완료 상태가 아닐 때만 수정 가능 */}
           {!currentItem.completed && (
@@ -240,12 +275,6 @@ export default function DetailScreen({ route, navigation, timeline }) {
               </View>
             </View>
           )}
-
-        {/* 설명 */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>설명</Text>
-          <Text style={styles.description}>{currentItem.description}</Text>
-        </View>
 
         {/* 팁 */}
         <View style={styles.section}>
@@ -366,6 +395,33 @@ export default function DetailScreen({ route, navigation, timeline }) {
           </View>
         )}
 
+        {/* 메이크업 스크랩 - makeup일 때 표시 */}
+        {currentItem.id === 'makeup' && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>메이크업 스크랩</Text>
+              <TouchableOpacity style={styles.addImageButton} onPress={pickMakeupImage}>
+                <Text style={styles.addImageButtonText}>+ 사진 추가</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={styles.imageGrid}>
+              {makeupImages.map((image, index) => (
+                <View key={image.id} style={styles.imageContainer}>
+                  <TouchableOpacity onPress={() => setSelectedImageIndex(index)} activeOpacity={0.8}>
+                    <Image source={{ uri: image.uri }} style={styles.image} />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.deleteImageButton}
+                    onPress={() => removeMakeupImage(image.id)}
+                  >
+                    <Text style={styles.deleteImageText}>×</Text>
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
+
         {/* 메모 입력 */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>메모</Text>
@@ -437,7 +493,13 @@ export default function DetailScreen({ route, navigation, timeline }) {
       <View style={styles.modalContainer}>
         <FlatList
           ref={flatListRef}
-          data={currentItem.id === 'wedding-studio-booking' ? studioImages : dressImages}
+          data={
+            currentItem.id === 'wedding-studio-booking'
+              ? studioImages
+              : currentItem.id === 'makeup'
+                ? makeupImages
+                : dressImages
+          }
           horizontal
           pagingEnabled
           showsHorizontalScrollIndicator={false}
@@ -462,7 +524,13 @@ export default function DetailScreen({ route, navigation, timeline }) {
         </TouchableOpacity>
         <View style={styles.imageCounter}>
           <Text style={styles.imageCounterText}>
-            {selectedImageIndex !== null ? selectedImageIndex + 1 : 0} / {currentItem.id === 'wedding-studio-booking' ? studioImages.length : dressImages.length}
+            {selectedImageIndex !== null ? selectedImageIndex + 1 : 0} / {
+              currentItem.id === 'wedding-studio-booking'
+                ? studioImages.length
+                : currentItem.id === 'makeup'
+                  ? makeupImages.length
+                  : dressImages.length
+            }
           </Text>
         </View>
       </View>
@@ -572,7 +640,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: '900',
     fontFamily: 'GowunDodum_400Regular',
     color: COLORS.darkPink,
     marginBottom: 16,
@@ -582,11 +650,14 @@ const styles = StyleSheet.create({
     fontFamily: 'GowunDodum_400Regular',
     color: COLORS.textDark,
     lineHeight: 18,
+    textAlign: 'center',
+    marginBottom: 20,
+    paddingHorizontal: 8,
   },
   tipItem: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    marginBottom: 8,
+    marginBottom: 4,
   },
   tipNumber: {
     fontSize: 13,
