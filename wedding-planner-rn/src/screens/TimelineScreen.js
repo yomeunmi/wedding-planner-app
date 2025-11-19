@@ -96,13 +96,15 @@ export default function TimelineScreen({ navigation, timeline }) {
     <View style={styles.container}>
       {/* 헤더 */}
       <View style={styles.header}>
+        <View style={styles.myButtonContainer}>
+          <TouchableOpacity style={styles.myPageButtonBox} onPress={handleMyPagePress}>
+            <Text style={styles.myPageButton}>My</Text>
+          </TouchableOpacity>
+        </View>
         <View style={styles.headerTop}>
           <Text style={styles.headerTitle}>
             {nickname ? `${nickname}의 결혼 준비 타임라인` : '결혼 준비 타임라인'}
           </Text>
-          <TouchableOpacity style={styles.myPageButtonBox} onPress={handleMyPagePress}>
-            <Text style={styles.myPageButton}>My</Text>
-          </TouchableOpacity>
         </View>
         <View style={styles.dateRange}>
           <Text style={styles.dateRangeText}>
@@ -171,11 +173,13 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 4,
   },
-  headerTop: {
+  myButtonContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 24,
+    justifyContent: 'flex-end',
+    marginBottom: 12,
+  },
+  headerTop: {
+    marginBottom: 12,
   },
   headerTitle: {
     fontSize: 26,

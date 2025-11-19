@@ -241,36 +241,52 @@ export default function DetailScreen({ route, navigation, timeline }) {
     Alert.alert('알림', '웨딩홀이 선택되었습니다! 🎊\n결혼식 당일 페이지에서 확인하실 수 있습니다.');
   };
 
-  // 결혼식 날짜 변경
-  const handleWeddingDateChange = async (event, selectedDate) => {
+  // 결혼식 날짜 변경 (DateTimePicker에서 날짜 선택 시)
+  const handleWeddingDateChange = (event, selectedDate) => {
     setShowWeddingDatePicker(false);
     if (selectedDate) {
-      try {
-        // WeddingTimeline의 weddingDate 업데이트
-        await AsyncStorage.setItem('wedding-date', selectedDate.toISOString());
-        timeline.weddingDate = selectedDate;
-
-        // 타임라인 재계산
-        await timeline.load();
-
-        Alert.alert(
-          '알림',
-          `결혼식 날짜가 ${timeline.formatDate(selectedDate)}로 변경되었습니다. 🎉`,
-          [
-            {
-              text: '확인',
-              onPress: () => {
-                // 타임라인 화면으로 이동하여 변경사항 반영
-                navigation.navigate('Timeline');
-              }
-            }
-          ]
-        );
-      } catch (error) {
-        console.error('날짜 변경 실패:', error);
-        Alert.alert('오류', '날짜 변경에 실패했습니다.');
-      }
+      setTempWeddingDate(selectedDate);
     }
+  };
+
+  // 결혼식 날짜 저장
+  const saveWeddingDate = async () => {
+    try {
+      // WeddingTimeline의 weddingDate 업데이트
+      await AsyncStorage.setItem('wedding-date', tempWeddingDate.toISOString());
+      timeline.weddingDate = tempWeddingDate;
+
+      // 타임라인 재계산 (모든 날짜 업데이트 포함)
+      timeline.calculateTimeline();
+
+      // 완료 상태 복원
+      await timeline.loadCompletionStatus();
+
+      // 변경사항 저장
+      await timeline.save();
+
+      Alert.alert(
+        '알림',
+        `결혼식 날짜가 ${timeline.formatDate(tempWeddingDate)}로 변경되었습니다. 🎉\n모든 타임라인 날짜가 업데이트되었습니다.`,
+        [
+          {
+            text: '확인',
+            onPress: () => {
+              // 타임라인 화면으로 이동하여 변경사항 반영
+              navigation.navigate('Timeline');
+            }
+          }
+        ]
+      );
+    } catch (error) {
+      console.error('날짜 변경 실패:', error);
+      Alert.alert('오류', '날짜 변경에 실패했습니다.');
+    }
+  };
+
+  // 결혼식 날짜 변경 취소
+  const cancelWeddingDateChange = () => {
+    setTempWeddingDate(timeline.weddingDate);
   };
 
   // 드레스샵 추가
@@ -585,6 +601,14 @@ export default function DetailScreen({ route, navigation, timeline }) {
                         <Text style={styles.editIconText}>✎</Text>
                       </TouchableOpacity>
                     )}
+                    {weddingHalls.length > 1 && (
+                      <TouchableOpacity
+                        style={styles.deleteItemButton}
+                        onPress={() => removeWeddingHall(hall.id)}
+                      >
+                        <Text style={styles.deleteItemText}>×</Text>
+                      </TouchableOpacity>
+                    )}
                   </View>
                 </View>
                 <TextInput
@@ -637,16 +661,15 @@ export default function DetailScreen({ route, navigation, timeline }) {
               <Text style={styles.weddingDateChangeLabel}>💒 결혼식 날짜</Text>
               <View style={styles.weddingDateRow}>
                 <Text style={styles.currentWeddingDate}>
-                  {timeline.formatDate(timeline.weddingDate)}
+                  {timeline.formatDate(tempWeddingDate)}
                 </Text>
                 <TouchableOpacity
                   style={styles.changeWeddingDateButton}
                   onPress={() => {
-                    setTempWeddingDate(timeline.weddingDate);
                     setShowWeddingDatePicker(true);
                   }}
                 >
-                  <Text style={styles.changeWeddingDateButtonText}>날짜 변경</Text>
+                  <Text style={styles.changeWeddingDateButtonText}>날짜 선택</Text>
                 </TouchableOpacity>
               </View>
               {showWeddingDatePicker && (
@@ -655,6 +678,23 @@ export default function DetailScreen({ route, navigation, timeline }) {
                   mode="date"
                   onChange={handleWeddingDateChange}
                 />
+              )}
+              {/* 저장/취소 버튼 */}
+              {tempWeddingDate.getTime() !== timeline.weddingDate.getTime() && (
+                <View style={styles.weddingDateActionButtons}>
+                  <TouchableOpacity
+                    style={styles.cancelWeddingDateButton}
+                    onPress={cancelWeddingDateChange}
+                  >
+                    <Text style={styles.cancelWeddingDateButtonText}>취소</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.saveWeddingDateButton}
+                    onPress={saveWeddingDate}
+                  >
+                    <Text style={styles.saveWeddingDateButtonText}>저장</Text>
+                  </TouchableOpacity>
+                </View>
               )}
             </View>
           </View>
@@ -700,6 +740,14 @@ export default function DetailScreen({ route, navigation, timeline }) {
                         onPress={() => startEditDressShop(shop.id)}
                       >
                         <Text style={styles.editIconText}>✎</Text>
+                      </TouchableOpacity>
+                    )}
+                    {dressShops.length > 1 && (
+                      <TouchableOpacity
+                        style={styles.deleteItemButton}
+                        onPress={() => removeDressShop(shop.id)}
+                      >
+                        <Text style={styles.deleteItemText}>×</Text>
                       </TouchableOpacity>
                     )}
                   </View>
@@ -1230,6 +1278,21 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: COLORS.darkPink,
   },
+  deleteItemButton: {
+    backgroundColor: '#FF6B6B',
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 4,
+  },
+  deleteItemText: {
+    color: COLORS.white,
+    fontSize: 18,
+    fontWeight: 'bold',
+    lineHeight: 20,
+  },
   input: {
     backgroundColor: COLORS.white,
     borderWidth: 1,
@@ -1294,6 +1357,36 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   changeWeddingDateButtonText: {
+    color: COLORS.white,
+    fontSize: 14,
+    fontWeight: 'bold',
+    fontFamily: 'GowunDodum_400Regular',
+  },
+  weddingDateActionButtons: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 8,
+    marginTop: 12,
+  },
+  cancelWeddingDateButton: {
+    backgroundColor: COLORS.lightGray,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  cancelWeddingDateButtonText: {
+    color: COLORS.textDark,
+    fontSize: 14,
+    fontWeight: 'bold',
+    fontFamily: 'GowunDodum_400Regular',
+  },
+  saveWeddingDateButton: {
+    backgroundColor: COLORS.darkPink,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  saveWeddingDateButtonText: {
     color: COLORS.white,
     fontSize: 14,
     fontWeight: 'bold',
