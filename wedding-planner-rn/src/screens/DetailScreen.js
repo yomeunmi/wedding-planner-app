@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Image,
+  Modal,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as ImagePicker from 'expo-image-picker';
@@ -22,11 +23,14 @@ export default function DetailScreen({ route, navigation, timeline }) {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [tempDate, setTempDate] = useState(new Date(item.date));
   const [memo, setMemo] = useState('');
+  const [tempMemo, setTempMemo] = useState('');
+  const [isEditingMemo, setIsEditingMemo] = useState(false);
   const [weddingHalls, setWeddingHalls] = useState([
     { id: 1, name: '', location: '', date: '', memo: '' },
     { id: 2, name: '', location: '', date: '', memo: '' },
   ]);
   const [dressImages, setDressImages] = useState([]);
+  const [selectedImage, setSelectedImage] = useState(null);
 
   // 데이터 불러오기
   useEffect(() => {
@@ -41,7 +45,10 @@ export default function DetailScreen({ route, navigation, timeline }) {
   const loadData = async () => {
     try {
       const savedMemo = await AsyncStorage.getItem(`memo-${currentItem.id}`);
-      if (savedMemo) setMemo(savedMemo);
+      if (savedMemo) {
+        setMemo(savedMemo);
+        setTempMemo(savedMemo);
+      }
 
       if (currentItem.id === 'wedding-hall-tour') {
         const savedHalls = await AsyncStorage.getItem(`wedding-halls-${currentItem.id}`);
@@ -87,6 +94,20 @@ export default function DetailScreen({ route, navigation, timeline }) {
       setCurrentItem({ ...currentItem, date: selectedDate });
       Alert.alert('알림', '날짜가 변경되었습니다.');
     }
+  };
+
+  // 메모 저장
+  const handleSaveMemo = async () => {
+    setMemo(tempMemo);
+    await AsyncStorage.setItem(`memo-${currentItem.id}`, tempMemo);
+    setIsEditingMemo(false);
+    Alert.alert('알림', '메모가 저장되었습니다.');
+  };
+
+  // 메모 수정 취소
+  const handleCancelMemo = () => {
+    setTempMemo(memo);
+    setIsEditingMemo(false);
   };
 
   // 웨딩홀 추가
@@ -139,7 +160,12 @@ export default function DetailScreen({ route, navigation, timeline }) {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
     >
-      <ScrollView style={styles.container}>
+      <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
+        {/* 상단 뒤로가기 버튼 */}
+        <TouchableOpacity style={styles.topBackButton} onPress={() => navigation.goBack()}>
+          <Text style={styles.topBackArrow}>←</Text>
+        </TouchableOpacity>
+
         <View style={styles.content}>
           {/* 아이콘 */}
           <View style={styles.iconContainer}>
@@ -158,7 +184,7 @@ export default function DetailScreen({ route, navigation, timeline }) {
                 onPress={() => setShowDatePicker(true)}
               >
                 <Text style={styles.dateText}>{timeline.formatDate(currentItem.date)}</Text>
-                <Text style={styles.editIcon}>✏️</Text>
+                <Text style={styles.editIcon}>✎</Text>
               </TouchableOpacity>
               {showDatePicker && (
                 <DateTimePicker
@@ -257,7 +283,7 @@ export default function DetailScreen({ route, navigation, timeline }) {
         {(currentItem.id === 'dress-shop-selection' || currentItem.id === 'dress-tour') && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>📷 드레스 스크랩</Text>
+              <Text style={styles.sectionTitle}>드레스 스크랩</Text>
               <TouchableOpacity style={styles.addImageButton} onPress={pickImage}>
                 <Text style={styles.addImageButtonText}>+ 사진 추가</Text>
               </TouchableOpacity>
@@ -265,7 +291,9 @@ export default function DetailScreen({ route, navigation, timeline }) {
             <View style={styles.imageGrid}>
               {dressImages.map((image) => (
                 <View key={image.id} style={styles.imageContainer}>
-                  <Image source={{ uri: image.uri }} style={styles.image} />
+                  <TouchableOpacity onPress={() => setSelectedImage(image.uri)} activeOpacity={0.8}>
+                    <Image source={{ uri: image.uri }} style={styles.image} />
+                  </TouchableOpacity>
                   <TouchableOpacity
                     style={styles.deleteImageButton}
                     onPress={() => removeImage(image.id)}
@@ -280,14 +308,47 @@ export default function DetailScreen({ route, navigation, timeline }) {
 
         {/* 메모 입력 */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>📝 메모</Text>
-          <TextInput
-            style={[styles.input, styles.memoInput]}
-            placeholder="메모를 입력하세요..."
-            value={memo}
-            onChangeText={setMemo}
-            multiline
-          />
+          <Text style={styles.sectionTitle}>메모</Text>
+          {!isEditingMemo ? (
+            <View style={styles.memoDisplay}>
+              <Text style={styles.memoText}>
+                {memo || '메모를 입력하세요...'}
+              </Text>
+              <TouchableOpacity
+                style={styles.editButton}
+                onPress={() => setIsEditingMemo(true)}
+              >
+                <Text style={styles.editButtonText}>✎ 수정</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <View style={styles.memoEdit}>
+              <TextInput
+                style={styles.memoEditInput}
+                value={tempMemo}
+                onChangeText={setTempMemo}
+                placeholder="메모를 입력하세요..."
+                multiline
+                numberOfLines={4}
+                textAlignVertical="top"
+                autoFocus
+              />
+              <View style={styles.editButtons}>
+                <TouchableOpacity
+                  style={styles.saveButton}
+                  onPress={handleSaveMemo}
+                >
+                  <Text style={styles.saveButtonText}>저장</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.cancelButton}
+                  onPress={handleCancelMemo}
+                >
+                  <Text style={styles.cancelButtonText}>취소</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
         </View>
 
         {/* 완료 버튼 */}
@@ -302,16 +363,32 @@ export default function DetailScreen({ route, navigation, timeline }) {
             {currentItem.completed ? '✓ 완료 취소' : '완료 표시'}
           </Text>
         </TouchableOpacity>
-
-        {/* 뒤로가기 버튼 */}
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Text style={styles.backButtonText}>← 타임라인으로 돌아가기</Text>
-        </TouchableOpacity>
       </View>
     </ScrollView>
+
+    {/* 이미지 크게 보기 Modal */}
+    <Modal
+      visible={selectedImage !== null}
+      transparent={true}
+      animationType="fade"
+      onRequestClose={() => setSelectedImage(null)}
+    >
+      <TouchableOpacity
+        style={styles.modalContainer}
+        activeOpacity={1}
+        onPress={() => setSelectedImage(null)}
+      >
+        <View style={styles.modalContent}>
+          <Image source={{ uri: selectedImage }} style={styles.modalImage} resizeMode="contain" />
+          <TouchableOpacity
+            style={styles.modalCloseButton}
+            onPress={() => setSelectedImage(null)}
+          >
+            <Text style={styles.modalCloseText}>✕</Text>
+          </TouchableOpacity>
+        </View>
+      </TouchableOpacity>
+    </Modal>
     </KeyboardAvoidingView>
   );
 }
@@ -320,6 +397,28 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
+  },
+  topBackButton: {
+    position: 'absolute',
+    top: 60,
+    left: 20,
+    zIndex: 10,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: COLORS.white,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  topBackArrow: {
+    color: COLORS.darkPink,
+    fontSize: 20,
+    fontWeight: 'bold',
   },
   content: {
     padding: 24,
@@ -340,8 +439,8 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    fontWeight: 'bold',
-    fontFamily: 'PoorStory_400Regular',
+    fontWeight: '900',
+    fontFamily: 'GowunDodum_400Regular',
     color: COLORS.darkPink,
     textAlign: 'center',
     marginBottom: 24,
@@ -359,7 +458,7 @@ const styles = StyleSheet.create({
   },
   dateLabel: {
     fontSize: 14,
-    fontFamily: 'PoorStory_400Regular',
+    fontFamily: 'GowunDodum_400Regular',
     color: COLORS.textGray,
     marginBottom: 8,
   },
@@ -374,11 +473,13 @@ const styles = StyleSheet.create({
   },
   dateText: {
     fontSize: 16,
-    fontFamily: 'PoorStory_400Regular',
+    fontFamily: 'GowunDodum_400Regular',
     color: COLORS.textDark,
   },
   editIcon: {
     fontSize: 16,
+    fontFamily: 'GowunDodum_400Regular',
+    color: COLORS.darkPink,
   },
   section: {
     backgroundColor: COLORS.white,
@@ -394,15 +495,15 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    fontFamily: 'PoorStory_400Regular',
+    fontFamily: 'GowunDodum_400Regular',
     color: COLORS.darkPink,
     marginBottom: 16,
   },
   description: {
     fontSize: 13,
-    fontFamily: 'PoorStory_400Regular',
+    fontFamily: 'GowunDodum_400Regular',
     color: COLORS.textDark,
-    lineHeight: 26,
+    lineHeight: 20,
   },
   tipsSection: {
     marginBottom: 16,
@@ -436,14 +537,14 @@ const styles = StyleSheet.create({
     color: COLORS.white,
     fontSize: 14,
     fontWeight: 'bold',
-    fontFamily: 'PoorStory_400Regular',
+    fontFamily: 'GowunDodum_400Regular',
   },
   tipText: {
     flex: 1,
     fontSize: 12,
-    fontFamily: 'PoorStory_400Regular',
+    fontFamily: 'GowunDodum_400Regular',
     color: COLORS.textDark,
-    lineHeight: 22,
+    lineHeight: 18,
   },
   dateDisplayOnly: {
     borderWidth: 2,
@@ -500,7 +601,7 @@ const styles = StyleSheet.create({
   hallNumber: {
     fontSize: 16,
     fontWeight: 'bold',
-    fontFamily: 'PoorStory_400Regular',
+    fontFamily: 'GowunDodum_400Regular',
     color: COLORS.darkPink,
   },
   input: {
@@ -511,7 +612,7 @@ const styles = StyleSheet.create({
     padding: 10,
     marginBottom: 8,
     fontSize: 14,
-    fontFamily: 'PoorStory_400Regular',
+    fontFamily: 'GowunDodum_400Regular',
     color: COLORS.textDark,
   },
   memoInput: {
@@ -527,7 +628,7 @@ const styles = StyleSheet.create({
   addImageButtonText: {
     color: COLORS.white,
     fontSize: 14,
-    fontFamily: 'PoorStory_400Regular',
+    fontFamily: 'GowunDodum_400Regular',
     fontWeight: 'bold',
   },
   imageGrid: {
@@ -551,15 +652,15 @@ const styles = StyleSheet.create({
     top: 4,
     right: 4,
     backgroundColor: 'rgba(0,0,0,0.6)',
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
     justifyContent: 'center',
     alignItems: 'center',
   },
   deleteImageText: {
     color: COLORS.white,
-    fontSize: 18,
+    fontSize: 14,
     fontWeight: 'bold',
   },
   completedButton: {
@@ -581,21 +682,105 @@ const styles = StyleSheet.create({
     color: COLORS.white,
     fontSize: 18,
     fontWeight: 'bold',
-    fontFamily: 'PoorStory_400Regular',
+    fontFamily: 'GowunDodum_400Regular',
     textAlign: 'center',
   },
-  backButton: {
-    backgroundColor: COLORS.white,
-    borderWidth: 2,
-    borderColor: COLORS.darkPink,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 24,
+  memoDisplay: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    gap: 12,
   },
-  backButtonText: {
+  memoText: {
+    flex: 1,
+    fontSize: 16,
+    fontFamily: 'GowunDodum_400Regular',
+    color: COLORS.textDark,
+  },
+  editButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  editButtonText: {
+    fontSize: 14,
+    fontFamily: 'GowunDodum_400Regular',
+    color: COLORS.darkPink,
+    fontWeight: '600',
+  },
+  memoEdit: {
+    gap: 12,
+  },
+  memoEditInput: {
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    fontFamily: 'GowunDodum_400Regular',
+    minHeight: 100,
+  },
+  editButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  saveButton: {
+    flex: 1,
+    backgroundColor: COLORS.darkPink,
+    borderRadius: 8,
+    padding: 12,
+  },
+  saveButtonText: {
+    color: COLORS.white,
+    fontSize: 16,
+    fontWeight: '600',
+    fontFamily: 'GowunDodum_400Regular',
+    textAlign: 'center',
+  },
+  cancelButton: {
+    flex: 1,
+    backgroundColor: COLORS.white,
+    borderWidth: 1,
+    borderColor: COLORS.darkPink,
+    borderRadius: 8,
+    padding: 12,
+  },
+  cancelButtonText: {
     color: COLORS.darkPink,
     fontSize: 16,
-    fontFamily: 'PoorStory_400Regular',
+    fontWeight: '600',
+    fontFamily: 'GowunDodum_400Regular',
     textAlign: 'center',
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalImage: {
+    width: '90%',
+    height: '80%',
+  },
+  modalCloseButton: {
+    position: 'absolute',
+    top: 60,
+    right: 20,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: COLORS.white,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalCloseText: {
+    fontSize: 24,
+    color: COLORS.darkPink,
+    fontWeight: 'bold',
   },
 });
