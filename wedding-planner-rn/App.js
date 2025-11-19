@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { View, ActivityIndicator } from 'react-native';
-import { useFonts, PoorStory_400Regular } from '@expo-google-fonts/poor-story';
+import { View, Text, StyleSheet, Animated } from 'react-native';
+import { useFonts, GowunDodum_400Regular } from '@expo-google-fonts/gowun-dodum';
 import { WeddingTimeline } from './src/utils/WeddingTimeline';
 
 import DateInputScreen from './src/screens/DateInputScreen';
@@ -15,10 +15,12 @@ const Stack = createNativeStackNavigator();
 export default function App() {
   const [timeline] = useState(new WeddingTimeline());
   const [initialRoute, setInitialRoute] = useState(null);
+  const [showApp, setShowApp] = useState(false);
+  const fadeAnim = useRef(new Animated.Value(0)).current;
 
-  // Poor Story 폰트 로드
+  // Gowun Dodum 폰트 로드
   const [fontsLoaded] = useFonts({
-    PoorStory_400Regular,
+    GowunDodum_400Regular,
   });
 
   useEffect(() => {
@@ -35,36 +37,68 @@ export default function App() {
     }
   };
 
-  // 폰트 로딩 중이거나 초기 라우트가 설정되지 않았으면 로딩 표시
-  if (!fontsLoaded || !initialRoute) {
+  useEffect(() => {
+    if (fontsLoaded && initialRoute) {
+      // 최소 1초 로딩화면 표시 후 페이드인
+      setTimeout(() => {
+        setShowApp(true);
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 500,
+          useNativeDriver: true,
+        }).start();
+      }, 1000);
+    }
+  }, [fontsLoaded, initialRoute]);
+
+  // 폰트 로딩 중이거나 초기 라우트가 설정되지 않았거나 앱을 아직 표시하지 않을 때 로딩 표시
+  if (!fontsLoaded || !initialRoute || !showApp) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color="#f0768b" />
+      <View style={styles.loadingContainer}>
+        <Text style={styles.heartIcon}>♥</Text>
       </View>
     );
   }
 
   return (
-    <NavigationContainer>
-      <Stack.Navigator
-        initialRouteName={initialRoute}
-        screenOptions={{
-          headerShown: false,
-        }}
-      >
-          <Stack.Screen name="DateInput">
-            {(props) => <DateInputScreen {...props} timeline={timeline} />}
-          </Stack.Screen>
-          <Stack.Screen name="Timeline">
-            {(props) => <TimelineScreen {...props} timeline={timeline} />}
-          </Stack.Screen>
-          <Stack.Screen name="Detail">
-            {(props) => <DetailScreen {...props} timeline={timeline} />}
-          </Stack.Screen>
-          <Stack.Screen name="MyPage">
-            {(props) => <MyPageScreen {...props} timeline={timeline} />}
-          </Stack.Screen>
-        </Stack.Navigator>
-    </NavigationContainer>
+    <Animated.View style={[styles.appContainer, { opacity: fadeAnim }]}>
+      <NavigationContainer>
+        <Stack.Navigator
+          initialRouteName={initialRoute}
+          screenOptions={{
+            headerShown: false,
+          }}
+        >
+            <Stack.Screen name="DateInput">
+              {(props) => <DateInputScreen {...props} timeline={timeline} />}
+            </Stack.Screen>
+            <Stack.Screen name="Timeline">
+              {(props) => <TimelineScreen {...props} timeline={timeline} />}
+            </Stack.Screen>
+            <Stack.Screen name="Detail">
+              {(props) => <DetailScreen {...props} timeline={timeline} />}
+            </Stack.Screen>
+            <Stack.Screen name="MyPage">
+              {(props) => <MyPageScreen {...props} timeline={timeline} />}
+            </Stack.Screen>
+          </Stack.Navigator>
+      </NavigationContainer>
+    </Animated.View>
   );
 }
+
+const styles = StyleSheet.create({
+  appContainer: {
+    flex: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+  },
+  heartIcon: {
+    fontSize: 80,
+    color: '#f0768b',
+  },
+});

@@ -14,6 +14,8 @@ export default function TimelineScreen({ navigation, timeline }) {
   const [items, setItems] = useState([]);
   const [dDay, setDDay] = useState(0);
   const [completedCount, setCompletedCount] = useState(0);
+  const [nickname, setNickname] = useState('');
+  const [showOnlyPending, setShowOnlyPending] = useState(false);
 
   useEffect(() => {
     loadTimeline();
@@ -32,6 +34,10 @@ export default function TimelineScreen({ navigation, timeline }) {
     setItems([...timeline.timeline]);
     setDDay(timeline.getDDay());
     setCompletedCount(timeline.getCompletedCount());
+
+    // 닉네임 로드
+    const savedNickname = await AsyncStorage.getItem('wedding-nickname');
+    setNickname(savedNickname || '');
   };
 
   const handleItemPress = (item) => {
@@ -59,6 +65,9 @@ export default function TimelineScreen({ navigation, timeline }) {
       ]
     );
   };
+
+  // 필터링된 아이템 목록
+  const filteredItems = showOnlyPending ? items.filter(item => !item.completed) : items;
 
   const renderItem = ({ item }) => (
     <TouchableOpacity
@@ -88,9 +97,11 @@ export default function TimelineScreen({ navigation, timeline }) {
       {/* 헤더 */}
       <View style={styles.header}>
         <View style={styles.headerTop}>
-          <Text style={styles.headerTitle}>결혼 준비 타임라인</Text>
-          <TouchableOpacity onPress={handleMyPagePress}>
-            <Text style={styles.myPageButton}>👤 마이페이지</Text>
+          <Text style={styles.headerTitle}>
+            {nickname ? `${nickname}의 결혼 준비 타임라인` : '결혼 준비 타임라인'}
+          </Text>
+          <TouchableOpacity style={styles.myPageButtonBox} onPress={handleMyPagePress}>
+            <Text style={styles.myPageButton}>My</Text>
           </TouchableOpacity>
         </View>
         <View style={styles.dateRange}>
@@ -114,9 +125,21 @@ export default function TimelineScreen({ navigation, timeline }) {
         </View>
       </View>
 
+      {/* 필터 버튼 */}
+      <View style={styles.filterContainer}>
+        <TouchableOpacity
+          style={[styles.filterButton, showOnlyPending && styles.filterButtonActive]}
+          onPress={() => setShowOnlyPending(!showOnlyPending)}
+        >
+          <Text style={[styles.filterButtonText, showOnlyPending && styles.filterButtonTextActive]}>
+            {showOnlyPending ? '전체 보기' : '해야할 것만 보기'}
+          </Text>
+        </TouchableOpacity>
+      </View>
+
       {/* 타임라인 목록 */}
       <FlatList
-        data={items}
+        data={filteredItems}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
@@ -139,7 +162,7 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: COLORS.white,
-    paddingTop: 80,
+    paddingTop: 100,
     paddingBottom: 20,
     paddingHorizontal: 20,
     shadowColor: '#000',
@@ -156,13 +179,21 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 24,
-    fontWeight: 'bold',
-    fontFamily: 'PoorStory_400Regular',
+    fontWeight: '900',
+    fontFamily: 'GowunDodum_400Regular',
     color: COLORS.darkPink,
   },
+  myPageButtonBox: {
+    backgroundColor: COLORS.white,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: COLORS.darkPink,
+  },
   myPageButton: {
-    fontSize: 14,
-    fontFamily: 'PoorStory_400Regular',
+    fontSize: 12,
+    fontFamily: 'GowunDodum_400Regular',
     color: COLORS.darkPink,
     fontWeight: '600',
   },
@@ -171,8 +202,9 @@ const styles = StyleSheet.create({
   },
   dateRangeText: {
     fontSize: 14,
-    fontFamily: 'PoorStory_400Regular',
-    color: COLORS.textGray,
+    fontWeight: 'bold',
+    fontFamily: 'GowunDodum_400Regular',
+    color: COLORS.textDark,
   },
   statsRow: {
     flexDirection: 'row',
@@ -180,34 +212,35 @@ const styles = StyleSheet.create({
   },
   statBox: {
     flex: 1,
-    backgroundColor: COLORS.lightPink,
+    backgroundColor: COLORS.darkPink,
     borderRadius: 8,
-    padding: 12,
+    padding: 8,
     alignItems: 'center',
   },
   dDayLabel: {
     fontSize: 12,
-    fontFamily: 'PoorStory_400Regular',
-    color: COLORS.textGray,
+    fontWeight: 'bold',
+    fontFamily: 'GowunDodum_400Regular',
+    color: COLORS.white,
     marginBottom: 4,
   },
   dDayValue: {
     fontSize: 20,
     fontWeight: 'bold',
-    fontFamily: 'PoorStory_400Regular',
-    color: COLORS.darkPink,
+    fontFamily: 'GowunDodum_400Regular',
+    color: COLORS.white,
   },
   completedLabel: {
     fontSize: 12,
-    fontFamily: 'PoorStory_400Regular',
-    color: COLORS.textGray,
+    fontFamily: 'GowunDodum_400Regular',
+    color: COLORS.white,
     marginBottom: 4,
   },
   completedValue: {
     fontSize: 20,
     fontWeight: 'bold',
-    fontFamily: 'PoorStory_400Regular',
-    color: COLORS.darkPink,
+    fontFamily: 'GowunDodum_400Regular',
+    color: COLORS.white,
   },
   listContent: {
     padding: 16,
@@ -226,7 +259,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   completedItem: {
-    opacity: 0.7,
+    // 완료된 항목도 동일한 스타일 유지
   },
   timelineIcon: {
     width: 48,
@@ -251,22 +284,21 @@ const styles = StyleSheet.create({
   timelineTitle: {
     fontSize: 16,
     fontWeight: '600',
-    fontFamily: 'PoorStory_400Regular',
+    fontFamily: 'GowunDodum_400Regular',
     color: COLORS.textDark,
   },
   completedText: {
-    textDecorationLine: 'line-through',
-    color: COLORS.textGray,
+    // 완료된 항목도 동일한 텍스트 스타일 유지
   },
   checkMark: {
     fontSize: 14,
-    fontFamily: 'PoorStory_400Regular',
+    fontFamily: 'GowunDodum_400Regular',
     color: COLORS.darkPink,
     marginLeft: 8,
   },
   timelineDate: {
     fontSize: 14,
-    fontFamily: 'PoorStory_400Regular',
+    fontFamily: 'GowunDodum_400Regular',
     color: COLORS.textGray,
   },
   arrow: {
@@ -290,7 +322,33 @@ const styles = StyleSheet.create({
     color: COLORS.darkPink,
     fontSize: 16,
     fontWeight: '600',
-    fontFamily: 'PoorStory_400Regular',
+    fontFamily: 'GowunDodum_400Regular',
     textAlign: 'center',
+  },
+  filterContainer: {
+    paddingHorizontal: 16,
+    paddingTop: 0,
+    paddingBottom: 8,
+    backgroundColor: COLORS.background,
+  },
+  filterButton: {
+    backgroundColor: COLORS.white,
+    borderWidth: 2,
+    borderColor: COLORS.darkPink,
+    borderRadius: 8,
+    padding: 8,
+  },
+  filterButtonActive: {
+    backgroundColor: COLORS.darkPink,
+  },
+  filterButtonText: {
+    color: COLORS.darkPink,
+    fontSize: 14,
+    fontFamily: 'GowunDodum_400Regular',
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  filterButtonTextActive: {
+    color: COLORS.white,
   },
 });

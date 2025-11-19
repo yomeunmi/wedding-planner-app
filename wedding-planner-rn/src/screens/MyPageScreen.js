@@ -60,6 +60,11 @@ export default function MyPageScreen({ navigation, timeline }) {
 
   return (
     <ScrollView style={styles.container}>
+      {/* 상단 뒤로가기 버튼 */}
+      <TouchableOpacity style={styles.topBackButton} onPress={() => navigation.goBack()}>
+        <Text style={styles.topBackArrow}>←</Text>
+      </TouchableOpacity>
+
       <View style={styles.content}>
         {/* 헤더 */}
         <View style={styles.header}>
@@ -78,7 +83,7 @@ export default function MyPageScreen({ navigation, timeline }) {
                 style={styles.editButton}
                 onPress={() => setIsEditingNickname(true)}
               >
-                <Text style={styles.editButtonText}>✏️ 수정</Text>
+                <Text style={styles.editButtonText}>✎ 수정</Text>
               </TouchableOpacity>
             </View>
           ) : (
@@ -116,10 +121,6 @@ export default function MyPageScreen({ navigation, timeline }) {
             <Text style={styles.infoValue}>
               {timeline.weddingDate && timeline.formatDate(timeline.weddingDate)}
             </Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>준비 기간</Text>
-            <Text style={styles.infoValue}>{timeline.getPrepPeriod()}</Text>
           </View>
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>D-Day</Text>
@@ -178,14 +179,6 @@ export default function MyPageScreen({ navigation, timeline }) {
             </View>
           ))}
         </View>
-
-        {/* 뒤로가기 버튼 */}
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Text style={styles.backButtonText}>← 타임라인으로 돌아가기</Text>
-        </TouchableOpacity>
       </View>
     </ScrollView>
   );
@@ -196,17 +189,39 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
+  topBackButton: {
+    position: 'absolute',
+    top: 60,
+    left: 20,
+    zIndex: 10,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: COLORS.white,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  topBackArrow: {
+    color: COLORS.darkPink,
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
   content: {
     padding: 20,
-    paddingTop: 80,
+    paddingTop: 120,
   },
   header: {
     marginBottom: 24,
   },
   title: {
     fontSize: 28,
-    fontWeight: 'bold',
-    fontFamily: 'PoorStory_400Regular',
+    fontWeight: '900',
+    fontFamily: 'GowunDodum_400Regular',
     color: COLORS.darkPink,
   },
   section: {
@@ -221,10 +236,10 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
-    fontFamily: 'PoorStory_400Regular',
-    color: COLORS.textDark,
+    fontFamily: 'GowunDodum_400Regular',
+    color: COLORS.darkPink,
     marginBottom: 16,
   },
   nicknameDisplay: {
@@ -234,7 +249,7 @@ const styles = StyleSheet.create({
   },
   nicknameText: {
     fontSize: 16,
-    fontFamily: 'PoorStory_400Regular',
+    fontFamily: 'GowunDodum_400Regular',
     color: COLORS.textDark,
   },
   editButton: {
@@ -243,7 +258,7 @@ const styles = StyleSheet.create({
   },
   editButtonText: {
     fontSize: 14,
-    fontFamily: 'PoorStory_400Regular',
+    fontFamily: 'GowunDodum_400Regular',
     color: COLORS.darkPink,
     fontWeight: '600',
   },
@@ -256,7 +271,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
-    fontFamily: 'PoorStory_400Regular',
+    fontFamily: 'GowunDodum_400Regular',
   },
   editButtons: {
     flexDirection: 'row',
@@ -272,7 +287,7 @@ const styles = StyleSheet.create({
     color: COLORS.white,
     fontSize: 16,
     fontWeight: '600',
-    fontFamily: 'PoorStory_400Regular',
+    fontFamily: 'GowunDodum_400Regular',
     textAlign: 'center',
   },
   cancelButton: {
@@ -287,7 +302,7 @@ const styles = StyleSheet.create({
     color: COLORS.darkPink,
     fontSize: 16,
     fontWeight: '600',
-    fontFamily: 'PoorStory_400Regular',
+    fontFamily: 'GowunDodum_400Regular',
     textAlign: 'center',
   },
   infoRow: {
@@ -299,13 +314,13 @@ const styles = StyleSheet.create({
   },
   infoLabel: {
     fontSize: 15,
-    fontFamily: 'PoorStory_400Regular',
+    fontFamily: 'GowunDodum_400Regular',
     color: COLORS.textGray,
   },
   infoValue: {
     fontSize: 15,
     fontWeight: '600',
-    fontFamily: 'PoorStory_400Regular',
+    fontFamily: 'GowunDodum_400Regular',
     color: COLORS.textDark,
   },
   dDayValue: {
@@ -319,7 +334,7 @@ const styles = StyleSheet.create({
   },
   completedSummary: {
     fontSize: 14,
-    fontFamily: 'PoorStory_400Regular',
+    fontFamily: 'GowunDodum_400Regular',
     color: COLORS.darkPink,
     fontWeight: '600',
   },
@@ -345,7 +360,7 @@ const styles = StyleSheet.create({
   checklistTitle: {
     fontSize: 15,
     fontWeight: '600',
-    fontFamily: 'PoorStory_400Regular',
+    fontFamily: 'GowunDodum_400Regular',
     color: COLORS.textDark,
   },
   completedText: {
@@ -354,13 +369,13 @@ const styles = StyleSheet.create({
   },
   checklistCompleted: {
     fontSize: 13,
-    fontFamily: 'PoorStory_400Regular',
+    fontFamily: 'GowunDodum_400Regular',
     color: COLORS.darkPink,
     marginLeft: 8,
   },
   checklistDate: {
     fontSize: 13,
-    fontFamily: 'PoorStory_400Regular',
+    fontFamily: 'GowunDodum_400Regular',
     color: COLORS.textGray,
   },
   checklistStatus: {
@@ -369,20 +384,5 @@ const styles = StyleSheet.create({
   },
   checklistStatusCompleted: {
     color: COLORS.darkPink,
-  },
-  backButton: {
-    backgroundColor: COLORS.white,
-    borderWidth: 2,
-    borderColor: COLORS.darkPink,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 24,
-  },
-  backButtonText: {
-    color: COLORS.darkPink,
-    fontSize: 16,
-    fontWeight: '600',
-    fontFamily: 'PoorStory_400Regular',
-    textAlign: 'center',
   },
 });
