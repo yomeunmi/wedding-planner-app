@@ -37,6 +37,8 @@ export default function DetailScreen({ route, navigation, timeline }) {
   const [makeupImages, setMakeupImages] = useState([]);
   const [selectedImageIndex, setSelectedImageIndex] = useState(null);
   const flatListRef = useRef(null);
+  const [showWeddingDatePicker, setShowWeddingDatePicker] = useState(false);
+  const [tempWeddingDate, setTempWeddingDate] = useState(new Date());
 
   // 데이터 불러오기
   useEffect(() => {
@@ -169,6 +171,29 @@ export default function DetailScreen({ route, navigation, timeline }) {
       hall.id === id ? { ...hall, isSelected: true } : { ...hall, isSelected: false }
     ));
     Alert.alert('알림', '웨딩홀이 선택되었습니다! 🎊');
+  };
+
+  // 결혼식 날짜 변경
+  const handleWeddingDateChange = async (event, selectedDate) => {
+    setShowWeddingDatePicker(false);
+    if (selectedDate) {
+      try {
+        // WeddingTimeline의 weddingDate 업데이트
+        await AsyncStorage.setItem('wedding-date', selectedDate.toISOString());
+        timeline.weddingDate = selectedDate;
+
+        // 타임라인 재계산
+        await timeline.load();
+
+        Alert.alert('알림', `결혼식 날짜가 ${timeline.formatDate(selectedDate)}로 변경되었습니다. 🎉`);
+
+        // 화면 새로고침을 위해 navigation 이벤트 발생
+        navigation.navigate('Timeline');
+      } catch (error) {
+        console.error('날짜 변경 실패:', error);
+        Alert.alert('오류', '날짜 변경에 실패했습니다.');
+      }
+    }
   };
 
   // 드레스 이미지 선택
@@ -385,6 +410,32 @@ export default function DetailScreen({ route, navigation, timeline }) {
                 )}
               </View>
             ))}
+
+            {/* 결혼식 날짜 변경 버튼 */}
+            <View style={styles.weddingDateChangeSection}>
+              <Text style={styles.weddingDateChangeLabel}>💒 결혼식 날짜</Text>
+              <View style={styles.weddingDateRow}>
+                <Text style={styles.currentWeddingDate}>
+                  {timeline.formatDate(timeline.weddingDate)}
+                </Text>
+                <TouchableOpacity
+                  style={styles.changeWeddingDateButton}
+                  onPress={() => {
+                    setTempWeddingDate(timeline.weddingDate);
+                    setShowWeddingDatePicker(true);
+                  }}
+                >
+                  <Text style={styles.changeWeddingDateButtonText}>날짜 변경</Text>
+                </TouchableOpacity>
+              </View>
+              {showWeddingDatePicker && (
+                <DateTimePicker
+                  value={tempWeddingDate}
+                  mode="date"
+                  onChange={handleWeddingDateChange}
+                />
+              )}
+            </View>
           </View>
         )}
 
@@ -855,6 +906,42 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontFamily: 'GowunDodum_400Regular',
     textAlign: 'center',
+  },
+  weddingDateChangeSection: {
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.lightPink,
+  },
+  weddingDateChangeLabel: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    fontFamily: 'GowunDodum_400Regular',
+    color: COLORS.darkPink,
+    marginBottom: 8,
+  },
+  weddingDateRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  currentWeddingDate: {
+    fontSize: 16,
+    fontFamily: 'GowunDodum_400Regular',
+    color: COLORS.textDark,
+    fontWeight: '600',
+  },
+  changeWeddingDateButton: {
+    backgroundColor: COLORS.darkPink,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  changeWeddingDateButtonText: {
+    color: COLORS.white,
+    fontSize: 14,
+    fontWeight: 'bold',
+    fontFamily: 'GowunDodum_400Regular',
   },
   addImageButton: {
     backgroundColor: COLORS.darkPink,
