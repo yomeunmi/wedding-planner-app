@@ -47,6 +47,9 @@ export default function DetailScreen({ route, navigation, timeline }) {
   const flatListRef = useRef(null);
   const [showWeddingDatePicker, setShowWeddingDatePicker] = useState(false);
   const [tempWeddingDate, setTempWeddingDate] = useState(new Date());
+  const [isEditingWeddingDate, setIsEditingWeddingDate] = useState(false);
+  const [showHallDatePicker, setShowHallDatePicker] = useState(null); // 웨딩홀 날짜 선택기 (hall.id 저장)
+  const [showShopDatePicker, setShowShopDatePicker] = useState(null); // 드레스샵 날짜 선택기 (shop.id 저장)
 
   // 데이터 불러오기
   useEffect(() => {
@@ -187,6 +190,15 @@ export default function DetailScreen({ route, navigation, timeline }) {
     ));
   };
 
+  // 웨딩홀 날짜 선택 핸들러
+  const handleHallDateChange = (id, event, selectedDate) => {
+    setShowHallDatePicker(null);
+    if (selectedDate) {
+      const formattedDate = selectedDate.toISOString().split('T')[0].replace(/-/g, '.');
+      updateWeddingHall(id, 'date', formattedDate);
+    }
+  };
+
   // 웨딩홀 편집 시작
   const startEditWeddingHall = (id) => {
     const hall = weddingHalls.find(h => h.id === id);
@@ -265,6 +277,10 @@ export default function DetailScreen({ route, navigation, timeline }) {
       // 변경사항 저장
       await timeline.save();
 
+      // 편집 모드 종료
+      setIsEditingWeddingDate(false);
+      setShowWeddingDatePicker(false);
+
       Alert.alert(
         '알림',
         `결혼식 날짜가 ${timeline.formatDate(tempWeddingDate)}로 변경되었습니다. 🎉\n모든 타임라인 날짜가 업데이트되었습니다.`,
@@ -287,6 +303,8 @@ export default function DetailScreen({ route, navigation, timeline }) {
   // 결혼식 날짜 변경 취소
   const cancelWeddingDateChange = () => {
     setTempWeddingDate(timeline.weddingDate);
+    setIsEditingWeddingDate(false);
+    setShowWeddingDatePicker(false);
   };
 
   // 드레스샵 추가
@@ -309,6 +327,15 @@ export default function DetailScreen({ route, navigation, timeline }) {
     setDressShops(dressShops.map(shop =>
       shop.id === id ? { ...shop, [field]: value } : shop
     ));
+  };
+
+  // 드레스샵 날짜 선택 핸들러
+  const handleShopDateChange = (id, event, selectedDate) => {
+    setShowShopDatePicker(null);
+    if (selectedDate) {
+      const formattedDate = selectedDate.toISOString().split('T')[0].replace(/-/g, '.');
+      updateDressShop(id, 'date', formattedDate);
+    }
   };
 
   // 드레스샵 편집 시작
@@ -625,13 +652,30 @@ export default function DetailScreen({ route, navigation, timeline }) {
                   onChangeText={(text) => updateWeddingHall(hall.id, 'location', text)}
                   editable={hall.isEditing}
                 />
-                <TextInput
-                  style={[styles.input, !hall.isEditing && styles.inputDisabled]}
-                  placeholder="투어 날짜 (예: 2025.01.15) *"
-                  value={hall.date}
-                  onChangeText={(text) => updateWeddingHall(hall.id, 'date', text)}
-                  editable={hall.isEditing}
-                />
+                {/* 투어 날짜 */}
+                <View style={styles.dateInputContainer}>
+                  <View style={styles.dateDisplayRow}>
+                    <Text style={styles.dateInputLabel}>투어 날짜 *</Text>
+                    <Text style={[styles.dateInputValue, !hall.date && styles.dateInputPlaceholder]}>
+                      {hall.date || '날짜를 선택하세요'}
+                    </Text>
+                  </View>
+                  {hall.isEditing && (
+                    <TouchableOpacity
+                      style={styles.selectDateButton}
+                      onPress={() => setShowHallDatePicker(hall.id)}
+                    >
+                      <Text style={styles.selectDateButtonText}>날짜 선택</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+                {showHallDatePicker === hall.id && (
+                  <DateTimePicker
+                    value={hall.date ? new Date(hall.date.replace(/\./g, '-')) : new Date()}
+                    mode="date"
+                    onChange={(event, selectedDate) => handleHallDateChange(hall.id, event, selectedDate)}
+                  />
+                )}
                 <TextInput
                   style={[styles.input, styles.memoInput, !hall.isEditing && styles.inputDisabled]}
                   placeholder="메모"
@@ -656,44 +700,61 @@ export default function DetailScreen({ route, navigation, timeline }) {
               <Text style={styles.addItemButtonText}>+ 웨딩홀 추가하기</Text>
             </TouchableOpacity>
 
-            {/* 결혼식 날짜 변경 버튼 */}
+            {/* 결혼식 날짜 변경 섹션 */}
             <View style={styles.weddingDateChangeSection}>
               <Text style={styles.weddingDateChangeLabel}>💒 결혼식 날짜</Text>
-              <View style={styles.weddingDateRow}>
-                <Text style={styles.currentWeddingDate}>
-                  {timeline.formatDate(tempWeddingDate)}
-                </Text>
-                <TouchableOpacity
-                  style={styles.changeWeddingDateButton}
-                  onPress={() => {
-                    setShowWeddingDatePicker(true);
-                  }}
-                >
-                  <Text style={styles.changeWeddingDateButtonText}>날짜 선택</Text>
-                </TouchableOpacity>
-              </View>
-              {showWeddingDatePicker && (
-                <DateTimePicker
-                  value={tempWeddingDate}
-                  mode="date"
-                  onChange={handleWeddingDateChange}
-                />
-              )}
-              {/* 저장/취소 버튼 */}
-              {tempWeddingDate.getTime() !== timeline.weddingDate.getTime() && (
-                <View style={styles.weddingDateActionButtons}>
+              {!isEditingWeddingDate ? (
+                <View style={styles.weddingDateRow}>
+                  <Text style={styles.currentWeddingDate}>
+                    {timeline.formatDate(timeline.weddingDate)}
+                  </Text>
                   <TouchableOpacity
-                    style={styles.cancelWeddingDateButton}
-                    onPress={cancelWeddingDateChange}
+                    style={styles.editWeddingDateButton}
+                    onPress={() => {
+                      setTempWeddingDate(timeline.weddingDate);
+                      setIsEditingWeddingDate(true);
+                    }}
                   >
-                    <Text style={styles.cancelWeddingDateButtonText}>취소</Text>
+                    <Text style={styles.editWeddingDateButtonText}>✎ 수정</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.saveWeddingDateButton}
-                    onPress={saveWeddingDate}
-                  >
-                    <Text style={styles.saveWeddingDateButtonText}>저장</Text>
-                  </TouchableOpacity>
+                </View>
+              ) : (
+                <View style={styles.weddingDateEditContainer}>
+                  <View style={styles.weddingDateRow}>
+                    <Text style={styles.currentWeddingDate}>
+                      {timeline.formatDate(tempWeddingDate)}
+                    </Text>
+                    <TouchableOpacity
+                      style={styles.changeWeddingDateButton}
+                      onPress={() => {
+                        setShowWeddingDatePicker(true);
+                      }}
+                    >
+                      <Text style={styles.changeWeddingDateButtonText}>날짜 선택</Text>
+                    </TouchableOpacity>
+                  </View>
+                  {showWeddingDatePicker && (
+                    <DateTimePicker
+                      value={tempWeddingDate}
+                      mode="date"
+                      onChange={handleWeddingDateChange}
+                    />
+                  )}
+                  {/* 저장/취소 버튼 */}
+                  <View style={styles.weddingDateActionButtons}>
+                    <TouchableOpacity
+                      style={styles.cancelWeddingDateButton}
+                      onPress={cancelWeddingDateChange}
+                    >
+                      <Text style={styles.cancelWeddingDateButtonText}>취소</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.saveWeddingDateButton}
+                      onPress={saveWeddingDate}
+                    >
+                      <Text style={styles.saveWeddingDateButtonText}>저장</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
               )}
             </View>
@@ -766,13 +827,30 @@ export default function DetailScreen({ route, navigation, timeline }) {
                   onChangeText={(text) => updateDressShop(shop.id, 'location', text)}
                   editable={shop.isEditing}
                 />
-                <TextInput
-                  style={[styles.input, !shop.isEditing && styles.inputDisabled]}
-                  placeholder="투어 날짜 (예: 2025.01.15) *"
-                  value={shop.date}
-                  onChangeText={(text) => updateDressShop(shop.id, 'date', text)}
-                  editable={shop.isEditing}
-                />
+                {/* 투어 날짜 */}
+                <View style={styles.dateInputContainer}>
+                  <View style={styles.dateDisplayRow}>
+                    <Text style={styles.dateInputLabel}>투어 날짜 *</Text>
+                    <Text style={[styles.dateInputValue, !shop.date && styles.dateInputPlaceholder]}>
+                      {shop.date || '날짜를 선택하세요'}
+                    </Text>
+                  </View>
+                  {shop.isEditing && (
+                    <TouchableOpacity
+                      style={styles.selectDateButton}
+                      onPress={() => setShowShopDatePicker(shop.id)}
+                    >
+                      <Text style={styles.selectDateButtonText}>날짜 선택</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+                {showShopDatePicker === shop.id && (
+                  <DateTimePicker
+                    value={shop.date ? new Date(shop.date.replace(/\./g, '-')) : new Date()}
+                    mode="date"
+                    onChange={(event, selectedDate) => handleShopDateChange(shop.id, event, selectedDate)}
+                  />
+                )}
                 <TextInput
                   style={[styles.input, styles.memoInput, !shop.isEditing && styles.inputDisabled]}
                   placeholder="메모"
@@ -1312,6 +1390,49 @@ const styles = StyleSheet.create({
     minHeight: 80,
     textAlignVertical: 'top',
   },
+  dateInputContainer: {
+    backgroundColor: COLORS.white,
+    borderWidth: 1,
+    borderColor: COLORS.lightPink,
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 8,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  dateDisplayRow: {
+    flex: 1,
+  },
+  dateInputLabel: {
+    fontSize: 12,
+    fontFamily: 'GowunDodum_400Regular',
+    color: COLORS.textGray,
+    marginBottom: 4,
+  },
+  dateInputValue: {
+    fontSize: 14,
+    fontFamily: 'GowunDodum_400Regular',
+    color: COLORS.textDark,
+    fontWeight: '600',
+  },
+  dateInputPlaceholder: {
+    color: COLORS.textLight,
+    fontWeight: 'normal',
+  },
+  selectDateButton: {
+    backgroundColor: COLORS.darkPink,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+    marginLeft: 8,
+  },
+  selectDateButtonText: {
+    color: COLORS.white,
+    fontSize: 12,
+    fontWeight: 'bold',
+    fontFamily: 'GowunDodum_400Regular',
+  },
   selectHallButton: {
     backgroundColor: COLORS.darkPink,
     borderRadius: 8,
@@ -1349,6 +1470,19 @@ const styles = StyleSheet.create({
     fontFamily: 'GowunDodum_400Regular',
     color: COLORS.textDark,
     fontWeight: '600',
+  },
+  editWeddingDateButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  editWeddingDateButtonText: {
+    fontSize: 14,
+    fontFamily: 'GowunDodum_400Regular',
+    color: COLORS.darkPink,
+    fontWeight: '600',
+  },
+  weddingDateEditContainer: {
+    gap: 12,
   },
   changeWeddingDateButton: {
     backgroundColor: COLORS.darkPink,
