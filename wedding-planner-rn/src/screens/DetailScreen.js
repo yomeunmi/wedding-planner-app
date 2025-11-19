@@ -32,6 +32,10 @@ export default function DetailScreen({ route, navigation, timeline }) {
     { id: 1, name: '', location: '', date: '', memo: '', isLocked: false, isSelected: false },
     { id: 2, name: '', location: '', date: '', memo: '', isLocked: false, isSelected: false },
   ]);
+  const [dressShops, setDressShops] = useState([
+    { id: 1, name: '', location: '', date: '', memo: '', isLocked: false, isSelected: false },
+    { id: 2, name: '', location: '', date: '', memo: '', isLocked: false, isSelected: false },
+  ]);
   const [dressImages, setDressImages] = useState([]);
   const [studioImages, setStudioImages] = useState([]);
   const [makeupImages, setMakeupImages] = useState([]);
@@ -48,7 +52,7 @@ export default function DetailScreen({ route, navigation, timeline }) {
   // 데이터 저장
   useEffect(() => {
     saveData();
-  }, [memo, weddingHalls, dressImages, studioImages, makeupImages]);
+  }, [memo, weddingHalls, dressShops, dressImages, studioImages, makeupImages]);
 
   const loadData = async () => {
     try {
@@ -61,6 +65,11 @@ export default function DetailScreen({ route, navigation, timeline }) {
       if (currentItem.id === 'wedding-hall-tour') {
         const savedHalls = await AsyncStorage.getItem(`wedding-halls-${currentItem.id}`);
         if (savedHalls) setWeddingHalls(JSON.parse(savedHalls));
+      }
+
+      if (currentItem.id === 'dress-tour') {
+        const savedShops = await AsyncStorage.getItem(`dress-shops-${currentItem.id}`);
+        if (savedShops) setDressShops(JSON.parse(savedShops));
       }
 
       if (currentItem.id === 'dress-shop-selection' || currentItem.id === 'dress-tour') {
@@ -88,6 +97,10 @@ export default function DetailScreen({ route, navigation, timeline }) {
 
       if (currentItem.id === 'wedding-hall-tour') {
         await AsyncStorage.setItem(`wedding-halls-${currentItem.id}`, JSON.stringify(weddingHalls));
+      }
+
+      if (currentItem.id === 'dress-tour') {
+        await AsyncStorage.setItem(`dress-shops-${currentItem.id}`, JSON.stringify(dressShops));
       }
 
       if (currentItem.id === 'dress-shop-selection' || currentItem.id === 'dress-tour') {
@@ -194,6 +207,43 @@ export default function DetailScreen({ route, navigation, timeline }) {
         Alert.alert('오류', '날짜 변경에 실패했습니다.');
       }
     }
+  };
+
+  // 드레스샵 추가
+  const addDressShop = () => {
+    const newId = dressShops.length > 0 ? Math.max(...dressShops.map(s => s.id)) + 1 : 1;
+    setDressShops([...dressShops, { id: newId, name: '', location: '', date: '', memo: '', isLocked: false, isSelected: false }]);
+  };
+
+  // 드레스샵 삭제
+  const removeDressShop = (id) => {
+    if (dressShops.length <= 1) {
+      Alert.alert('알림', '최소 1개의 드레스샵은 있어야 합니다.');
+      return;
+    }
+    setDressShops(dressShops.filter(shop => shop.id !== id));
+  };
+
+  // 드레스샵 정보 업데이트
+  const updateDressShop = (id, field, value) => {
+    setDressShops(dressShops.map(shop =>
+      shop.id === id ? { ...shop, [field]: value } : shop
+    ));
+  };
+
+  // 드레스샵 잠금 토글
+  const toggleDressShopLock = (id) => {
+    setDressShops(dressShops.map(shop =>
+      shop.id === id ? { ...shop, isLocked: !shop.isLocked } : shop
+    ));
+  };
+
+  // 드레스샵 선택
+  const selectDressShop = (id) => {
+    setDressShops(dressShops.map(shop =>
+      shop.id === id ? { ...shop, isSelected: true } : { ...shop, isSelected: false }
+    ));
+    Alert.alert('알림', '드레스샵이 선택되었습니다! 👗');
   };
 
   // 드레스 이미지 선택
@@ -436,6 +486,91 @@ export default function DetailScreen({ route, navigation, timeline }) {
                 />
               )}
             </View>
+          </View>
+        )}
+
+        {/* 드레스샵 투어 정보 입력 - dress-tour일 때만 표시 */}
+        {currentItem.id === 'dress-tour' && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>👗 투어 드레스샵 정보</Text>
+              <View style={styles.buttonGroup}>
+                <TouchableOpacity style={styles.addButton} onPress={addDressShop}>
+                  <Text style={styles.buttonText}>+</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+            {dressShops.map((shop, index) => (
+              <View key={shop.id} style={[
+                styles.hallCard,
+                shop.isSelected && styles.hallCardSelected,
+                shop.isLocked && styles.hallCardLocked,
+              ]}>
+                <View style={styles.hallHeader}>
+                  <View style={styles.hallTitleRow}>
+                    <Text style={styles.hallNumber}>{index + 1}번째 드레스샵</Text>
+                    {shop.isSelected && (
+                      <View style={styles.selectedBadge}>
+                        <Text style={styles.selectedBadgeText}>✓ 선택됨</Text>
+                      </View>
+                    )}
+                  </View>
+                  <View style={styles.hallActionButtons}>
+                    <TouchableOpacity
+                      style={[styles.lockButton, shop.isLocked && styles.lockButtonActive]}
+                      onPress={() => toggleDressShopLock(shop.id)}
+                    >
+                      <Text style={styles.lockButtonText}>{shop.isLocked ? '🔒' : '🔓'}</Text>
+                    </TouchableOpacity>
+                    {dressShops.length > 1 && (
+                      <TouchableOpacity
+                        style={styles.removeButton}
+                        onPress={() => removeDressShop(shop.id)}
+                      >
+                        <Text style={styles.buttonText}>-</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                </View>
+                <TextInput
+                  style={[styles.input, shop.isLocked && styles.inputDisabled]}
+                  placeholder="드레스샵 이름"
+                  value={shop.name}
+                  onChangeText={(text) => updateDressShop(shop.id, 'name', text)}
+                  editable={!shop.isLocked}
+                />
+                <TextInput
+                  style={[styles.input, shop.isLocked && styles.inputDisabled]}
+                  placeholder="위치"
+                  value={shop.location}
+                  onChangeText={(text) => updateDressShop(shop.id, 'location', text)}
+                  editable={!shop.isLocked}
+                />
+                <TextInput
+                  style={[styles.input, shop.isLocked && styles.inputDisabled]}
+                  placeholder="투어 날짜 (예: 2025.01.15)"
+                  value={shop.date}
+                  onChangeText={(text) => updateDressShop(shop.id, 'date', text)}
+                  editable={!shop.isLocked}
+                />
+                <TextInput
+                  style={[styles.input, styles.memoInput, shop.isLocked && styles.inputDisabled]}
+                  placeholder="메모"
+                  value={shop.memo}
+                  onChangeText={(text) => updateDressShop(shop.id, 'memo', text)}
+                  multiline
+                  editable={!shop.isLocked}
+                />
+                {!shop.isSelected && (
+                  <TouchableOpacity
+                    style={styles.selectHallButton}
+                    onPress={() => selectDressShop(shop.id)}
+                  >
+                    <Text style={styles.selectHallButtonText}>이 드레스샵 선택하기</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            ))}
           </View>
         )}
 
