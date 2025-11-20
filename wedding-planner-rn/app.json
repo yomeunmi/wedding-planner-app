@@ -14,14 +14,15 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.yomeunmi.weddingplanner",
-      "buildNumber": "1.0.0"
+      "buildNumber": "1"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.yomeunmi.weddingplanner"
+      "package": "com.yomeunmi.weddingplanner",
+      "versionCode": 1
     },
     "web": {
       "favicon": "./assets/favicon.png"
