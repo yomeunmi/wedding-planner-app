@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import NotificationManager from './NotificationManager';
 
 // 웨딩 준비 타임라인 계산 및 관리
 export class WeddingTimeline {
@@ -6,6 +7,7 @@ export class WeddingTimeline {
     this.weddingDate = null;
     this.startDate = null;
     this.timeline = [];
+    this.notificationManager = NotificationManager;
   }
 
   // 날짜 설정
@@ -62,7 +64,7 @@ export class WeddingTimeline {
         title: '웨딩촬영 예약',
         icon: '⦾',
         description: '웨딩 스튜디오를 선택하고 촬영 일정을 예약합니다. 포트폴리오와 패키지를 비교하여 선택하세요.',
-        daysBeforeWedding: Math.min(totalDays - 90, 120),
+        daysBeforeWedding: Math.min(totalDays - 90, 105),
         category: 'studios',
         tips: [
           '포트폴리오를 꼼꼼히 확인하고 본인의 스타일과 맞는지 체크하세요',
@@ -94,7 +96,7 @@ export class WeddingTimeline {
         title: '드레스샵 선택',
         icon: '◇',
         description: '웨딩드레스샵을 알아보고 스타일과 예산을 비교합니다. SNS와 후기를 참고하여 선택하세요.',
-        daysBeforeWedding: Math.min(totalDays - 120, 120),
+        daysBeforeWedding: Math.min(totalDays - 120, 135),
         category: 'dress',
         tips: [
           'SNS나 인스타그램에서 드레스샵 포트폴리오 검색.',
@@ -110,7 +112,7 @@ export class WeddingTimeline {
         title: '드레스샵 투어',
         icon: '◆',
         description: '웨딩드레스와 턱시도를 선택합니다. 여러 곳을 방문하여 다양한 스타일을 착용해보세요.',
-        daysBeforeWedding: Math.min(totalDays - 90, 90),
+        daysBeforeWedding: Math.min(totalDays - 75, 75),
         category: 'dress',
         tips: [
           '최소 5벌 이상 입어보고 비교하세요',
@@ -143,7 +145,7 @@ export class WeddingTimeline {
         title: '메이크업 예약',
         icon: '✿',
         description: '본식 당일 메이크업과 헤어를 담당할 샵을 예약합니다. 리허설을 통해 원하는 스타일을 미리 확인하세요.',
-        daysBeforeWedding: Math.min(totalDays - 120, 90),
+        daysBeforeWedding: Math.min(totalDays - 90, 90),
         category: 'makeup',
         tips: [
           '포트폴리오에서 본인이 원하는 스타일을 찾아보세요',
@@ -162,7 +164,7 @@ export class WeddingTimeline {
         title: '신랑 예복 맞춤',
         icon: '◈',
         description: '신랑의 예복을 준비합니다. 턱시도, 예복, 한복 등 원하는 스타일을 선택하고 맞춤 제작합니다.',
-        daysBeforeWedding: Math.min(totalDays - 90, 90),
+        daysBeforeWedding: Math.min(totalDays - 75, 75),
         category: 'dress',
         tips: [
           '신부 드레스와 조화를 이루는 색상과 스타일을 선택하세요',
@@ -213,7 +215,7 @@ export class WeddingTimeline {
         title: '신혼여행 예약',
         icon: '✈',
         description: '신혼여행 행선지와 일정을 결정하고 항공권과 숙소를 예약합니다.',
-        daysBeforeWedding: Math.min(totalDays - 120, 120),
+        daysBeforeWedding: Math.min(totalDays - 105, 120),
         category: 'honeymoon',
         tips: [
           '나라/도시, 여행 기간, 예산을 먼저 결정하세요',
@@ -266,7 +268,7 @@ export class WeddingTimeline {
         title: '신혼집 준비',
         icon: '⌂',
         description: '신혼집 계약과 가전, 가구, 생활용품 등 혼수를 준비합니다.',
-        daysBeforeWedding: Math.min(totalDays - 120, 120),
+        daysBeforeWedding: Math.min(totalDays - 120, 150),
         category: 'home',
         tips: [
           '전세/월세/자가 계약 및 입주 날짜 확인.',
@@ -395,6 +397,9 @@ export class WeddingTimeline {
       timeline: this.timeline
     };
     await AsyncStorage.setItem('wedding-timeline-data', JSON.stringify(data));
+
+    // 알림 스케줄링
+    await this.scheduleNotifications();
   }
 
   // 타임라인 불러오기
@@ -457,5 +462,46 @@ export class WeddingTimeline {
       return true;
     }
     return false;
+  }
+
+  // 알림 권한 요청 및 초기화
+  async initializeNotifications() {
+    const hasPermission = await this.notificationManager.requestPermissions();
+    if (hasPermission) {
+      await this.scheduleNotifications();
+    }
+    return hasPermission;
+  }
+
+  // 타임라인 알림 스케줄링
+  async scheduleNotifications() {
+    try {
+      const count = await this.notificationManager.scheduleTimelineNotifications(this.timeline);
+      console.log(`${count}개의 알림이 스케줄링되었습니다.`);
+      return count;
+    } catch (error) {
+      console.error('알림 스케줄링 오류:', error);
+      return 0;
+    }
+  }
+
+  // 모든 알림 취소
+  async cancelAllNotifications() {
+    await this.notificationManager.cancelAllNotifications();
+  }
+
+  // 특정 항목의 알림 취소
+  async cancelItemNotifications(itemId) {
+    await this.notificationManager.cancelItemNotifications(itemId);
+  }
+
+  // 스케줄링된 알림 조회
+  async getScheduledNotifications() {
+    return await this.notificationManager.getScheduledNotifications();
+  }
+
+  // 테스트 알림 전송
+  async sendTestNotification() {
+    await this.notificationManager.sendTestNotification();
   }
 }

@@ -38,6 +38,15 @@ export default function TimelineScreen({ navigation, timeline }) {
     // 닉네임 로드
     const savedNickname = await AsyncStorage.getItem('wedding-nickname');
     setNickname(savedNickname || '');
+
+    // 알림 권한 확인 및 초기화 (한 번만 확인)
+    const notificationSetupDone = await AsyncStorage.getItem('notification-setup-done');
+    if (!notificationSetupDone) {
+      const hasPermission = await timeline.initializeNotifications();
+      if (hasPermission) {
+        await AsyncStorage.setItem('notification-setup-done', 'true');
+      }
+    }
   };
 
   const handleItemPress = (item) => {

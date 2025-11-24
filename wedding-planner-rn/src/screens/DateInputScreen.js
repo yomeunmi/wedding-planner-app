@@ -44,6 +44,23 @@ export default function DateInputScreen({ navigation, timeline }) {
 
     timeline.setDates(weddingDate, startDate);
     await timeline.save();
+
+    // 알림 권한 요청 및 초기화
+    const hasPermission = await timeline.initializeNotifications();
+    if (hasPermission) {
+      Alert.alert(
+        '알림 설정 완료',
+        '타임라인 일정에 맞춰 알림을 보내드립니다!\n각 일정의 7일 전, 3일 전, 당일에 알림을 받으실 수 있습니다.',
+        [{ text: '확인' }]
+      );
+    } else {
+      Alert.alert(
+        '알림 권한 필요',
+        '일정 알림을 받으시려면 알림 권한을 허용해주세요.\n설정 > 알림에서 권한을 변경할 수 있습니다.',
+        [{ text: '확인' }]
+      );
+    }
+
     navigation.navigate('Timeline');
   };
 
