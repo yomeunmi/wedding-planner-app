@@ -56,7 +56,7 @@ export default function TimelineConfirmScreen({ navigation, timeline }) {
 
       <View style={styles.footer}>
         <TouchableOpacity style={styles.confirmButton} onPress={handleConfirm}>
-          <Text style={styles.confirmButtonText}>확인했어요!</Text>
+          <Text style={styles.confirmButtonText}>이 일정대로 갈께요 💗</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

@@ -85,7 +85,7 @@ export default function TimelineScreen({ navigation, timeline }) {
       <View style={styles.header}>
         <View style={styles.headerTop}>
           <Text style={styles.headerTitle}>
-            {nickname ? `${nickname}의 결혼 준비 타임라인` : '결혼 준비 타임라인'}
+            {nickname ? `${nickname}의 타임라인` : '타임라인'}
           </Text>
         </View>
         <View style={styles.dateRange}>
@@ -139,7 +139,7 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: COLORS.white,
-    paddingTop: 60,
+    paddingTop: 80,
     paddingBottom: 20,
     paddingHorizontal: 20,
     shadowColor: '#000',

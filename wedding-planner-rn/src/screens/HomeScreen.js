@@ -115,12 +115,15 @@ export default function HomeScreen({ timeline }) {
   function renderContent() {
     return (
       <>
-        {/* 상단 D-Day 표시 */}
+        {/* 상단 D-Day 배너 */}
         <View style={styles.dDayContainer}>
-          <View style={styles.dDayCard}>
+          <View style={styles.dDayBanner}>
             <Text style={styles.dDayLabel}>우리의 결혼식</Text>
-            <Text style={styles.dDayValue}>{renderDDay()}</Text>
-            <Text style={styles.weddingDate}>{formatWeddingDate()}</Text>
+            <View style={styles.dDayContent}>
+              <Text style={styles.dDayValue}>{renderDDay()}</Text>
+              <Text style={styles.dDaySeparator}>|</Text>
+              <Text style={styles.weddingDate}>{formatWeddingDate()}</Text>
+            </View>
           </View>
         </View>
 
@@ -167,33 +170,45 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     alignItems: 'center',
   },
-  dDayCard: {
+  dDayBanner: {
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    borderRadius: 20,
-    padding: 24,
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-    minWidth: 280,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
+    width: '100%',
+    maxWidth: 400,
   },
   dDayLabel: {
-    fontSize: 16,
+    fontSize: 14,
     fontFamily: 'GowunDodum_400Regular',
     color: COLORS.textGray,
-    marginBottom: 8,
+    fontWeight: '600',
+  },
+  dDayContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
   },
   dDayValue: {
-    fontSize: 48,
+    fontSize: 24,
     fontWeight: 'bold',
     fontFamily: 'GowunDodum_400Regular',
     color: COLORS.darkPink,
-    marginBottom: 8,
+  },
+  dDaySeparator: {
+    fontSize: 20,
+    color: COLORS.textLight,
   },
   weddingDate: {
-    fontSize: 18,
+    fontSize: 14,
     fontFamily: 'GowunDodum_400Regular',
     color: COLORS.textDark,
     fontWeight: '600',
@@ -216,7 +231,7 @@ const styles = StyleSheet.create({
   },
   bottomActions: {
     paddingHorizontal: 20,
-    paddingBottom: 100, // 탭바 공간 확보
+    paddingBottom: 140, // 탭바 공간 확보 + 추가 여백
   },
   changeImageButton: {
     backgroundColor: 'rgba(255, 255, 255, 0.9)',

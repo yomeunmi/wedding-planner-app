@@ -109,16 +109,20 @@ export default function App() {
             backgroundColor: COLORS.white,
             borderTopWidth: 1,
             borderTopColor: COLORS.border,
-            height: 60,
-            paddingBottom: 8,
-            paddingTop: 8,
+            height: 100,
+            paddingBottom: 20,
+            paddingTop: 16,
           },
           tabBarActiveTintColor: COLORS.darkPink,
           tabBarInactiveTintColor: COLORS.textGray,
           tabBarLabelStyle: {
-            fontSize: 12,
+            fontSize: 14,
             fontFamily: 'GowunDodum_400Regular',
             fontWeight: '600',
+            marginTop: 4,
+          },
+          tabBarIconStyle: {
+            marginBottom: 0,
           },
         }}
       >
@@ -127,7 +131,7 @@ export default function App() {
           options={{
             tabBarLabel: '홈',
             tabBarIcon: ({ color, size }) => (
-              <Text style={{ fontSize: 24, color }}>🏠</Text>
+              <Text style={{ fontSize: 32, color }}>🏠</Text>
             ),
           }}
         >
@@ -138,7 +142,7 @@ export default function App() {
           options={{
             tabBarLabel: '타임라인',
             tabBarIcon: ({ color, size }) => (
-              <Text style={{ fontSize: 24, color }}>📋</Text>
+              <Text style={{ fontSize: 32, color }}>📋</Text>
             ),
           }}
         >
@@ -149,7 +153,7 @@ export default function App() {
           options={{
             tabBarLabel: '알림',
             tabBarIcon: ({ color, size }) => (
-              <Text style={{ fontSize: 24, color }}>🔔</Text>
+              <Text style={{ fontSize: 32, color }}>🔔</Text>
             ),
           }}
         >
@@ -160,7 +164,7 @@ export default function App() {
           options={{
             tabBarLabel: 'My',
             tabBarIcon: ({ color, size }) => (
-              <Text style={{ fontSize: 24, color }}>👤</Text>
+              <Text style={{ fontSize: 32, color }}>👤</Text>
             ),
           }}
         >
