@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
   },
   dDayContainer: {
-    paddingTop: 60,
+    paddingTop: 120,
     paddingHorizontal: 20,
     alignItems: 'center',
   },
@@ -252,7 +252,7 @@ const styles = StyleSheet.create({
   },
   bottomActions: {
     paddingHorizontal: 20,
-    paddingBottom: 140, // 탭바 공간 확보 + 추가 여백
+    paddingBottom: 100, // 탭바 공간 확보
   },
   changeImageButton: {
     backgroundColor: 'rgba(255, 255, 255, 0.9)',
