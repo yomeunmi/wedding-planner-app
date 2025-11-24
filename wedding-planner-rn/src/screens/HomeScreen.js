@@ -3,7 +3,7 @@ import {
   View,
   Text,
   StyleSheet,
-  ImageBackground,
+  Image,
   TouchableOpacity,
   Alert,
 } from 'react-native';
@@ -60,7 +60,7 @@ export default function HomeScreen({ timeline }) {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
-      aspect: [9, 16],
+      aspect: [1, 1],
       quality: 0.8,
     });
 
@@ -94,21 +94,21 @@ export default function HomeScreen({ timeline }) {
 
   return (
     <View style={styles.container}>
-      {backgroundImage ? (
-        <ImageBackground
-          source={{ uri: backgroundImage }}
-          style={styles.backgroundImage}
-          resizeMode="cover"
-        >
-          <View style={styles.overlay}>
-            {renderContent()}
-          </View>
-        </ImageBackground>
-      ) : (
-        <View style={[styles.backgroundImage, styles.defaultBackground]}>
-          {renderContent()}
-        </View>
-      )}
+      <View style={styles.backgroundContainer}>
+        {backgroundImage ? (
+          <>
+            <Image
+              source={{ uri: backgroundImage }}
+              style={styles.squareImage}
+              resizeMode="cover"
+            />
+            <View style={styles.gradientOverlay} />
+          </>
+        ) : (
+          <View style={styles.defaultSquareBackground} />
+        )}
+      </View>
+      {renderContent()}
     </View>
   );
 
@@ -155,15 +155,34 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
-  backgroundImage: {
-    flex: 1,
-  },
-  defaultBackground: {
+  backgroundContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: COLORS.lightPink,
   },
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.2)',
+  squareImage: {
+    width: '100%',
+    aspectRatio: 1,
+    maxWidth: 600,
+  },
+  defaultSquareBackground: {
+    width: '100%',
+    aspectRatio: 1,
+    maxWidth: 600,
+    backgroundColor: COLORS.lightPink,
+  },
+  gradientOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
   },
   dDayContainer: {
     paddingTop: 60,
@@ -223,11 +242,13 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: 'bold',
     fontFamily: 'GowunDodum_400Regular',
-    color: COLORS.white,
+    color: COLORS.darkPink,
     textAlign: 'center',
-    textShadowColor: 'rgba(0, 0, 0, 0.5)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 20,
+    overflow: 'hidden',
   },
   bottomActions: {
     paddingHorizontal: 20,
