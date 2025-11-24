@@ -42,7 +42,6 @@
         {
           "icon": "./assets/icon.png",
           "color": "#FF6B9D",
-          "sounds": ["./assets/notification-sound.wav"],
           "mode": "production"
         }
       ]
