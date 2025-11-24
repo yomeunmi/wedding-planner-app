@@ -50,29 +50,7 @@ export default function TimelineScreen({ navigation, timeline }) {
   };
 
   const handleItemPress = (item) => {
-    navigation.navigate('Detail', { item });
-  };
-
-  const handleMyPagePress = () => {
-    navigation.navigate('MyPage');
-  };
-
-  const handleResetData = () => {
-    Alert.alert(
-      '데이터 초기화',
-      '모든 데이터가 삭제됩니다. 정말 초기화하시겠습니까?',
-      [
-        { text: '취소', style: 'cancel' },
-        {
-          text: '초기화',
-          style: 'destructive',
-          onPress: async () => {
-            await AsyncStorage.clear();
-            navigation.navigate('DateInput');
-          },
-        },
-      ]
-    );
+    navigation.getParent()?.navigate('Detail', { item });
   };
 
   // 필터링된 아이템 목록
@@ -105,11 +83,6 @@ export default function TimelineScreen({ navigation, timeline }) {
     <View style={styles.container}>
       {/* 헤더 */}
       <View style={styles.header}>
-        <View style={styles.myButtonContainer}>
-          <TouchableOpacity style={styles.myPageButtonBox} onPress={handleMyPagePress}>
-            <Text style={styles.myPageButton}>My</Text>
-          </TouchableOpacity>
-        </View>
         <View style={styles.headerTop}>
           <Text style={styles.headerTitle}>
             {nickname ? `${nickname}의 결혼 준비 타임라인` : '결혼 준비 타임라인'}
@@ -155,13 +128,6 @@ export default function TimelineScreen({ navigation, timeline }) {
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
       />
-
-      {/* 하단 버튼 */}
-      <View style={styles.footer}>
-        <TouchableOpacity style={styles.resetButton} onPress={handleResetData}>
-          <Text style={styles.resetButtonText}>데이터 초기화</Text>
-        </TouchableOpacity>
-      </View>
     </View>
   );
 }
@@ -173,7 +139,7 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: COLORS.white,
-    paddingTop: 100,
+    paddingTop: 60,
     paddingBottom: 20,
     paddingHorizontal: 20,
     shadowColor: '#000',
@@ -181,11 +147,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 4,
-  },
-  myButtonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    marginBottom: 12,
   },
   headerTop: {
     marginBottom: 12,
@@ -195,20 +156,6 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     fontFamily: 'GowunDodum_400Regular',
     color: COLORS.darkPink,
-  },
-  myPageButtonBox: {
-    backgroundColor: COLORS.white,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 6,
-    borderWidth: 2,
-    borderColor: COLORS.darkPink,
-  },
-  myPageButton: {
-    fontSize: 12,
-    fontFamily: 'GowunDodum_400Regular',
-    color: COLORS.darkPink,
-    fontWeight: '600',
   },
   dateRange: {
     marginBottom: 16,
@@ -320,26 +267,6 @@ const styles = StyleSheet.create({
   arrow: {
     fontSize: 24,
     color: COLORS.textLight,
-  },
-  footer: {
-    padding: 16,
-    backgroundColor: COLORS.white,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.border,
-  },
-  resetButton: {
-    backgroundColor: COLORS.white,
-    borderWidth: 1,
-    borderColor: COLORS.darkPink,
-    borderRadius: 8,
-    padding: 14,
-  },
-  resetButtonText: {
-    color: COLORS.darkPink,
-    fontSize: 16,
-    fontWeight: '600',
-    fontFamily: 'GowunDodum_400Regular',
-    textAlign: 'center',
   },
   filterContainer: {
     paddingHorizontal: 16,

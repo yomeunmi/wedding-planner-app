@@ -1,16 +1,23 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { View, Text, StyleSheet, Animated, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useFonts, GowunDodum_400Regular } from '@expo-google-fonts/gowun-dodum';
 import { WeddingTimeline } from './src/utils/WeddingTimeline';
 
 import DateInputScreen from './src/screens/DateInputScreen';
+import TimelineConfirmScreen from './src/screens/TimelineConfirmScreen';
+import BackgroundImageScreen from './src/screens/BackgroundImageScreen';
+import HomeScreen from './src/screens/HomeScreen';
 import TimelineScreen from './src/screens/TimelineScreen';
+import NotificationScreen from './src/screens/NotificationScreen';
 import DetailScreen from './src/screens/DetailScreen';
 import MyPageScreen from './src/screens/MyPageScreen';
+import { COLORS } from './src/constants/colors';
 
 const Stack = createNativeStackNavigator();
+const Tab = createBottomTabNavigator();
 
 export default function App() {
   const [timeline] = useState(new WeddingTimeline());
@@ -33,7 +40,7 @@ export default function App() {
       const hasSaved = await timeline.hasSavedData();
       if (hasSaved) {
         await timeline.load();
-        setInitialRoute('Timeline');
+        setInitialRoute('MainTabs');
       } else {
         setInitialRoute('DateInput');
       }
@@ -92,6 +99,77 @@ export default function App() {
     );
   }
 
+  // 탭 네비게이터 컴포넌트
+  function MainTabs() {
+    return (
+      <Tab.Navigator
+        screenOptions={{
+          headerShown: false,
+          tabBarStyle: {
+            backgroundColor: COLORS.white,
+            borderTopWidth: 1,
+            borderTopColor: COLORS.border,
+            height: 60,
+            paddingBottom: 8,
+            paddingTop: 8,
+          },
+          tabBarActiveTintColor: COLORS.darkPink,
+          tabBarInactiveTintColor: COLORS.textGray,
+          tabBarLabelStyle: {
+            fontSize: 12,
+            fontFamily: 'GowunDodum_400Regular',
+            fontWeight: '600',
+          },
+        }}
+      >
+        <Tab.Screen
+          name="Home"
+          options={{
+            tabBarLabel: '홈',
+            tabBarIcon: ({ color, size }) => (
+              <Text style={{ fontSize: 24, color }}>🏠</Text>
+            ),
+          }}
+        >
+          {(props) => <HomeScreen {...props} timeline={timeline} />}
+        </Tab.Screen>
+        <Tab.Screen
+          name="Timeline"
+          options={{
+            tabBarLabel: '타임라인',
+            tabBarIcon: ({ color, size }) => (
+              <Text style={{ fontSize: 24, color }}>📋</Text>
+            ),
+          }}
+        >
+          {(props) => <TimelineScreen {...props} timeline={timeline} />}
+        </Tab.Screen>
+        <Tab.Screen
+          name="Notifications"
+          options={{
+            tabBarLabel: '알림',
+            tabBarIcon: ({ color, size }) => (
+              <Text style={{ fontSize: 24, color }}>🔔</Text>
+            ),
+          }}
+        >
+          {(props) => <NotificationScreen {...props} timeline={timeline} />}
+        </Tab.Screen>
+        <Tab.Screen
+          name="MyPage"
+          options={{
+            tabBarLabel: 'My',
+            tabBarIcon: ({ color, size }) => (
+              <Text style={{ fontSize: 24, color }}>👤</Text>
+            ),
+          }}
+        >
+          {(props) => <MyPageScreen {...props} timeline={timeline} />}
+        </Tab.Screen>
+      </Tab.Navigator>
+    );
+  }
+
   return (
     <Animated.View style={[styles.appContainer, { opacity: fadeAnim }]}>
       <NavigationContainer>
@@ -101,19 +179,20 @@ export default function App() {
             headerShown: false,
           }}
         >
-            <Stack.Screen name="DateInput">
-              {(props) => <DateInputScreen {...props} timeline={timeline} />}
-            </Stack.Screen>
-            <Stack.Screen name="Timeline">
-              {(props) => <TimelineScreen {...props} timeline={timeline} />}
-            </Stack.Screen>
-            <Stack.Screen name="Detail">
-              {(props) => <DetailScreen {...props} timeline={timeline} />}
-            </Stack.Screen>
-            <Stack.Screen name="MyPage">
-              {(props) => <MyPageScreen {...props} timeline={timeline} />}
-            </Stack.Screen>
-          </Stack.Navigator>
+          <Stack.Screen name="DateInput">
+            {(props) => <DateInputScreen {...props} timeline={timeline} />}
+          </Stack.Screen>
+          <Stack.Screen name="TimelineConfirm">
+            {(props) => <TimelineConfirmScreen {...props} timeline={timeline} />}
+          </Stack.Screen>
+          <Stack.Screen name="BackgroundImage">
+            {(props) => <BackgroundImageScreen {...props} />}
+          </Stack.Screen>
+          <Stack.Screen name="MainTabs" component={MainTabs} />
+          <Stack.Screen name="Detail">
+            {(props) => <DetailScreen {...props} timeline={timeline} />}
+          </Stack.Screen>
+        </Stack.Navigator>
       </NavigationContainer>
     </Animated.View>
   );

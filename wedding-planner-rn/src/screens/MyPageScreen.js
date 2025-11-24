@@ -56,15 +56,32 @@ export default function MyPageScreen({ navigation, timeline }) {
     setIsEditingNickname(false);
   };
 
+  const handleResetData = () => {
+    Alert.alert(
+      '데이터 초기화',
+      '모든 데이터가 삭제됩니다. 정말 초기화하시겠습니까?',
+      [
+        { text: '취소', style: 'cancel' },
+        {
+          text: '초기화',
+          style: 'destructive',
+          onPress: async () => {
+            await AsyncStorage.clear();
+            // 스택 네비게이터의 루트로 이동
+            navigation.getParent()?.reset({
+              index: 0,
+              routes: [{ name: 'DateInput' }],
+            });
+          },
+        },
+      ]
+    );
+  };
+
   const completedCount = items.filter(item => item.completed).length;
 
   return (
     <ScrollView style={styles.container}>
-      {/* 상단 뒤로가기 버튼 */}
-      <TouchableOpacity style={styles.topBackButton} onPress={() => navigation.goBack()}>
-        <Text style={styles.topBackArrow}>←</Text>
-      </TouchableOpacity>
-
       <View style={styles.content}>
         {/* 헤더 */}
         <View style={styles.header}>
@@ -179,6 +196,14 @@ export default function MyPageScreen({ navigation, timeline }) {
             </View>
           ))}
         </View>
+
+        {/* 데이터 초기화 버튼 */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>설정</Text>
+          <TouchableOpacity style={styles.resetButton} onPress={handleResetData}>
+            <Text style={styles.resetButtonText}>데이터 초기화</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </ScrollView>
   );
@@ -189,31 +214,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
-  topBackButton: {
-    position: 'absolute',
-    top: 60,
-    left: 20,
-    zIndex: 10,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: COLORS.white,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  topBackArrow: {
-    color: COLORS.darkPink,
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
   content: {
     padding: 20,
-    paddingTop: 120,
+    paddingTop: 60,
   },
   header: {
     marginBottom: 24,
@@ -384,5 +387,19 @@ const styles = StyleSheet.create({
   },
   checklistStatusCompleted: {
     color: COLORS.darkPink,
+  },
+  resetButton: {
+    backgroundColor: COLORS.white,
+    borderWidth: 1,
+    borderColor: COLORS.darkPink,
+    borderRadius: 8,
+    padding: 14,
+  },
+  resetButtonText: {
+    color: COLORS.darkPink,
+    fontSize: 16,
+    fontWeight: '600',
+    fontFamily: 'GowunDodum_400Regular',
+    textAlign: 'center',
   },
 });
