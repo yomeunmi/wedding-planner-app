@@ -4,6 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { View, Text, StyleSheet, Animated, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useFonts, GowunDodum_400Regular } from '@expo-google-fonts/gowun-dodum';
+import { Ionicons } from '@expo/vector-icons';
 import { WeddingTimeline } from './src/utils/WeddingTimeline';
 
 import DateInputScreen from './src/screens/DateInputScreen';
@@ -130,8 +131,12 @@ export default function App() {
           name="Home"
           options={{
             tabBarLabel: '홈',
-            tabBarIcon: ({ color, size }) => (
-              <Text style={{ fontSize: 32, color }}>🏠</Text>
+            tabBarIcon: ({ color, focused }) => (
+              <Ionicons
+                name={focused ? 'home' : 'home-outline'}
+                size={28}
+                color={color}
+              />
             ),
           }}
         >
@@ -141,8 +146,12 @@ export default function App() {
           name="Timeline"
           options={{
             tabBarLabel: '타임라인',
-            tabBarIcon: ({ color, size }) => (
-              <Text style={{ fontSize: 32, color }}>📋</Text>
+            tabBarIcon: ({ color, focused }) => (
+              <Ionicons
+                name={focused ? 'list' : 'list-outline'}
+                size={28}
+                color={color}
+              />
             ),
           }}
         >
@@ -152,8 +161,12 @@ export default function App() {
           name="Notifications"
           options={{
             tabBarLabel: '알림',
-            tabBarIcon: ({ color, size }) => (
-              <Text style={{ fontSize: 32, color }}>🔔</Text>
+            tabBarIcon: ({ color, focused }) => (
+              <Ionicons
+                name={focused ? 'notifications' : 'notifications-outline'}
+                size={28}
+                color={color}
+              />
             ),
           }}
         >
@@ -163,8 +176,12 @@ export default function App() {
           name="MyPage"
           options={{
             tabBarLabel: 'My',
-            tabBarIcon: ({ color, size }) => (
-              <Text style={{ fontSize: 32, color }}>👤</Text>
+            tabBarIcon: ({ color, focused }) => (
+              <Ionicons
+                name={focused ? 'person' : 'person-outline'}
+                size={28}
+                color={color}
+              />
             ),
           }}
         >
