@@ -25,11 +25,12 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.yomeunmi.weddingplanner",
-      "versionCode": 2,
+      "versionCode": 3,
       "permissions": [
         "RECEIVE_BOOT_COMPLETED",
         "VIBRATE",
-        "WAKE_LOCK"
+        "WAKE_LOCK",
+        "POST_NOTIFICATIONS"
       ],
       "useNextNotificationsApi": true
     },
