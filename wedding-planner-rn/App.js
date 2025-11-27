@@ -241,7 +241,6 @@ const styles = StyleSheet.create({
     marginTop: 15,
     fontSize: 16,
     color: '#666',
-    fontFamily: 'GowunDodum_400Regular',
   },
   errorContainer: {
     flex: 1,
