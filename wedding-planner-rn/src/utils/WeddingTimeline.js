@@ -428,15 +428,8 @@ export class WeddingTimeline {
       // 완료 상태 복원
       await this.loadCompletionStatus();
 
-      // 앱 로드 시 알림이 활성화되어 있으면 알림 다시 스케줄링
-      const notificationsEnabled = await AsyncStorage.getItem('notifications-enabled');
-      if (notificationsEnabled !== 'false') {
-        try {
-          await this.scheduleNotifications();
-        } catch (error) {
-          console.log('알림 스케줄링 재시도 실패:', error);
-        }
-      }
+      // 앱 로드 시에는 알림을 자동 스케줄링하지 않음
+      // 알림은 사용자가 "이 일정대로 갈께요" 버튼을 클릭한 후에만 스케줄링됨
 
       return true;
     }

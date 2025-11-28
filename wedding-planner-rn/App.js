@@ -5,6 +5,8 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { View, Text, StyleSheet, Animated, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useFonts, GowunDodum_400Regular } from '@expo-google-fonts/gowun-dodum';
 import { Ionicons } from '@expo/vector-icons';
+import * as Notifications from 'expo-notifications';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { WeddingTimeline } from './src/utils/WeddingTimeline';
 
 import DateInputScreen from './src/screens/DateInputScreen';
@@ -35,6 +37,83 @@ export default function App() {
 
   useEffect(() => {
     initializeApp();
+
+    // 알림 수신 리스너 설정 - 알림이 도착하면 히스토리에 저장
+    const notificationReceivedSubscription = Notifications.addNotificationReceivedListener(async (notification) => {
+      try {
+        const { title, body, data } = notification.request.content;
+
+        // 테스트 알림은 저장하지 않음
+        if (data?.test) return;
+
+        const newNotification = {
+          id: notification.request.identifier,
+          title,
+          body,
+          date: new Date().toISOString(),
+          itemId: data?.itemId || null,
+          type: data?.type || 'unknown',
+        };
+
+        // 기존 히스토리 로드
+        const existing = await AsyncStorage.getItem('notification-history');
+        let history = existing ? JSON.parse(existing) : [];
+
+        // 중복 체크 (같은 ID의 알림이 이미 있는지)
+        const isDuplicate = history.some(n => n.id === newNotification.id);
+        if (!isDuplicate) {
+          history.unshift(newNotification);
+          // 최대 50개까지만 저장
+          if (history.length > 50) {
+            history = history.slice(0, 50);
+          }
+          await AsyncStorage.setItem('notification-history', JSON.stringify(history));
+          console.log('알림 히스토리에 저장됨:', newNotification.title);
+        }
+      } catch (error) {
+        console.error('알림 히스토리 저장 오류:', error);
+      }
+    });
+
+    // 알림 응답 리스너 (알림을 탭했을 때) - 히스토리에도 저장
+    const notificationResponseSubscription = Notifications.addNotificationResponseReceivedListener(async (response) => {
+      try {
+        const { title, body, data } = response.notification.request.content;
+
+        // 테스트 알림은 저장하지 않음
+        if (data?.test) return;
+
+        const newNotification = {
+          id: response.notification.request.identifier,
+          title,
+          body,
+          date: new Date().toISOString(),
+          itemId: data?.itemId || null,
+          type: data?.type || 'unknown',
+        };
+
+        // 기존 히스토리 로드
+        const existing = await AsyncStorage.getItem('notification-history');
+        let history = existing ? JSON.parse(existing) : [];
+
+        // 중복 체크
+        const isDuplicate = history.some(n => n.id === newNotification.id);
+        if (!isDuplicate) {
+          history.unshift(newNotification);
+          if (history.length > 50) {
+            history = history.slice(0, 50);
+          }
+          await AsyncStorage.setItem('notification-history', JSON.stringify(history));
+        }
+      } catch (error) {
+        console.error('알림 응답 저장 오류:', error);
+      }
+    });
+
+    return () => {
+      notificationReceivedSubscription.remove();
+      notificationResponseSubscription.remove();
+    };
   }, []);
 
   const initializeApp = async () => {

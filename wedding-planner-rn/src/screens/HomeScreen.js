@@ -87,15 +87,12 @@ export default function HomeScreen({ timeline }) {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
-      {/* 상단 D-Day 배너 - 심플한 흰색 디자인 */}
+      {/* 상단 D-Day 배너 - 한줄 심플 디자인 */}
       <View style={styles.headerSection}>
         <View style={styles.banner}>
           <Text style={styles.dDayLabel}>우리의 결혼식</Text>
-          <View style={styles.dDayRow}>
-            <Text style={styles.dDayValue}>{renderDDay()}</Text>
-            <Text style={styles.dDaySeparator}>|</Text>
-            <Text style={styles.weddingDateText}>{formatWeddingDate()}</Text>
-          </View>
+          <Text style={styles.dDayValue}>{renderDDay()}</Text>
+          <Text style={styles.weddingDateText}>{formatWeddingDate()}</Text>
         </View>
       </View>
 
@@ -145,39 +142,32 @@ const styles = StyleSheet.create({
   },
   banner: {
     backgroundColor: '#ffffff',
-    borderRadius: 16,
-    paddingVertical: 20,
-    paddingHorizontal: 24,
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
   },
   dDayLabel: {
     fontSize: 14,
     fontFamily: 'GowunDodum_400Regular',
     color: COLORS.textGray,
-    marginBottom: 8,
-  },
-  dDayRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
   },
   dDayValue: {
-    fontSize: 28,
+    fontSize: 20,
     fontWeight: 'bold',
     fontFamily: 'GowunDodum_400Regular',
     color: COLORS.darkPink,
   },
-  dDaySeparator: {
-    fontSize: 20,
-    color: COLORS.textLight,
-  },
   weddingDateText: {
-    fontSize: 15,
+    fontSize: 13,
     fontFamily: 'GowunDodum_400Regular',
     color: COLORS.textDark,
   },
