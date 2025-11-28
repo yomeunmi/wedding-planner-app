@@ -8,6 +8,7 @@ import {
   Switch,
   Alert,
   RefreshControl,
+  Image,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
@@ -117,7 +118,10 @@ export default function NotificationScreen({ timeline }) {
     if (notification.itemId) {
       const item = timeline.getItemById(notification.itemId);
       if (item) {
-        navigation.navigate('Detail', { itemId: notification.itemId });
+        // DetailScreen은 item 객체를 기대함
+        navigation.navigate('Detail', { item: item });
+      } else {
+        Alert.alert('알림', '해당 일정을 찾을 수 없습니다.');
       }
     }
   };

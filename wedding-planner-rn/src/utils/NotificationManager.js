@@ -63,16 +63,28 @@ export class NotificationManager {
     }
   }
 
+  // 오늘 날짜 문자열 (중복 방지용)
+  getTodayString() {
+    const today = new Date();
+    return `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
+  }
+
   // 타임라인 항목에 대한 알림 스케줄링
   async scheduleTimelineNotifications(timelineItems) {
     try {
-      // 기존 알림 모두 취소
-      await this.cancelAllNotifications();
+      // 기존 스케줄된 알림 취소 (히스토리는 유지)
+      await Notifications.cancelAllScheduledNotificationsAsync();
 
       const now = new Date();
       now.setHours(0, 0, 0, 0); // 오늘 자정 기준
       const scheduledNotifications = [];
       const immediateNotifications = []; // 즉시 보낼 알림 목록
+
+      // 오늘 이미 보낸 즉시 알림 체크
+      const todayString = this.getTodayString();
+      const sentTodayKey = `sent-immediate-notifications-${todayString}`;
+      const sentTodayData = await AsyncStorage.getItem(sentTodayKey);
+      const sentToday = sentTodayData ? JSON.parse(sentTodayData) : [];
 
       for (const item of timelineItems) {
         const itemDate = new Date(item.date);
@@ -86,11 +98,15 @@ export class NotificationManager {
         // 일정까지 남은 일수 계산
         const daysUntil = Math.ceil((itemDate - now) / (1000 * 60 * 60 * 24));
 
-        // === 즉시 알림: 현재 7일 이내 또는 3일 이내 일정 ===
+        // === 즉시 알림: 현재 7일 이내 또는 3일 이내 일정 (중복 방지) ===
+        const immediateKey7 = `${item.id}-immediate-7-${daysUntil}`;
+        const immediateKey3 = `${item.id}-immediate-3-${daysUntil}`;
+        const immediateKeyDday = `${item.id}-immediate-dday`;
 
         // 7일 이내 일정 (3일 초과 ~ 7일 이하)
-        if (daysUntil > 0 && daysUntil <= 7 && daysUntil > 3) {
+        if (daysUntil > 0 && daysUntil <= 7 && daysUntil > 3 && !sentToday.includes(immediateKey7)) {
           immediateNotifications.push({
+            key: immediateKey7,
             title: `${item.title} ${daysUntil}일 전`,
             body: `${item.title}까지 ${daysUntil}일 남았습니다. 준비를 시작하세요!`,
             data: { itemId: item.id, type: 'immediate-7' }
@@ -98,8 +114,9 @@ export class NotificationManager {
         }
 
         // 3일 이내 일정 (1일 이상 ~ 3일 이하)
-        if (daysUntil > 0 && daysUntil <= 3) {
+        if (daysUntil > 0 && daysUntil <= 3 && !sentToday.includes(immediateKey3)) {
           immediateNotifications.push({
+            key: immediateKey3,
             title: `${item.title} ${daysUntil}일 전`,
             body: `${item.title}까지 ${daysUntil}일 남았습니다. 서두르세요!`,
             data: { itemId: item.id, type: 'immediate-3' }
@@ -107,8 +124,9 @@ export class NotificationManager {
         }
 
         // 오늘이 D-Day인 경우
-        if (daysUntil === 0) {
+        if (daysUntil === 0 && !sentToday.includes(immediateKeyDday)) {
           immediateNotifications.push({
+            key: immediateKeyDday,
             title: `오늘은 ${item.title} 날!`,
             body: `${item.title} 일정을 확인하세요. ${item.icon || ''}`,
             data: { itemId: item.id, type: 'immediate-dday' }
@@ -162,10 +180,11 @@ export class NotificationManager {
         }
       }
 
-      // 즉시 알림 보내기 (5초 후에 순차적으로)
+      // 즉시 알림 보내기 (3초 간격으로)
+      const newSentKeys = [...sentToday];
       for (let i = 0; i < immediateNotifications.length; i++) {
         const notification = immediateNotifications[i];
-        const delaySeconds = (i + 1) * 3; // 3초, 6초, 9초... 간격으로 발송
+        const delaySeconds = (i + 1) * 3;
 
         const id = await this.scheduleNotification(
           notification.title,
@@ -173,12 +192,18 @@ export class NotificationManager {
           { seconds: delaySeconds },
           notification.data
         );
-        if (id) scheduledNotifications.push({
-          itemId: notification.data.itemId,
-          type: notification.data.type,
-          notificationId: id
-        });
+        if (id) {
+          scheduledNotifications.push({
+            itemId: notification.data.itemId,
+            type: notification.data.type,
+            notificationId: id
+          });
+          newSentKeys.push(notification.key);
+        }
       }
+
+      // 오늘 보낸 즉시 알림 키 저장 (중복 방지용)
+      await AsyncStorage.setItem(sentTodayKey, JSON.stringify(newSentKeys));
 
       // 스케줄링된 알림 ID 저장
       await AsyncStorage.setItem(

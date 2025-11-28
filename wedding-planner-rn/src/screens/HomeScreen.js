@@ -11,11 +11,48 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { COLORS } from '../constants/colors';
+import Svg, { Path } from 'react-native-svg';
+
+// 스캘럽(물결) 테두리 컴포넌트
+const ScallopBorder = ({ width, position }) => {
+  const scallops = 12;
+  const scallopWidth = width / scallops;
+  const scallopHeight = 10;
+
+  let pathD = '';
+
+  if (position === 'top') {
+    // 상단: 아래로 볼록한 물결
+    pathD = `M 0 ${scallopHeight}`;
+    for (let i = 0; i < scallops; i++) {
+      const x1 = i * scallopWidth + scallopWidth / 2;
+      const x2 = (i + 1) * scallopWidth;
+      pathD += ` Q ${x1} 0, ${x2} ${scallopHeight}`;
+    }
+    pathD += ` L ${width} 0 L 0 0 Z`;
+  } else {
+    // 하단: 위로 볼록한 물결
+    pathD = `M 0 0`;
+    for (let i = 0; i < scallops; i++) {
+      const x1 = i * scallopWidth + scallopWidth / 2;
+      const x2 = (i + 1) * scallopWidth;
+      pathD += ` Q ${x1} ${scallopHeight}, ${x2} 0`;
+    }
+    pathD += ` L ${width} ${scallopHeight} L 0 ${scallopHeight} Z`;
+  }
+
+  return (
+    <Svg width={width} height={scallopHeight} style={position === 'top' ? styles.scallopTop : styles.scallopBottom}>
+      <Path d={pathD} fill="#c9a86c" />
+    </Svg>
+  );
+};
 
 export default function HomeScreen({ timeline }) {
   const [backgroundImage, setBackgroundImage] = useState(null);
   const [dDay, setDDay] = useState(0);
   const [weddingDate, setWeddingDate] = useState(null);
+  const [containerWidth, setContainerWidth] = useState(300);
 
   useEffect(() => {
     loadData();
@@ -85,32 +122,37 @@ export default function HomeScreen({ timeline }) {
     return `${year}.${month}.${day} (${weekday})`;
   };
 
+  const onFrameLayout = (event) => {
+    const { width } = event.nativeEvent.layout;
+    setContainerWidth(width);
+  };
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
-      {/* 상단 D-Day 배너 - 이미지 위에 겹치지 않음 */}
+      {/* 상단 D-Day 배너 - 레이스 테두리 */}
       <View style={styles.headerSection}>
-        <View style={styles.laceFrame}>
-          {/* 물결 테두리 효과 */}
-          <View style={styles.waveTop}>
-            {[...Array(20)].map((_, i) => (
-              <View key={i} style={styles.waveDot} />
-            ))}
-          </View>
+        <View
+          style={styles.laceFrameWrapper}
+          onLayout={onFrameLayout}
+        >
+          {/* 상단 스캘럽 테두리 */}
+          <ScallopBorder width={containerWidth} position="top" />
 
-          <View style={styles.dDayBanner}>
-            <Text style={styles.dDayLabel}>우리의 결혼식</Text>
-            <View style={styles.dDayContent}>
-              <Text style={styles.dDayValue}>{renderDDay()}</Text>
-              <Text style={styles.dDaySeparator}>|</Text>
-              <Text style={styles.weddingDateText}>{formatWeddingDate()}</Text>
+          <View style={styles.laceFrame}>
+            <View style={styles.innerBorder}>
+              <View style={styles.dDayBanner}>
+                <Text style={styles.dDayLabel}>우리의 결혼식</Text>
+                <View style={styles.dDayContent}>
+                  <Text style={styles.dDayValue}>{renderDDay()}</Text>
+                  <Text style={styles.dDaySeparator}>|</Text>
+                  <Text style={styles.weddingDateText}>{formatWeddingDate()}</Text>
+                </View>
+              </View>
             </View>
           </View>
 
-          <View style={styles.waveBottom}>
-            {[...Array(20)].map((_, i) => (
-              <View key={i} style={styles.waveDot} />
-            ))}
-          </View>
+          {/* 하단 스캘럽 테두리 */}
+          <ScallopBorder width={containerWidth} position="bottom" />
         </View>
       </View>
 
@@ -159,40 +201,37 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: COLORS.lightPink,
   },
-  laceFrame: {
-    backgroundColor: '#ffffff',
-    paddingVertical: 4,
-    paddingHorizontal: 16,
+  laceFrameWrapper: {
+    width: '100%',
     alignItems: 'center',
-    overflow: 'hidden',
   },
-  waveTop: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginBottom: 4,
+  scallopTop: {
+    marginBottom: -1,
   },
-  waveBottom: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 4,
+  scallopBottom: {
+    marginTop: -1,
   },
-  waveDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#d4a574',
-    marginHorizontal: 2,
+  laceFrame: {
+    backgroundColor: '#c9a86c',
+    width: '100%',
+    paddingVertical: 3,
+    paddingHorizontal: 3,
+  },
+  innerBorder: {
+    backgroundColor: '#ffffff',
+    paddingVertical: 2,
+    paddingHorizontal: 8,
   },
   dDayBanner: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 8,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: 16,
+    gap: 12,
     borderTopWidth: 1,
     borderBottomWidth: 1,
-    borderColor: '#e8d4c4',
+    borderColor: '#c9a86c',
     borderStyle: 'dashed',
   },
   dDayLabel: {
