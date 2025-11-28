@@ -38,13 +38,12 @@ export default function App() {
   }, []);
 
   const initializeApp = async () => {
-    // 알림 기능 임시 비활성화 - Android 크래시 방지
-    // try {
-    //   await NotificationManager.initialize();
-    //   console.log('NotificationManager initialized successfully');
-    // } catch (notifError) {
-    //   console.log('NotificationManager initialization failed, but app will continue:', notifError);
-    // }
+    // NotificationManager는 이제 더미이므로 안전하게 초기화 가능
+    try {
+      await NotificationManager.initialize();
+    } catch (error) {
+      console.log('NotificationManager initialization error:', error);
+    }
 
     // 데이터 로드
     await checkSavedData();

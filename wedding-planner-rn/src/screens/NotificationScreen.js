@@ -116,6 +116,14 @@ export default function NotificationScreen({ timeline }) {
         <Text style={styles.title}>알림 설정</Text>
       </View>
 
+      {/* 알림 기능 비활성화 안내 */}
+      <View style={styles.warningBox}>
+        <Text style={styles.warningText}>
+          ⚠️ 알림 기능이 현재 비활성화되어 있습니다.{'\n'}
+          향후 업데이트에서 다시 제공될 예정입니다.
+        </Text>
+      </View>
+
       {/* 알림 활성화/비활성화 */}
       <View style={styles.section}>
         <View style={styles.settingItem}>
@@ -371,5 +379,21 @@ const styles = StyleSheet.create({
     fontFamily: 'GowunDodum_400Regular',
     color: COLORS.textDark,
     lineHeight: 22,
+  },
+  warningBox: {
+    margin: 20,
+    marginTop: 10,
+    backgroundColor: '#FFF3CD',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#FFC107',
+  },
+  warningText: {
+    fontSize: 14,
+    fontFamily: 'GowunDodum_400Regular',
+    color: '#856404',
+    lineHeight: 20,
+    textAlign: 'center',
   },
 });
