@@ -112,8 +112,15 @@ export default function HomeScreen({ timeline }) {
       <>
         {/* 상단 D-Day 배너 */}
         <View style={styles.dDayContainer}>
-          <View style={styles.dDayBannerOuter}>
-            <Text style={styles.laceDecoration}>♡ · · · ♡ · · · ♡ · · · ♡ · · · ♡</Text>
+          <View style={styles.laceFrame}>
+            {/* 상단 스캘럽 테두리 */}
+            <View style={styles.scallop}>
+              <Text style={styles.scallopText}>⌢ ⌢ ⌢ ⌢ ⌢ ⌢ ⌢ ⌢ ⌢ ⌢ ⌢ ⌢ ⌢</Text>
+            </View>
+            {/* 상단 장식 라인 */}
+            <Text style={styles.lacePatternTop}>✿ · · · ✿ · · · ✿ · · · ✿ · · · ✿</Text>
+
+            {/* 메인 콘텐츠 */}
             <View style={styles.dDayBanner}>
               <Text style={styles.dDayLabel}>우리의 결혼식</Text>
               <View style={styles.dDayContent}>
@@ -122,7 +129,13 @@ export default function HomeScreen({ timeline }) {
                 <Text style={styles.weddingDate}>{formatWeddingDate()}</Text>
               </View>
             </View>
-            <Text style={styles.laceDecoration}>♡ · · · ♡ · · · ♡ · · · ♡ · · · ♡</Text>
+
+            {/* 하단 장식 라인 */}
+            <Text style={styles.lacePatternBottom}>✿ · · · ✿ · · · ✿ · · · ✿ · · · ✿</Text>
+            {/* 하단 스캘럽 테두리 */}
+            <View style={styles.scallopBottom}>
+              <Text style={styles.scallopText}>⌣ ⌣ ⌣ ⌣ ⌣ ⌣ ⌣ ⌣ ⌣ ⌣ ⌣ ⌣ ⌣</Text>
+            </View>
           </View>
         </View>
 
@@ -182,39 +195,64 @@ const styles = StyleSheet.create({
   },
   dDayContainer: {
     paddingTop: 100,
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     alignItems: 'center',
   },
-  dDayBannerOuter: {
-    backgroundColor: 'rgba(255, 255, 255, 0.98)',
-    borderRadius: 20,
-    padding: 8,
-    shadowColor: '#f0768b',
+  laceFrame: {
+    backgroundColor: '#ffffff',
+    borderRadius: 8,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    shadowColor: '#d4a574',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 12,
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
     elevation: 6,
     width: '100%',
-    maxWidth: 400,
+    maxWidth: 380,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#e8d4c4',
   },
-  laceDecoration: {
-    fontSize: 12,
-    color: '#ffd1dc',
-    letterSpacing: 2,
-    marginVertical: 4,
+  scallop: {
+    marginTop: -2,
+    overflow: 'hidden',
+  },
+  scallopBottom: {
+    marginBottom: -2,
+    overflow: 'hidden',
+  },
+  scallopText: {
+    fontSize: 14,
+    color: '#d4a574',
+    letterSpacing: -2,
+  },
+  lacePatternTop: {
+    fontSize: 10,
+    color: '#c9a07a',
+    letterSpacing: 1,
+    marginTop: 2,
+    marginBottom: 6,
+  },
+  lacePatternBottom: {
+    fontSize: 10,
+    color: '#c9a07a',
+    letterSpacing: 1,
+    marginTop: 6,
+    marginBottom: 2,
   },
   dDayBanner: {
-    backgroundColor: 'rgba(255, 255, 255, 1)',
-    borderRadius: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 20,
+    backgroundColor: '#ffffff',
+    borderRadius: 4,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     width: '100%',
-    borderWidth: 1.5,
-    borderColor: '#ffe4e9',
+    borderWidth: 1,
+    borderColor: '#e8d4c4',
+    borderStyle: 'dotted',
   },
   dDayLabel: {
     fontSize: 18,

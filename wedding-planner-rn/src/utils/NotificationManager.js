@@ -70,60 +70,114 @@ export class NotificationManager {
       await this.cancelAllNotifications();
 
       const now = new Date();
+      now.setHours(0, 0, 0, 0); // 오늘 자정 기준
       const scheduledNotifications = [];
+      const immediateNotifications = []; // 즉시 보낼 알림 목록
 
       for (const item of timelineItems) {
         const itemDate = new Date(item.date);
+        itemDate.setHours(0, 0, 0, 0);
 
         // 이미 지난 날짜는 스케줄링하지 않음
-        if (itemDate <= now) {
+        if (itemDate < now) {
           continue;
         }
 
-        // 각 항목마다 3개의 알림 스케줄링
-        // 1. D-7일 알림
-        const sevenDaysBefore = new Date(itemDate);
-        sevenDaysBefore.setDate(sevenDaysBefore.getDate() - 7);
-        sevenDaysBefore.setHours(10, 0, 0, 0); // 오전 10시
+        // 일정까지 남은 일수 계산
+        const daysUntil = Math.ceil((itemDate - now) / (1000 * 60 * 60 * 24));
 
-        if (sevenDaysBefore > now) {
+        // === 즉시 알림: 현재 7일 이내 또는 3일 이내 일정 ===
+
+        // 7일 이내 일정 (3일 초과 ~ 7일 이하)
+        if (daysUntil > 0 && daysUntil <= 7 && daysUntil > 3) {
+          immediateNotifications.push({
+            title: `${item.title} ${daysUntil}일 전`,
+            body: `${item.title}까지 ${daysUntil}일 남았습니다. 준비를 시작하세요!`,
+            data: { itemId: item.id, type: 'immediate-7' }
+          });
+        }
+
+        // 3일 이내 일정 (1일 이상 ~ 3일 이하)
+        if (daysUntil > 0 && daysUntil <= 3) {
+          immediateNotifications.push({
+            title: `${item.title} ${daysUntil}일 전`,
+            body: `${item.title}까지 ${daysUntil}일 남았습니다. 서두르세요!`,
+            data: { itemId: item.id, type: 'immediate-3' }
+          });
+        }
+
+        // 오늘이 D-Day인 경우
+        if (daysUntil === 0) {
+          immediateNotifications.push({
+            title: `오늘은 ${item.title} 날!`,
+            body: `${item.title} 일정을 확인하세요. ${item.icon || ''}`,
+            data: { itemId: item.id, type: 'immediate-dday' }
+          });
+        }
+
+        // === 미래 알림 스케줄링 ===
+
+        // 1. D-7일 알림 (7일보다 더 남은 경우에만)
+        if (daysUntil > 7) {
+          const sevenDaysBefore = new Date(itemDate);
+          sevenDaysBefore.setDate(sevenDaysBefore.getDate() - 7);
+          sevenDaysBefore.setHours(10, 0, 0, 0); // 오전 10시
+
           const id = await this.scheduleNotification(
             `${item.title} 일주일 전`,
             `${item.title}까지 7일 남았습니다. 준비를 시작하세요!`,
             sevenDaysBefore,
             { itemId: item.id, type: 'd-7' }
           );
-          scheduledNotifications.push({ itemId: item.id, type: 'd-7', notificationId: id });
+          if (id) scheduledNotifications.push({ itemId: item.id, type: 'd-7', notificationId: id });
         }
 
-        // 2. D-3일 알림
-        const threeDaysBefore = new Date(itemDate);
-        threeDaysBefore.setDate(threeDaysBefore.getDate() - 3);
-        threeDaysBefore.setHours(10, 0, 0, 0); // 오전 10시
+        // 2. D-3일 알림 (3일보다 더 남은 경우에만)
+        if (daysUntil > 3) {
+          const threeDaysBefore = new Date(itemDate);
+          threeDaysBefore.setDate(threeDaysBefore.getDate() - 3);
+          threeDaysBefore.setHours(10, 0, 0, 0); // 오전 10시
 
-        if (threeDaysBefore > now) {
           const id = await this.scheduleNotification(
             `${item.title} 3일 전`,
             `${item.title}까지 3일 남았습니다. 잊지 마세요!`,
             threeDaysBefore,
             { itemId: item.id, type: 'd-3' }
           );
-          scheduledNotifications.push({ itemId: item.id, type: 'd-3', notificationId: id });
+          if (id) scheduledNotifications.push({ itemId: item.id, type: 'd-3', notificationId: id });
         }
 
-        // 3. D-Day 알림 (당일 오전 9시)
-        const dDay = new Date(itemDate);
-        dDay.setHours(9, 0, 0, 0); // 오전 9시
+        // 3. D-Day 알림 (아직 당일이 아닌 경우)
+        if (daysUntil > 0) {
+          const dDayTime = new Date(itemDate);
+          dDayTime.setHours(9, 0, 0, 0); // 오전 9시
 
-        if (dDay > now) {
           const id = await this.scheduleNotification(
             `오늘은 ${item.title} 날!`,
-            `${item.title} 일정을 확인하세요. 행복한 하루 되세요! ${item.icon}`,
-            dDay,
+            `${item.title} 일정을 확인하세요. 행복한 하루 되세요! ${item.icon || ''}`,
+            dDayTime,
             { itemId: item.id, type: 'd-day' }
           );
-          scheduledNotifications.push({ itemId: item.id, type: 'd-day', notificationId: id });
+          if (id) scheduledNotifications.push({ itemId: item.id, type: 'd-day', notificationId: id });
         }
+      }
+
+      // 즉시 알림 보내기 (5초 후에 순차적으로)
+      for (let i = 0; i < immediateNotifications.length; i++) {
+        const notification = immediateNotifications[i];
+        const delaySeconds = (i + 1) * 3; // 3초, 6초, 9초... 간격으로 발송
+
+        const id = await this.scheduleNotification(
+          notification.title,
+          notification.body,
+          { seconds: delaySeconds },
+          notification.data
+        );
+        if (id) scheduledNotifications.push({
+          itemId: notification.data.itemId,
+          type: notification.data.type,
+          notificationId: id
+        });
       }
 
       // 스케줄링된 알림 ID 저장
@@ -132,7 +186,7 @@ export class NotificationManager {
         JSON.stringify(scheduledNotifications)
       );
 
-      console.log(`${scheduledNotifications.length}개의 알림이 스케줄링되었습니다.`);
+      console.log(`${scheduledNotifications.length}개의 알림이 스케줄링되었습니다. (즉시: ${immediateNotifications.length}개)`);
       return scheduledNotifications.length;
     } catch (error) {
       console.error('알림 스케줄링 중 오류:', error);
