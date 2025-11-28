@@ -7,14 +7,10 @@ import {
   TouchableOpacity,
   Alert,
   ScrollView,
-  ImageBackground,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { COLORS } from '../constants/colors';
-
-// 레이스 배너 이미지 (assets 폴더에서 불러옴)
-const laceBannerImage = require('../../assets/lace-banner.png');
 
 export default function HomeScreen({ timeline }) {
   const [backgroundImage, setBackgroundImage] = useState(null);
@@ -91,22 +87,16 @@ export default function HomeScreen({ timeline }) {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
-      {/* 상단 D-Day 배너 - 레이스 이미지 사용 */}
+      {/* 상단 D-Day 배너 - 심플한 흰색 디자인 */}
       <View style={styles.headerSection}>
-        <ImageBackground
-          source={laceBannerImage}
-          style={styles.laceBanner}
-          resizeMode="stretch"
-        >
-          <View style={styles.bannerContent}>
-            <Text style={styles.dDayLabel}>우리의 결혼식</Text>
-            <View style={styles.dDayContent}>
-              <Text style={styles.dDayValue}>{renderDDay()}</Text>
-              <Text style={styles.dDaySeparator}>|</Text>
-              <Text style={styles.weddingDateText}>{formatWeddingDate()}</Text>
-            </View>
+        <View style={styles.banner}>
+          <Text style={styles.dDayLabel}>우리의 결혼식</Text>
+          <View style={styles.dDayRow}>
+            <Text style={styles.dDayValue}>{renderDDay()}</Text>
+            <Text style={styles.dDaySeparator}>|</Text>
+            <Text style={styles.weddingDateText}>{formatWeddingDate()}</Text>
           </View>
-        </ImageBackground>
+        </View>
       </View>
 
       {/* 메인 사진 영역 */}
@@ -149,51 +139,47 @@ const styles = StyleSheet.create({
   },
   headerSection: {
     paddingTop: 60,
-    paddingHorizontal: 0,
+    paddingHorizontal: 20,
     paddingBottom: 0,
-    alignItems: 'center',
     backgroundColor: COLORS.lightPink,
   },
-  laceBanner: {
-    width: '100%',
-    height: 120,
-    justifyContent: 'center',
+  banner: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    paddingVertical: 20,
+    paddingHorizontal: 24,
     alignItems: 'center',
-  },
-  bannerContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 16,
-    paddingHorizontal: 20,
-    paddingBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
   },
   dDayLabel: {
-    fontSize: 16,
+    fontSize: 14,
     fontFamily: 'GowunDodum_400Regular',
-    color: '#8B7355',
-    fontWeight: '600',
+    color: COLORS.textGray,
+    marginBottom: 8,
   },
-  dDayContent: {
+  dDayRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 12,
   },
   dDayValue: {
-    fontSize: 22,
+    fontSize: 28,
     fontWeight: 'bold',
     fontFamily: 'GowunDodum_400Regular',
     color: COLORS.darkPink,
   },
   dDaySeparator: {
-    fontSize: 18,
-    color: '#c9a86c',
+    fontSize: 20,
+    color: COLORS.textLight,
   },
   weddingDateText: {
-    fontSize: 13,
+    fontSize: 15,
     fontFamily: 'GowunDodum_400Regular',
-    color: '#8B7355',
-    fontWeight: '600',
+    color: COLORS.textDark,
   },
   imageSection: {
     paddingHorizontal: 20,

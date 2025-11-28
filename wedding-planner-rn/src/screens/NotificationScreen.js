@@ -22,10 +22,27 @@ export default function NotificationScreen({ timeline }) {
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
+    // 기존 잘못된 알림 히스토리 정리 (미래 알림 제거)
+    cleanupNotificationHistory();
     loadNotificationSettings();
     loadAllNotifications();
     loadReadNotificationIds();
   }, []);
+
+  const cleanupNotificationHistory = async () => {
+    try {
+      const existing = await AsyncStorage.getItem('notification-history');
+      if (existing) {
+        const history = JSON.parse(existing);
+        const now = new Date();
+        // 과거 알림만 유지
+        const cleanedHistory = history.filter(n => new Date(n.date) <= now);
+        await AsyncStorage.setItem('notification-history', JSON.stringify(cleanedHistory));
+      }
+    } catch (error) {
+      console.error('알림 히스토리 정리 오류:', error);
+    }
+  };
 
   const loadNotificationSettings = async () => {
     const enabled = await AsyncStorage.getItem('notifications-enabled');
@@ -34,32 +51,16 @@ export default function NotificationScreen({ timeline }) {
 
   const loadAllNotifications = async () => {
     try {
-      // 스케줄된 알림 정보 가져오기
-      const scheduledNotifications = await timeline.getScheduledNotifications();
-
-      // 기존 히스토리 로드
+      // 기존 히스토리만 로드 (실제로 도착한 알림만 표시)
       const existing = await AsyncStorage.getItem('notification-history');
       let history = existing ? JSON.parse(existing) : [];
 
-      // 새로운 스케줄된 알림을 히스토리에 추가
-      for (const notification of (scheduledNotifications || [])) {
-        const id = notification.identifier;
-        if (id && !history.find(h => h.id === id)) {
-          const triggerDate = getNotificationTriggerDate(notification);
-          const itemId = notification.content?.data?.itemId;
-          history.push({
-            id,
-            itemId,
-            title: notification.content?.title || '알림',
-            body: notification.content?.body || '',
-            date: triggerDate ? triggerDate.toISOString() : new Date().toISOString(),
-            createdAt: new Date().toISOString(),
-          });
-        }
-      }
-
-      // 히스토리 저장
-      await AsyncStorage.setItem('notification-history', JSON.stringify(history));
+      // 현재 시간 기준으로 미래 알림은 제외 (아직 도착하지 않은 알림)
+      const now = new Date();
+      history = history.filter(notification => {
+        const notificationDate = new Date(notification.date);
+        return notificationDate <= now;
+      });
 
       // 날짜순 정렬 (최신순)
       history.sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -118,8 +119,12 @@ export default function NotificationScreen({ timeline }) {
     if (notification.itemId) {
       const item = timeline.getItemById(notification.itemId);
       if (item) {
-        // DetailScreen은 item 객체를 기대함
-        navigation.navigate('Detail', { item: item });
+        // Date 객체를 ISO 문자열로 변환하여 직렬화 문제 방지
+        const serializedItem = {
+          ...item,
+          date: item.date instanceof Date ? item.date.toISOString() : item.date,
+        };
+        navigation.navigate('Detail', { item: serializedItem });
       } else {
         Alert.alert('알림', '해당 일정을 찾을 수 없습니다.');
       }
