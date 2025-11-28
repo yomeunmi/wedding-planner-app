@@ -466,11 +466,16 @@ export class WeddingTimeline {
 
   // 알림 권한 요청 및 초기화
   async initializeNotifications() {
-    const hasPermission = await this.notificationManager.requestPermissions();
-    if (hasPermission) {
-      await this.scheduleNotifications();
+    try {
+      const hasPermission = await this.notificationManager.requestPermissions();
+      if (hasPermission) {
+        await this.scheduleNotifications();
+      }
+      return hasPermission;
+    } catch (error) {
+      console.error('알림 초기화 오류:', error);
+      return false;
     }
-    return hasPermission;
   }
 
   // 타임라인 알림 스케줄링
@@ -487,21 +492,38 @@ export class WeddingTimeline {
 
   // 모든 알림 취소
   async cancelAllNotifications() {
-    await this.notificationManager.cancelAllNotifications();
+    try {
+      await this.notificationManager.cancelAllNotifications();
+    } catch (error) {
+      console.error('알림 취소 오류:', error);
+    }
   }
 
   // 특정 항목의 알림 취소
   async cancelItemNotifications(itemId) {
-    await this.notificationManager.cancelItemNotifications(itemId);
+    try {
+      await this.notificationManager.cancelItemNotifications(itemId);
+    } catch (error) {
+      console.error('항목 알림 취소 오류:', error);
+    }
   }
 
   // 스케줄링된 알림 조회
   async getScheduledNotifications() {
-    return await this.notificationManager.getScheduledNotifications();
+    try {
+      return await this.notificationManager.getScheduledNotifications();
+    } catch (error) {
+      console.error('알림 조회 오류:', error);
+      return [];
+    }
   }
 
   // 테스트 알림 전송
   async sendTestNotification() {
-    await this.notificationManager.sendTestNotification();
+    try {
+      await this.notificationManager.sendTestNotification();
+    } catch (error) {
+      console.error('테스트 알림 전송 오류:', error);
+    }
   }
 }
