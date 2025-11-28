@@ -6,6 +6,7 @@ import {
   Image,
   TouchableOpacity,
   Alert,
+  ScrollView,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -21,24 +22,21 @@ export default function HomeScreen({ timeline }) {
   }, []);
 
   useEffect(() => {
-    // 포커스될 때마다 데이터 새로고침
     const interval = setInterval(() => {
       if (timeline.weddingDate) {
         setDDay(timeline.getDDay());
       }
-    }, 1000 * 60); // 1분마다 업데이트
+    }, 1000 * 60);
 
     return () => clearInterval(interval);
   }, [timeline]);
 
   const loadData = async () => {
-    // 배경사진 로드
     const savedImage = await AsyncStorage.getItem('wedding-background-image');
     if (savedImage) {
       setBackgroundImage(savedImage);
     }
 
-    // 타임라인 데이터 로드
     if (timeline.weddingDate) {
       setWeddingDate(timeline.weddingDate);
       setDDay(timeline.getDDay());
@@ -88,142 +86,117 @@ export default function HomeScreen({ timeline }) {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.backgroundContainer}>
-        {backgroundImage ? (
-          <>
-            <Image
-              source={{ uri: backgroundImage }}
-              style={styles.squareImage}
-              resizeMode="cover"
-            />
-            <View style={styles.gradientOverlay} />
-          </>
-        ) : (
-          <View style={styles.defaultSquareBackground} />
-        )}
-      </View>
-      {renderContent()}
-    </View>
-  );
+    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
+      {/* 상단 D-Day 배너 - 이미지 위에 겹치지 않음 */}
+      <View style={styles.headerSection}>
+        <View style={styles.laceFrame}>
+          {/* 물결 테두리 효과 */}
+          <View style={styles.waveTop}>
+            {[...Array(20)].map((_, i) => (
+              <View key={i} style={styles.waveDot} />
+            ))}
+          </View>
 
-  function renderContent() {
-    return (
-      <>
-        {/* 상단 D-Day 배너 */}
-        <View style={styles.dDayContainer}>
-          <View style={styles.laceFrame}>
-            {/* 상단 물결 테두리 */}
-            <Text style={styles.waveBorderTop}>∿∿∿∿∿∿∿∿∿∿∿∿∿∿∿∿∿∿∿∿</Text>
-
-            {/* 메인 콘텐츠 */}
-            <View style={styles.dDayBanner}>
-              <Text style={styles.dDayLabel}>우리의 결혼식</Text>
-              <View style={styles.dDayContent}>
-                <Text style={styles.dDayValue}>{renderDDay()}</Text>
-                <Text style={styles.dDaySeparator}>|</Text>
-                <Text style={styles.weddingDate}>{formatWeddingDate()}</Text>
-              </View>
+          <View style={styles.dDayBanner}>
+            <Text style={styles.dDayLabel}>우리의 결혼식</Text>
+            <View style={styles.dDayContent}>
+              <Text style={styles.dDayValue}>{renderDDay()}</Text>
+              <Text style={styles.dDaySeparator}>|</Text>
+              <Text style={styles.weddingDateText}>{formatWeddingDate()}</Text>
             </View>
+          </View>
 
-            {/* 하단 물결 테두리 */}
-            <Text style={styles.waveBorderBottom}>∿∿∿∿∿∿∿∿∿∿∿∿∿∿∿∿∿∿∿∿</Text>
+          <View style={styles.waveBottom}>
+            {[...Array(20)].map((_, i) => (
+              <View key={i} style={styles.waveDot} />
+            ))}
           </View>
         </View>
+      </View>
 
-        {/* 중앙 컨텐츠 */}
-        <View style={styles.centerContent}>
-        </View>
+      {/* 메인 사진 영역 */}
+      <View style={styles.imageSection}>
+        {backgroundImage ? (
+          <Image
+            source={{ uri: backgroundImage }}
+            style={styles.squareImage}
+            resizeMode="cover"
+          />
+        ) : (
+          <View style={styles.defaultSquareBackground}>
+            <Text style={styles.placeholderText}>사진을 추가해주세요</Text>
+          </View>
+        )}
+      </View>
 
-        {/* 하단 배경사진 변경 버튼 */}
-        <View style={styles.bottomActions}>
-          <TouchableOpacity
-            style={styles.changeImageButton}
-            onPress={changeBackgroundImage}
-          >
-            <Text style={styles.changeImageButtonText}>
-              {backgroundImage ? '배경사진 변경' : '배경사진 설정'}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </>
-    );
-  }
+      {/* 배경사진 변경 버튼 */}
+      <View style={styles.bottomActions}>
+        <TouchableOpacity
+          style={styles.changeImageButton}
+          onPress={changeBackgroundImage}
+        >
+          <Text style={styles.changeImageButtonText}>
+            {backgroundImage ? '배경사진 변경' : '배경사진 설정'}
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
+  );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
-  },
-  backgroundContainer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    alignItems: 'center',
-    justifyContent: 'center',
     backgroundColor: COLORS.lightPink,
   },
-  squareImage: {
-    width: '100%',
-    aspectRatio: 1,
-    maxWidth: 600,
+  scrollContent: {
+    paddingBottom: 120,
   },
-  defaultSquareBackground: {
-    width: '100%',
-    aspectRatio: 1,
-    maxWidth: 600,
-    backgroundColor: COLORS.lightPink,
-  },
-  gradientOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-  },
-  dDayContainer: {
-    paddingTop: 120,
+  headerSection: {
+    paddingTop: 60,
     paddingHorizontal: 20,
+    paddingBottom: 16,
     alignItems: 'center',
+    backgroundColor: COLORS.lightPink,
   },
   laceFrame: {
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    borderRadius: 12,
-    paddingVertical: 2,
-    paddingHorizontal: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 4,
+    backgroundColor: '#ffffff',
+    paddingVertical: 4,
+    paddingHorizontal: 16,
     alignItems: 'center',
+    overflow: 'hidden',
   },
-  waveBorderTop: {
-    fontSize: 16,
-    color: '#d4a574',
-    letterSpacing: -3,
-    marginBottom: -4,
+  waveTop: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginBottom: 4,
   },
-  waveBorderBottom: {
-    fontSize: 16,
-    color: '#d4a574',
-    letterSpacing: -3,
-    marginTop: -4,
+  waveBottom: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 4,
+  },
+  waveDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#d4a574',
+    marginHorizontal: 2,
   },
   dDayBanner: {
-    paddingVertical: 10,
-    paddingHorizontal: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 16,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: '#e8d4c4',
+    borderStyle: 'dashed',
   },
   dDayLabel: {
-    fontSize: 18,
+    fontSize: 16,
     fontFamily: 'GowunDodum_400Regular',
     color: COLORS.textDark,
     fontWeight: '600',
@@ -231,44 +204,64 @@ const styles = StyleSheet.create({
   dDayContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 10,
   },
   dDayValue: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: 'bold',
     fontFamily: 'GowunDodum_400Regular',
     color: COLORS.darkPink,
   },
   dDaySeparator: {
-    fontSize: 20,
+    fontSize: 18,
     color: COLORS.textLight,
   },
-  weddingDate: {
-    fontSize: 14,
+  weddingDateText: {
+    fontSize: 13,
     fontFamily: 'GowunDodum_400Regular',
     color: COLORS.textDark,
     fontWeight: '600',
   },
-  centerContent: {
-    flex: 1,
+  imageSection: {
+    paddingHorizontal: 20,
+    alignItems: 'center',
+  },
+  squareImage: {
+    width: '100%',
+    aspectRatio: 1,
+    borderRadius: 12,
+  },
+  defaultSquareBackground: {
+    width: '100%',
+    aspectRatio: 1,
+    backgroundColor: '#f5e6e8',
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 20,
+  },
+  placeholderText: {
+    fontSize: 16,
+    color: COLORS.textGray,
+    fontFamily: 'GowunDodum_400Regular',
   },
   bottomActions: {
     paddingHorizontal: 20,
-    paddingBottom: 120, // 탭바 공간 확보
-    marginTop: -40, // 사진과 버튼 간격 좁히기
+    paddingTop: 16,
   },
   changeImageButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    backgroundColor: '#ffffff',
     borderRadius: 12,
-    padding: 16,
+    padding: 14,
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   changeImageButtonText: {
     color: COLORS.darkPink,
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
     fontFamily: 'GowunDodum_400Regular',
   },

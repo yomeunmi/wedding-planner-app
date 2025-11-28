@@ -10,19 +10,19 @@ import {
   RefreshControl,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation } from '@react-navigation/native';
 import { COLORS } from '../constants/colors';
 
 export default function NotificationScreen({ timeline }) {
+  const navigation = useNavigation();
   const [notificationEnabled, setNotificationEnabled] = useState(true);
-  const [scheduledNotifications, setScheduledNotifications] = useState([]);
-  const [receivedNotifications, setReceivedNotifications] = useState([]);
+  const [allNotifications, setAllNotifications] = useState([]);
   const [readNotificationIds, setReadNotificationIds] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     loadNotificationSettings();
-    loadScheduledNotifications();
-    loadReceivedNotifications();
+    loadAllNotifications();
     loadReadNotificationIds();
   }, []);
 
@@ -31,58 +31,40 @@ export default function NotificationScreen({ timeline }) {
     setNotificationEnabled(enabled !== 'false');
   };
 
-  const loadScheduledNotifications = async () => {
+  const loadAllNotifications = async () => {
     try {
-      const notifications = await timeline.getScheduledNotifications();
-      setScheduledNotifications(notifications || []);
+      // 스케줄된 알림 정보 가져오기
+      const scheduledNotifications = await timeline.getScheduledNotifications();
 
-      // 스케줄된 알림 정보를 히스토리에 저장
-      await saveNotificationHistory(notifications || []);
-    } catch (error) {
-      console.error('알림 로드 오류:', error);
-    }
-  };
-
-  const saveNotificationHistory = async (notifications) => {
-    try {
+      // 기존 히스토리 로드
       const existing = await AsyncStorage.getItem('notification-history');
-      const history = existing ? JSON.parse(existing) : [];
+      let history = existing ? JSON.parse(existing) : [];
 
-      for (const notification of notifications) {
+      // 새로운 스케줄된 알림을 히스토리에 추가
+      for (const notification of (scheduledNotifications || [])) {
         const id = notification.identifier;
         if (id && !history.find(h => h.id === id)) {
           const triggerDate = getNotificationTriggerDate(notification);
+          const itemId = notification.content?.data?.itemId;
           history.push({
             id,
+            itemId,
             title: notification.content?.title || '알림',
             body: notification.content?.body || '',
-            date: triggerDate ? triggerDate.toISOString() : null,
+            date: triggerDate ? triggerDate.toISOString() : new Date().toISOString(),
             createdAt: new Date().toISOString(),
           });
         }
       }
 
+      // 히스토리 저장
       await AsyncStorage.setItem('notification-history', JSON.stringify(history));
-    } catch (error) {
-      console.error('알림 히스토리 저장 오류:', error);
-    }
-  };
 
-  const loadReceivedNotifications = async () => {
-    try {
-      const history = await AsyncStorage.getItem('notification-history');
-      if (history) {
-        const parsed = JSON.parse(history);
-        const now = new Date();
-        // 시간이 지난 알림만 "받은 알림"으로 표시
-        const received = parsed.filter(n => {
-          if (!n.date) return false;
-          return new Date(n.date) <= now;
-        });
-        setReceivedNotifications(received);
-      }
+      // 날짜순 정렬 (최신순)
+      history.sort((a, b) => new Date(b.date) - new Date(a.date));
+      setAllNotifications(history);
     } catch (error) {
-      console.error('받은 알림 로드 오류:', error);
+      console.error('알림 로드 오류:', error);
     }
   };
 
@@ -97,20 +79,52 @@ export default function NotificationScreen({ timeline }) {
     }
   };
 
+  const getNotificationTriggerDate = (notification) => {
+    if (!notification.trigger) return null;
+
+    const trigger = notification.trigger;
+
+    if (trigger instanceof Date) return trigger;
+    if (trigger.date !== undefined) return new Date(trigger.date);
+    if (trigger.value !== undefined) return new Date(trigger.value);
+    if (typeof trigger === 'number') return new Date(trigger);
+    if (trigger.seconds !== undefined) {
+      const futureDate = new Date();
+      futureDate.setSeconds(futureDate.getSeconds() + trigger.seconds);
+      return futureDate;
+    }
+
+    return null;
+  };
+
   const markAsRead = async (notificationId) => {
     try {
-      const newReadIds = [...readNotificationIds, notificationId];
-      setReadNotificationIds(newReadIds);
-      await AsyncStorage.setItem('read-notification-ids', JSON.stringify(newReadIds));
+      if (!readNotificationIds.includes(notificationId)) {
+        const newReadIds = [...readNotificationIds, notificationId];
+        setReadNotificationIds(newReadIds);
+        await AsyncStorage.setItem('read-notification-ids', JSON.stringify(newReadIds));
+      }
     } catch (error) {
       console.error('읽음 처리 오류:', error);
     }
   };
 
+  const handleNotificationPress = async (notification) => {
+    // 읽음 처리
+    await markAsRead(notification.id);
+
+    // 타임라인 상세화면으로 이동
+    if (notification.itemId) {
+      const item = timeline.getItemById(notification.itemId);
+      if (item) {
+        navigation.navigate('Detail', { itemId: notification.itemId });
+      }
+    }
+  };
+
   const onRefresh = async () => {
     setRefreshing(true);
-    await loadScheduledNotifications();
-    await loadReceivedNotifications();
+    await loadAllNotifications();
     await loadReadNotificationIds();
     setRefreshing(false);
   };
@@ -130,12 +144,11 @@ export default function NotificationScreen({ timeline }) {
         setNotificationEnabled(false);
         await AsyncStorage.setItem('notifications-enabled', 'false');
       } else {
-        await loadScheduledNotifications();
+        await loadAllNotifications();
         Alert.alert('알림 활성화', '알림이 활성화되었습니다.', [{ text: '확인' }]);
       }
     } else {
       await timeline.cancelAllNotifications();
-      setScheduledNotifications([]);
       Alert.alert('알림 비활성화', '모든 알림이 취소되었습니다.', [{ text: '확인' }]);
     }
   };
@@ -145,79 +158,40 @@ export default function NotificationScreen({ timeline }) {
     Alert.alert('테스트 알림', '테스트 알림이 전송되었습니다!', [{ text: '확인' }]);
   };
 
-  const getNotificationTriggerDate = (notification) => {
-    if (!notification.trigger) return null;
-
-    const trigger = notification.trigger;
-
-    if (trigger instanceof Date) {
-      return trigger;
-    }
-
-    if (trigger.date !== undefined) {
-      return new Date(trigger.date);
-    }
-
-    if (trigger.value !== undefined) {
-      return new Date(trigger.value);
-    }
-
-    if (typeof trigger === 'number') {
-      return new Date(trigger);
-    }
-
-    // seconds 형식의 trigger 처리
-    if (trigger.seconds !== undefined) {
-      const futureDate = new Date();
-      futureDate.setSeconds(futureDate.getSeconds() + trigger.seconds);
-      return futureDate;
-    }
-
-    return null;
-  };
-
   const formatNotificationDate = (dateString) => {
-    if (!dateString) return '알 수 없음';
+    if (!dateString) return '';
 
     const date = new Date(dateString);
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const hour = String(date.getHours()).padStart(2, '0');
-    const minute = String(date.getMinutes()).padStart(2, '0');
-
-    return `${year}.${month}.${day} ${hour}:${minute}`;
-  };
-
-  const formatScheduledNotificationDate = (notification) => {
-    const date = getNotificationTriggerDate(notification);
-    if (!date) return '알 수 없음';
-
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const hour = String(date.getHours()).padStart(2, '0');
-    const minute = String(date.getMinutes()).padStart(2, '0');
-
-    return `${year}.${month}.${day} ${hour}:${minute}`;
-  };
-
-  const getNotificationStats = () => {
     const now = new Date();
-    const upcoming = scheduledNotifications.filter(n => {
-      const triggerDate = getNotificationTriggerDate(n);
-      if (!triggerDate) return false;
-      return triggerDate > now;
-    });
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
 
-    return {
-      upcoming: upcoming.length,
-      received: receivedNotifications.length,
-      unread: receivedNotifications.filter(n => !readNotificationIds.includes(n.id)).length
-    };
+    if (diffMs < 0) {
+      // 미래 알림
+      const futureDays = Math.ceil(Math.abs(diffMs) / 86400000);
+      if (futureDays === 0) return '오늘 예정';
+      if (futureDays === 1) return '내일 예정';
+      return `${futureDays}일 후 예정`;
+    }
+
+    if (diffMins < 1) return '방금 전';
+    if (diffMins < 60) return `${diffMins}분 전`;
+    if (diffHours < 24) return `${diffHours}시간 전`;
+    if (diffDays < 7) return `${diffDays}일 전`;
+
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}.${month}.${day}`;
   };
 
-  const stats = getNotificationStats();
+  const getUnreadCount = () => {
+    return allNotifications.filter(n => !readNotificationIds.includes(n.id)).length;
+  };
+
+  const unreadCount = getUnreadCount();
 
   return (
     <ScrollView
@@ -227,7 +201,12 @@ export default function NotificationScreen({ timeline }) {
       }
     >
       <View style={styles.header}>
-        <Text style={styles.title}>알림 설정</Text>
+        <Text style={styles.title}>알림</Text>
+        {unreadCount > 0 && (
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>{unreadCount}</Text>
+          </View>
+        )}
       </View>
 
       {/* 알림 활성화/비활성화 */}
@@ -248,25 +227,6 @@ export default function NotificationScreen({ timeline }) {
         </View>
       </View>
 
-      {/* 알림 통계 */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>알림 현황</Text>
-        <View style={styles.statsContainer}>
-          <View style={styles.statBox}>
-            <Text style={styles.statValue}>{stats.upcoming}</Text>
-            <Text style={styles.statLabel}>예정된 알림</Text>
-          </View>
-          <View style={styles.statBox}>
-            <Text style={styles.statValue}>{stats.received}</Text>
-            <Text style={styles.statLabel}>받은 알림</Text>
-          </View>
-          <View style={styles.statBox}>
-            <Text style={styles.statValue}>{stats.unread}</Text>
-            <Text style={styles.statLabel}>안읽은 알림</Text>
-          </View>
-        </View>
-      </View>
-
       {/* 테스트 알림 */}
       <View style={styles.section}>
         <TouchableOpacity
@@ -280,88 +240,58 @@ export default function NotificationScreen({ timeline }) {
       {/* 받은 알림 목록 */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>
-          받은 알림 ({stats.received}개)
+          받은 알림 ({allNotifications.length}개)
         </Text>
-        {receivedNotifications.length === 0 ? (
+        {allNotifications.length === 0 ? (
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyIcon}>📭</Text>
             <Text style={styles.emptyText}>
-              받은 알림이 없습니다
+              알림이 없습니다
+            </Text>
+            <Text style={styles.emptySubText}>
+              타임라인 일정에 따라 알림이 도착합니다
             </Text>
           </View>
         ) : (
-          receivedNotifications
-            .sort((a, b) => new Date(b.date) - new Date(a.date))
-            .map((notification, index) => {
-              const isRead = readNotificationIds.includes(notification.id);
-              return (
-                <TouchableOpacity
-                  key={notification.id || index}
-                  style={[
-                    styles.notificationItem,
-                    !isRead && styles.notificationItemUnread
-                  ]}
-                  onPress={() => !isRead && markAsRead(notification.id)}
-                >
-                  <View style={styles.notificationContent}>
-                    <View style={styles.notificationHeader}>
-                      <Text style={styles.notificationTitle}>
-                        {notification.title}
-                      </Text>
-                      {!isRead && <View style={styles.unreadDot} />}
-                    </View>
-                    <Text style={styles.notificationBody}>
-                      {notification.body}
+          allNotifications.map((notification, index) => {
+            const isRead = readNotificationIds.includes(notification.id);
+            const isFuture = new Date(notification.date) > new Date();
+            return (
+              <TouchableOpacity
+                key={notification.id || index}
+                style={[
+                  styles.notificationItem,
+                  !isRead && styles.notificationItemUnread,
+                  isFuture && styles.notificationItemFuture,
+                ]}
+                onPress={() => handleNotificationPress(notification)}
+                activeOpacity={0.7}
+              >
+                <View style={styles.notificationContent}>
+                  <View style={styles.notificationHeader}>
+                    <Text style={[
+                      styles.notificationTitle,
+                      !isRead && styles.notificationTitleUnread
+                    ]}>
+                      {notification.title}
                     </Text>
+                    {!isRead && <View style={styles.unreadDot} />}
+                  </View>
+                  <Text style={styles.notificationBody} numberOfLines={2}>
+                    {notification.body}
+                  </Text>
+                  <View style={styles.notificationFooter}>
                     <Text style={styles.notificationDate}>
                       {formatNotificationDate(notification.date)}
                     </Text>
+                    {notification.itemId && (
+                      <Text style={styles.tapHint}>탭하여 상세보기</Text>
+                    )}
                   </View>
-                </TouchableOpacity>
-              );
-            })
-        )}
-      </View>
-
-      {/* 예정된 알림 목록 */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>
-          예정된 알림 ({stats.upcoming}개)
-        </Text>
-        {stats.upcoming === 0 ? (
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyIcon}>🔔</Text>
-            <Text style={styles.emptyText}>
-              예정된 알림이 없습니다
-            </Text>
-          </View>
-        ) : (
-          scheduledNotifications
-            .filter(n => {
-              const triggerDate = getNotificationTriggerDate(n);
-              if (!triggerDate) return false;
-              return triggerDate > new Date();
-            })
-            .sort((a, b) => {
-              const dateA = getNotificationTriggerDate(a) || new Date(0);
-              const dateB = getNotificationTriggerDate(b) || new Date(0);
-              return dateA - dateB;
-            })
-            .map((notification, index) => (
-              <View key={notification.identifier || index} style={styles.notificationItem}>
-                <View style={styles.notificationContent}>
-                  <Text style={styles.notificationTitle}>
-                    {notification.content?.title || '알림'}
-                  </Text>
-                  <Text style={styles.notificationBody}>
-                    {notification.content?.body || ''}
-                  </Text>
-                  <Text style={styles.notificationDate}>
-                    {formatScheduledNotificationDate(notification)}
-                  </Text>
                 </View>
-              </View>
-            ))
+              </TouchableOpacity>
+            );
+          })
         )}
       </View>
 
@@ -370,7 +300,7 @@ export default function NotificationScreen({ timeline }) {
         <Text style={styles.infoText}>
           💡 각 타임라인 항목마다 D-7, D-3, D-Day에 알림을 받게 됩니다.{'\n'}
           {'\n'}
-          알림 권한을 허용하지 않으셨다면 설정 {'>'} 알림에서 권한을 변경해주세요.
+          알림을 탭하면 해당 일정의 상세 정보를 볼 수 있습니다.
         </Text>
       </View>
     </ScrollView>
@@ -389,12 +319,26 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
     fontFamily: 'GowunDodum_400Regular',
     color: COLORS.darkPink,
+  },
+  badge: {
+    backgroundColor: COLORS.darkPink,
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    marginLeft: 10,
+  },
+  badgeText: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: 'bold',
   },
   section: {
     marginTop: 20,
@@ -436,44 +380,16 @@ const styles = StyleSheet.create({
     fontFamily: 'GowunDodum_400Regular',
     color: COLORS.textGray,
   },
-  statsContainer: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  statBox: {
-    flex: 1,
-    backgroundColor: COLORS.white,
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
-  },
-  statValue: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    fontFamily: 'GowunDodum_400Regular',
-    color: COLORS.darkPink,
-    marginBottom: 4,
-  },
-  statLabel: {
-    fontSize: 12,
-    fontFamily: 'GowunDodum_400Regular',
-    color: COLORS.textGray,
-  },
   testButton: {
     backgroundColor: COLORS.white,
     borderWidth: 2,
     borderColor: COLORS.darkPink,
     borderRadius: 12,
-    padding: 16,
+    padding: 14,
   },
   testButtonText: {
     color: COLORS.darkPink,
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
     fontFamily: 'GowunDodum_400Regular',
     textAlign: 'center',
@@ -482,15 +398,20 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     borderRadius: 12,
     padding: 16,
-    marginBottom: 12,
+    marginBottom: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
+    shadowOpacity: 0.08,
+    shadowRadius: 2,
+    elevation: 1,
   },
   notificationItemUnread: {
     backgroundColor: COLORS.lightPink,
+    borderLeftWidth: 3,
+    borderLeftColor: COLORS.darkPink,
+  },
+  notificationItemFuture: {
+    opacity: 0.7,
   },
   notificationContent: {
     flex: 1,
@@ -499,14 +420,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    marginBottom: 6,
   },
   notificationTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontSize: 15,
+    fontWeight: '600',
     fontFamily: 'GowunDodum_400Regular',
     color: COLORS.textDark,
-    marginBottom: 4,
     flex: 1,
+  },
+  notificationTitleUnread: {
+    fontWeight: 'bold',
   },
   unreadDot: {
     width: 8,
@@ -520,11 +444,22 @@ const styles = StyleSheet.create({
     fontFamily: 'GowunDodum_400Regular',
     color: COLORS.textGray,
     marginBottom: 8,
+    lineHeight: 20,
+  },
+  notificationFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   notificationDate: {
     fontSize: 12,
     fontFamily: 'GowunDodum_400Regular',
     color: COLORS.textLight,
+  },
+  tapHint: {
+    fontSize: 11,
+    fontFamily: 'GowunDodum_400Regular',
+    color: COLORS.darkPink,
   },
   emptyContainer: {
     backgroundColor: COLORS.white,
@@ -538,6 +473,12 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
+    fontFamily: 'GowunDodum_400Regular',
+    color: COLORS.textDark,
+    marginBottom: 4,
+  },
+  emptySubText: {
+    fontSize: 14,
     fontFamily: 'GowunDodum_400Regular',
     color: COLORS.textGray,
   },
