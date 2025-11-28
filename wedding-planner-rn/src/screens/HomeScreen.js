@@ -7,52 +7,19 @@ import {
   TouchableOpacity,
   Alert,
   ScrollView,
+  ImageBackground,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { COLORS } from '../constants/colors';
-import Svg, { Path } from 'react-native-svg';
 
-// 스캘럽(물결) 테두리 컴포넌트
-const ScallopBorder = ({ width, position }) => {
-  const scallops = 12;
-  const scallopWidth = width / scallops;
-  const scallopHeight = 10;
-
-  let pathD = '';
-
-  if (position === 'top') {
-    // 상단: 아래로 볼록한 물결
-    pathD = `M 0 ${scallopHeight}`;
-    for (let i = 0; i < scallops; i++) {
-      const x1 = i * scallopWidth + scallopWidth / 2;
-      const x2 = (i + 1) * scallopWidth;
-      pathD += ` Q ${x1} 0, ${x2} ${scallopHeight}`;
-    }
-    pathD += ` L ${width} 0 L 0 0 Z`;
-  } else {
-    // 하단: 위로 볼록한 물결
-    pathD = `M 0 0`;
-    for (let i = 0; i < scallops; i++) {
-      const x1 = i * scallopWidth + scallopWidth / 2;
-      const x2 = (i + 1) * scallopWidth;
-      pathD += ` Q ${x1} ${scallopHeight}, ${x2} 0`;
-    }
-    pathD += ` L ${width} ${scallopHeight} L 0 ${scallopHeight} Z`;
-  }
-
-  return (
-    <Svg width={width} height={scallopHeight} style={position === 'top' ? styles.scallopTop : styles.scallopBottom}>
-      <Path d={pathD} fill="#c9a86c" />
-    </Svg>
-  );
-};
+// 레이스 배너 이미지 (assets 폴더에서 불러옴)
+const laceBannerImage = require('../../assets/lace-banner.png');
 
 export default function HomeScreen({ timeline }) {
   const [backgroundImage, setBackgroundImage] = useState(null);
   const [dDay, setDDay] = useState(0);
   const [weddingDate, setWeddingDate] = useState(null);
-  const [containerWidth, setContainerWidth] = useState(300);
 
   useEffect(() => {
     loadData();
@@ -122,38 +89,24 @@ export default function HomeScreen({ timeline }) {
     return `${year}.${month}.${day} (${weekday})`;
   };
 
-  const onFrameLayout = (event) => {
-    const { width } = event.nativeEvent.layout;
-    setContainerWidth(width);
-  };
-
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
-      {/* 상단 D-Day 배너 - 레이스 테두리 */}
+      {/* 상단 D-Day 배너 - 레이스 이미지 사용 */}
       <View style={styles.headerSection}>
-        <View
-          style={styles.laceFrameWrapper}
-          onLayout={onFrameLayout}
+        <ImageBackground
+          source={laceBannerImage}
+          style={styles.laceBanner}
+          resizeMode="contain"
         >
-          {/* 상단 스캘럽 테두리 */}
-          <ScallopBorder width={containerWidth} position="top" />
-
-          <View style={styles.laceFrame}>
-            <View style={styles.innerBorder}>
-              <View style={styles.dDayBanner}>
-                <Text style={styles.dDayLabel}>우리의 결혼식</Text>
-                <View style={styles.dDayContent}>
-                  <Text style={styles.dDayValue}>{renderDDay()}</Text>
-                  <Text style={styles.dDaySeparator}>|</Text>
-                  <Text style={styles.weddingDateText}>{formatWeddingDate()}</Text>
-                </View>
-              </View>
+          <View style={styles.bannerContent}>
+            <Text style={styles.dDayLabel}>우리의 결혼식</Text>
+            <View style={styles.dDayContent}>
+              <Text style={styles.dDayValue}>{renderDDay()}</Text>
+              <Text style={styles.dDaySeparator}>|</Text>
+              <Text style={styles.weddingDateText}>{formatWeddingDate()}</Text>
             </View>
           </View>
-
-          {/* 하단 스캘럽 테두리 */}
-          <ScallopBorder width={containerWidth} position="bottom" />
-        </View>
+        </ImageBackground>
       </View>
 
       {/* 메인 사진 영역 */}
@@ -196,48 +149,29 @@ const styles = StyleSheet.create({
   },
   headerSection: {
     paddingTop: 60,
-    paddingHorizontal: 20,
-    paddingBottom: 16,
+    paddingHorizontal: 16,
+    paddingBottom: 12,
     alignItems: 'center',
     backgroundColor: COLORS.lightPink,
   },
-  laceFrameWrapper: {
+  laceBanner: {
     width: '100%',
+    aspectRatio: 2.5,
+    justifyContent: 'center',
     alignItems: 'center',
   },
-  scallopTop: {
-    marginBottom: -1,
-  },
-  scallopBottom: {
-    marginTop: -1,
-  },
-  laceFrame: {
-    backgroundColor: '#c9a86c',
-    width: '100%',
-    paddingVertical: 3,
-    paddingHorizontal: 3,
-  },
-  innerBorder: {
-    backgroundColor: '#ffffff',
-    paddingVertical: 2,
-    paddingHorizontal: 8,
-  },
-  dDayBanner: {
-    paddingVertical: 10,
-    paddingHorizontal: 8,
+  bannerContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 12,
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: '#c9a86c',
-    borderStyle: 'dashed',
+    justifyContent: 'center',
+    gap: 16,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
   },
   dDayLabel: {
     fontSize: 16,
     fontFamily: 'GowunDodum_400Regular',
-    color: COLORS.textDark,
+    color: '#8B7355',
     fontWeight: '600',
   },
   dDayContent: {
@@ -253,12 +187,12 @@ const styles = StyleSheet.create({
   },
   dDaySeparator: {
     fontSize: 18,
-    color: COLORS.textLight,
+    color: '#c9a86c',
   },
   weddingDateText: {
     fontSize: 13,
     fontFamily: 'GowunDodum_400Regular',
-    color: COLORS.textDark,
+    color: '#8B7355',
     fontWeight: '600',
   },
   imageSection: {
