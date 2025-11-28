@@ -96,7 +96,7 @@ export default function HomeScreen({ timeline }) {
         <ImageBackground
           source={laceBannerImage}
           style={styles.laceBanner}
-          resizeMode="contain"
+          resizeMode="stretch"
         >
           <View style={styles.bannerContent}>
             <Text style={styles.dDayLabel}>우리의 결혼식</Text>
@@ -149,14 +149,14 @@ const styles = StyleSheet.create({
   },
   headerSection: {
     paddingTop: 60,
-    paddingHorizontal: 16,
-    paddingBottom: 12,
+    paddingHorizontal: 0,
+    paddingBottom: 0,
     alignItems: 'center',
     backgroundColor: COLORS.lightPink,
   },
   laceBanner: {
     width: '100%',
-    aspectRatio: 2.5,
+    height: 120,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -197,6 +197,7 @@ const styles = StyleSheet.create({
   },
   imageSection: {
     paddingHorizontal: 20,
+    paddingTop: 16,
     alignItems: 'center',
   },
   squareImage: {

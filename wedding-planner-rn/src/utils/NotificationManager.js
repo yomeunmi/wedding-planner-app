@@ -75,8 +75,9 @@ export class NotificationManager {
       // 기존 스케줄된 알림 취소 (히스토리는 유지)
       await Notifications.cancelAllScheduledNotificationsAsync();
 
-      const now = new Date();
-      now.setHours(0, 0, 0, 0); // 오늘 자정 기준
+      // 오늘 자정 기준 (시간대 문제 방지)
+      const today = new Date();
+      const now = new Date(today.getFullYear(), today.getMonth(), today.getDate());
       const scheduledNotifications = [];
       const immediateNotifications = []; // 즉시 보낼 알림 목록
 
@@ -87,16 +88,27 @@ export class NotificationManager {
       const sentToday = sentTodayData ? JSON.parse(sentTodayData) : [];
 
       for (const item of timelineItems) {
-        const itemDate = new Date(item.date);
-        itemDate.setHours(0, 0, 0, 0);
-
-        // 이미 지난 날짜는 스케줄링하지 않음
-        if (itemDate < now) {
+        // 날짜 파싱을 더 정확하게
+        const itemDateObj = new Date(item.date);
+        if (isNaN(itemDateObj.getTime())) {
+          console.log(`잘못된 날짜 형식: ${item.title} - ${item.date}`);
           continue;
         }
 
-        // 일정까지 남은 일수 계산
-        const daysUntil = Math.ceil((itemDate - now) / (1000 * 60 * 60 * 24));
+        // 자정 기준으로 설정
+        const itemDate = new Date(itemDateObj.getFullYear(), itemDateObj.getMonth(), itemDateObj.getDate());
+
+        // 이미 지난 날짜는 스케줄링하지 않음
+        if (itemDate.getTime() < now.getTime()) {
+          continue;
+        }
+
+        // 일정까지 남은 일수 계산 (정수로 계산)
+        const diffMs = itemDate.getTime() - now.getTime();
+        const daysUntil = Math.round(diffMs / (1000 * 60 * 60 * 24));
+
+        // 디버깅 로그
+        console.log(`[알림] ${item.title}: ${daysUntil}일 후 (${itemDate.toDateString()})`);
 
         // === 즉시 알림: 현재 7일 이내 또는 3일 이내 일정 (중복 방지) ===
         const immediateKey7 = `${item.id}-immediate-7-${daysUntil}`;
