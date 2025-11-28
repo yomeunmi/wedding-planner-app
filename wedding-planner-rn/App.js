@@ -38,19 +38,15 @@ export default function App() {
   }, []);
 
   const initializeApp = async () => {
-    try {
-      // NotificationManager 초기화 (실패해도 앱은 계속 실행)
-      try {
-        await NotificationManager.initialize();
-        console.log('NotificationManager initialized successfully');
-      } catch (notifError) {
-        console.log('NotificationManager initialization failed, but app will continue:', notifError);
-      }
-    } catch (error) {
-      console.log('App initialization error:', error);
-    }
+    // 알림 기능 임시 비활성화 - Android 크래시 방지
+    // try {
+    //   await NotificationManager.initialize();
+    //   console.log('NotificationManager initialized successfully');
+    // } catch (notifError) {
+    //   console.log('NotificationManager initialization failed, but app will continue:', notifError);
+    // }
 
-    // 데이터 로드는 알림 실패와 무관하게 진행
+    // 데이터 로드
     await checkSavedData();
   };
 

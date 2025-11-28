@@ -25,7 +25,7 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.yomeunmi.weddingplanner",
-      "versionCode": 6,
+      "versionCode": 7,
       "permissions": [
         "RECEIVE_BOOT_COMPLETED",
         "VIBRATE",
@@ -37,15 +37,6 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "plugins": [
-      [
-        "expo-notifications",
-        {
-          "icon": "./assets/icon.png",
-          "color": "#FF6B9D",
-          "mode": "production"
-        }
-      ]
-    ]
+    "plugins": []
   }
 }
