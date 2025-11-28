@@ -25,7 +25,7 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.yomeunmi.weddingplanner",
-      "versionCode": 4,
+      "versionCode": 5,
       "permissions": [
         "RECEIVE_BOOT_COMPLETED",
         "VIBRATE",

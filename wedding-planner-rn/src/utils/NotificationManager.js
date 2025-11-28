@@ -2,27 +2,36 @@ import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// 알림 설정: 앱이 foreground일 때도 알림 표시
-try {
-  Notifications.setNotificationHandler({
-    handleNotification: async () => ({
-      shouldShowAlert: true,
-      shouldPlaySound: true,
-      shouldSetBadge: true,
-    }),
-  });
-} catch (error) {
-  console.log('Notification handler setup failed:', error);
-}
-
 export class NotificationManager {
   constructor() {
     this.notificationIds = {};
+    this.initialized = false;
+  }
+
+  // 초기화 메서드 - 앱 시작 후 호출
+  async initialize() {
+    if (this.initialized) return;
+
+    try {
+      // 알림 설정: 앱이 foreground일 때도 알림 표시
+      Notifications.setNotificationHandler({
+        handleNotification: async () => ({
+          shouldShowAlert: true,
+          shouldPlaySound: true,
+          shouldSetBadge: true,
+        }),
+      });
+      this.initialized = true;
+    } catch (error) {
+      console.log('Notification handler setup failed:', error);
+    }
   }
 
   // 알림 권한 요청
   async requestPermissions() {
     try {
+      await this.initialize();
+
       const { status: existingStatus } = await Notifications.getPermissionsAsync();
       let finalStatus = existingStatus;
 

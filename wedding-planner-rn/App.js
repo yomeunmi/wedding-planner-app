@@ -16,6 +16,7 @@ import NotificationScreen from './src/screens/NotificationScreen';
 import DetailScreen from './src/screens/DetailScreen';
 import MyPageScreen from './src/screens/MyPageScreen';
 import { COLORS } from './src/constants/colors';
+import NotificationManager from './src/utils/NotificationManager';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -33,8 +34,18 @@ export default function App() {
   });
 
   useEffect(() => {
-    checkSavedData();
+    initializeApp();
   }, []);
+
+  const initializeApp = async () => {
+    try {
+      // NotificationManager 초기화
+      await NotificationManager.initialize();
+    } catch (error) {
+      console.log('NotificationManager initialization failed:', error);
+    }
+    await checkSavedData();
+  };
 
   const checkSavedData = async () => {
     try {
