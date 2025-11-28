@@ -74,12 +74,41 @@ export default function NotificationScreen({ timeline }) {
     Alert.alert('테스트 알림', '테스트 알림이 전송되었습니다!', [{ text: '확인' }]);
   };
 
+  const getNotificationTriggerDate = (notification) => {
+    if (!notification.trigger) return null;
+
+    // expo-notifications에서 반환되는 다양한 trigger 형식 처리
+    const trigger = notification.trigger;
+
+    // trigger가 Date 객체인 경우
+    if (trigger instanceof Date) {
+      return trigger;
+    }
+
+    // trigger.date가 있는 경우 (DateTriggerInput)
+    if (trigger.date !== undefined) {
+      return new Date(trigger.date);
+    }
+
+    // trigger.value가 있는 경우 (일부 버전 호환)
+    if (trigger.value !== undefined) {
+      return new Date(trigger.value);
+    }
+
+    // trigger가 timestamp인 경우
+    if (typeof trigger === 'number') {
+      return new Date(trigger);
+    }
+
+    return null;
+  };
+
   const formatNotificationDate = (notification) => {
-    if (!notification.trigger || !notification.trigger.value) {
+    const date = getNotificationTriggerDate(notification);
+    if (!date) {
       return '알 수 없음';
     }
 
-    const date = new Date(notification.trigger.value);
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
@@ -92,12 +121,14 @@ export default function NotificationScreen({ timeline }) {
   const getNotificationStats = () => {
     const now = new Date();
     const upcoming = scheduledNotifications.filter(n => {
-      if (!n.trigger || !n.trigger.value) return false;
-      return new Date(n.trigger.value) > now;
+      const triggerDate = getNotificationTriggerDate(n);
+      if (!triggerDate) return false;
+      return triggerDate > now;
     });
     const past = scheduledNotifications.filter(n => {
-      if (!n.trigger || !n.trigger.value) return false;
-      return new Date(n.trigger.value) <= now;
+      const triggerDate = getNotificationTriggerDate(n);
+      if (!triggerDate) return false;
+      return triggerDate <= now;
     });
 
     return { upcoming: upcoming.length, past: past.length };
@@ -174,16 +205,17 @@ export default function NotificationScreen({ timeline }) {
         ) : (
           scheduledNotifications
             .filter(n => {
-              if (!n.trigger || !n.trigger.value) return false;
-              return new Date(n.trigger.value) > new Date();
+              const triggerDate = getNotificationTriggerDate(n);
+              if (!triggerDate) return false;
+              return triggerDate > new Date();
             })
             .sort((a, b) => {
-              const dateA = new Date(a.trigger?.value || 0);
-              const dateB = new Date(b.trigger?.value || 0);
+              const dateA = getNotificationTriggerDate(a) || new Date(0);
+              const dateB = getNotificationTriggerDate(b) || new Date(0);
               return dateA - dateB;
             })
             .map((notification, index) => (
-              <View key={index} style={styles.notificationItem}>
+              <View key={notification.identifier || index} style={styles.notificationItem}>
                 <View style={styles.notificationContent}>
                   <Text style={styles.notificationTitle}>
                     {notification.content?.title || '알림'}

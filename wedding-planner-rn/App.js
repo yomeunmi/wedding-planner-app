@@ -119,19 +119,18 @@ export default function App() {
           headerShown: false,
           tabBarStyle: {
             backgroundColor: COLORS.white,
-            borderTopWidth: 1,
-            borderTopColor: COLORS.border,
-            height: 100,
-            paddingBottom: 20,
-            paddingTop: 16,
+            borderTopWidth: 0,
+            height: 110,
+            paddingBottom: 30,
+            paddingTop: 12,
           },
           tabBarActiveTintColor: COLORS.darkPink,
           tabBarInactiveTintColor: COLORS.textGray,
           tabBarLabelStyle: {
-            fontSize: 14,
+            fontSize: 12,
             fontFamily: 'GowunDodum_400Regular',
             fontWeight: '600',
-            marginTop: 4,
+            marginTop: 2,
           },
           tabBarIconStyle: {
             marginBottom: 0,
@@ -145,7 +144,7 @@ export default function App() {
             tabBarIcon: ({ color, focused }) => (
               <Ionicons
                 name={focused ? 'home' : 'home-outline'}
-                size={28}
+                size={22}
                 color={color}
               />
             ),
@@ -160,7 +159,7 @@ export default function App() {
             tabBarIcon: ({ color, focused }) => (
               <Ionicons
                 name={focused ? 'list' : 'list-outline'}
-                size={28}
+                size={22}
                 color={color}
               />
             ),
@@ -175,7 +174,7 @@ export default function App() {
             tabBarIcon: ({ color, focused }) => (
               <Ionicons
                 name={focused ? 'notifications' : 'notifications-outline'}
-                size={28}
+                size={22}
                 color={color}
               />
             ),
@@ -190,7 +189,7 @@ export default function App() {
             tabBarIcon: ({ color, focused }) => (
               <Ionicons
                 name={focused ? 'person' : 'person-outline'}
-                size={28}
+                size={22}
                 color={color}
               />
             ),

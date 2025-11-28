@@ -427,6 +427,17 @@ export class WeddingTimeline {
 
       // 완료 상태 복원
       await this.loadCompletionStatus();
+
+      // 앱 로드 시 알림이 활성화되어 있으면 알림 다시 스케줄링
+      const notificationsEnabled = await AsyncStorage.getItem('notifications-enabled');
+      if (notificationsEnabled !== 'false') {
+        try {
+          await this.scheduleNotifications();
+        } catch (error) {
+          console.log('알림 스케줄링 재시도 실패:', error);
+        }
+      }
+
       return true;
     }
     return false;

@@ -14,7 +14,6 @@ import { COLORS } from '../constants/colors';
 export default function HomeScreen({ timeline }) {
   const [backgroundImage, setBackgroundImage] = useState(null);
   const [dDay, setDDay] = useState(0);
-  const [nickname, setNickname] = useState('');
   const [weddingDate, setWeddingDate] = useState(null);
 
   useEffect(() => {
@@ -38,10 +37,6 @@ export default function HomeScreen({ timeline }) {
     if (savedImage) {
       setBackgroundImage(savedImage);
     }
-
-    // 닉네임 로드
-    const savedNickname = await AsyncStorage.getItem('wedding-nickname');
-    setNickname(savedNickname || '');
 
     // 타임라인 데이터 로드
     if (timeline.weddingDate) {
@@ -117,21 +112,22 @@ export default function HomeScreen({ timeline }) {
       <>
         {/* 상단 D-Day 배너 */}
         <View style={styles.dDayContainer}>
-          <View style={styles.dDayBanner}>
-            <Text style={styles.dDayLabel}>우리의 결혼식</Text>
-            <View style={styles.dDayContent}>
-              <Text style={styles.dDayValue}>{renderDDay()}</Text>
-              <Text style={styles.dDaySeparator}>|</Text>
-              <Text style={styles.weddingDate}>{formatWeddingDate()}</Text>
+          <View style={styles.dDayBannerOuter}>
+            <Text style={styles.laceDecoration}>♡ · · · ♡ · · · ♡ · · · ♡ · · · ♡</Text>
+            <View style={styles.dDayBanner}>
+              <Text style={styles.dDayLabel}>우리의 결혼식</Text>
+              <View style={styles.dDayContent}>
+                <Text style={styles.dDayValue}>{renderDDay()}</Text>
+                <Text style={styles.dDaySeparator}>|</Text>
+                <Text style={styles.weddingDate}>{formatWeddingDate()}</Text>
+              </View>
             </View>
+            <Text style={styles.laceDecoration}>♡ · · · ♡ · · · ♡ · · · ♡ · · · ♡</Text>
           </View>
         </View>
 
         {/* 중앙 컨텐츠 */}
         <View style={styles.centerContent}>
-          {nickname && (
-            <Text style={styles.welcomeText}>{nickname}의 웨딩플래너</Text>
-          )}
         </View>
 
         {/* 하단 배경사진 변경 버튼 */}
@@ -185,30 +181,45 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
   },
   dDayContainer: {
-    paddingTop: 120,
+    paddingTop: 100,
     paddingHorizontal: 20,
     alignItems: 'center',
   },
+  dDayBannerOuter: {
+    backgroundColor: 'rgba(255, 255, 255, 0.98)',
+    borderRadius: 20,
+    padding: 8,
+    shadowColor: '#f0768b',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    elevation: 6,
+    width: '100%',
+    maxWidth: 400,
+    alignItems: 'center',
+  },
+  laceDecoration: {
+    fontSize: 12,
+    color: '#ffd1dc',
+    letterSpacing: 2,
+    marginVertical: 4,
+  },
   dDayBanner: {
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    backgroundColor: 'rgba(255, 255, 255, 1)',
     borderRadius: 12,
-    paddingVertical: 12,
+    paddingVertical: 14,
     paddingHorizontal: 20,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 4,
     width: '100%',
-    maxWidth: 400,
+    borderWidth: 1.5,
+    borderColor: '#ffe4e9',
   },
   dDayLabel: {
-    fontSize: 14,
+    fontSize: 18,
     fontFamily: 'GowunDodum_400Regular',
-    color: COLORS.textGray,
+    color: COLORS.textDark,
     fontWeight: '600',
   },
   dDayContent: {
@@ -238,21 +249,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
   },
-  welcomeText: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    fontFamily: 'GowunDodum_400Regular',
-    color: COLORS.darkPink,
-    textAlign: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 20,
-    overflow: 'hidden',
-  },
   bottomActions: {
     paddingHorizontal: 20,
-    paddingBottom: 100, // 탭바 공간 확보
+    paddingBottom: 120, // 탭바 공간 확보
+    marginTop: -40, // 사진과 버튼 간격 좁히기
   },
   changeImageButton: {
     backgroundColor: 'rgba(255, 255, 255, 0.9)',
