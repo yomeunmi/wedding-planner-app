@@ -6,7 +6,9 @@ import {
   FlatList,
   TouchableOpacity,
   SafeAreaView,
+  Alert,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { COLORS } from '../constants/colors';
 
 export default function TimelineConfirmScreen({ navigation, timeline }) {
@@ -20,7 +22,20 @@ export default function TimelineConfirmScreen({ navigation, timeline }) {
     setItems([...timeline.timeline]);
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
+    try {
+      // 알림 권한 요청 및 스케줄링
+      const notificationsEnabled = await AsyncStorage.getItem('notifications-enabled');
+      if (notificationsEnabled !== 'false') {
+        const hasPermission = await timeline.initializeNotifications();
+        if (hasPermission) {
+          console.log('알림이 성공적으로 스케줄링되었습니다.');
+        }
+      }
+    } catch (error) {
+      console.log('알림 스케줄링 오류:', error);
+    }
+
     // 배경사진 설정 여부 확인 후 이동
     navigation.replace('BackgroundImage');
   };

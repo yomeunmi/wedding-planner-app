@@ -389,7 +389,7 @@ export class WeddingTimeline {
     }
   }
 
-  // 타임라인 저장
+  // 타임라인 저장 (알림 스케줄링은 별도로 호출해야 함)
   async save() {
     const data = {
       weddingDate: this.weddingDate.toISOString(),
@@ -398,8 +398,8 @@ export class WeddingTimeline {
     };
     await AsyncStorage.setItem('wedding-timeline-data', JSON.stringify(data));
 
-    // 알림 스케줄링
-    await this.scheduleNotifications();
+    // 알림 스케줄링은 사용자가 "이 일정대로 갈께요" 버튼 클릭 시에만 수행
+    // scheduleNotifications()는 TimelineConfirmScreen에서 직접 호출
   }
 
   // 타임라인 불러오기

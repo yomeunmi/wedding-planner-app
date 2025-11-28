@@ -86,7 +86,7 @@ export default function HomeScreen({ timeline }) {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
+    <View style={styles.container}>
       {/* 상단 D-Day 배너 - 한줄 심플 디자인 */}
       <View style={styles.headerSection}>
         <View style={styles.banner}>
@@ -96,7 +96,7 @@ export default function HomeScreen({ timeline }) {
         </View>
       </View>
 
-      {/* 메인 사진 영역 */}
+      {/* 메인 사진 영역 - 중앙 배치 */}
       <View style={styles.imageSection}>
         {backgroundImage ? (
           <Image
@@ -122,7 +122,7 @@ export default function HomeScreen({ timeline }) {
           </Text>
         </TouchableOpacity>
       </View>
-    </ScrollView>
+    </View>
   );
 }
 
@@ -130,14 +130,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.lightPink,
-  },
-  scrollContent: {
-    paddingBottom: 120,
+    paddingBottom: 100, // 탭바 높이 고려
   },
   headerSection: {
-    paddingTop: 60,
+    paddingTop: 70,
     paddingHorizontal: 20,
-    paddingBottom: 0,
+    paddingBottom: 16,
     backgroundColor: COLORS.lightPink,
   },
   banner: {
@@ -172,8 +170,9 @@ const styles = StyleSheet.create({
     color: COLORS.textDark,
   },
   imageSection: {
+    flex: 1,
     paddingHorizontal: 20,
-    paddingTop: 16,
+    justifyContent: 'center',
     alignItems: 'center',
   },
   squareImage: {
@@ -197,6 +196,7 @@ const styles = StyleSheet.create({
   bottomActions: {
     paddingHorizontal: 20,
     paddingTop: 16,
+    paddingBottom: 16,
   },
   changeImageButton: {
     backgroundColor: '#ffffff',

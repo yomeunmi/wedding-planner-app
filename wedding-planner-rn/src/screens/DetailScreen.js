@@ -22,7 +22,12 @@ import ZoomableImage from '../components/ZoomableImage';
 
 export default function DetailScreen({ route, navigation, timeline }) {
   const { item } = route.params;
-  const [currentItem, setCurrentItem] = useState(item);
+  // item.date가 문자열일 수 있으므로 Date 객체로 변환
+  const initialItem = {
+    ...item,
+    date: item.date instanceof Date ? item.date : new Date(item.date),
+  };
+  const [currentItem, setCurrentItem] = useState(initialItem);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [tempDate, setTempDate] = useState(new Date(item.date));
   const [memo, setMemo] = useState('');
