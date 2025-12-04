@@ -87,40 +87,43 @@ export default function HomeScreen({ timeline }) {
 
   return (
     <View style={styles.container}>
-      {/* 상단 D-Day 배너 - 한줄 심플 디자인 */}
-      <View style={styles.headerSection}>
-        <View style={styles.banner}>
-          <Text style={styles.dDayLabel}>우리의 결혼식</Text>
-          <Text style={styles.dDayValue}>{renderDDay()}</Text>
-          <Text style={styles.weddingDateText}>{formatWeddingDate()}</Text>
-        </View>
-      </View>
-
-      {/* 메인 사진 영역 - 중앙 배치 */}
-      <View style={styles.imageSection}>
-        {backgroundImage ? (
-          <Image
-            source={{ uri: backgroundImage }}
-            style={styles.squareImage}
-            resizeMode="cover"
-          />
-        ) : (
-          <View style={styles.defaultSquareBackground}>
-            <Text style={styles.placeholderText}>사진을 추가해주세요</Text>
+      {/* 중앙 정렬 컨테이너 */}
+      <View style={styles.centerWrapper}>
+        {/* 상단 D-Day 배너 - 한줄 심플 디자인 */}
+        <View style={styles.headerSection}>
+          <View style={styles.banner}>
+            <Text style={styles.dDayLabel}>우리의 결혼식</Text>
+            <Text style={styles.dDayValue}>{renderDDay()}</Text>
+            <Text style={styles.weddingDateText}>{formatWeddingDate()}</Text>
           </View>
-        )}
-      </View>
+        </View>
 
-      {/* 배경사진 변경 버튼 */}
-      <View style={styles.bottomActions}>
-        <TouchableOpacity
-          style={styles.changeImageButton}
-          onPress={changeBackgroundImage}
-        >
-          <Text style={styles.changeImageButtonText}>
-            {backgroundImage ? '배경사진 변경' : '배경사진 설정'}
-          </Text>
-        </TouchableOpacity>
+        {/* 메인 사진 영역 */}
+        <View style={styles.imageSection}>
+          {backgroundImage ? (
+            <Image
+              source={{ uri: backgroundImage }}
+              style={styles.squareImage}
+              resizeMode="cover"
+            />
+          ) : (
+            <View style={styles.defaultSquareBackground}>
+              <Text style={styles.placeholderText}>사진을 추가해주세요</Text>
+            </View>
+          )}
+        </View>
+
+        {/* 배경사진 변경 버튼 */}
+        <View style={styles.bottomActions}>
+          <TouchableOpacity
+            style={styles.changeImageButton}
+            onPress={changeBackgroundImage}
+          >
+            <Text style={styles.changeImageButtonText}>
+              {backgroundImage ? '배경사진 변경' : '배경사진 설정'}
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -130,13 +133,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.lightPink,
-    paddingBottom: 100, // 탭바 높이 고려
+    justifyContent: 'center',
+    paddingBottom: 80, // 탭바 높이 고려
+  },
+  centerWrapper: {
+    paddingHorizontal: 20,
   },
   headerSection: {
-    paddingTop: 60,
-    paddingHorizontal: 20,
-    paddingBottom: 8,
-    backgroundColor: COLORS.lightPink,
+    marginBottom: 10,
   },
   banner: {
     backgroundColor: '#ffffff',
@@ -170,11 +174,7 @@ const styles = StyleSheet.create({
     color: COLORS.textDark,
   },
   imageSection: {
-    flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 4,
-    justifyContent: 'flex-start',
-    alignItems: 'center',
+    marginBottom: 10,
   },
   squareImage: {
     width: '100%',
@@ -195,9 +195,7 @@ const styles = StyleSheet.create({
     fontFamily: 'GowunDodum_400Regular',
   },
   bottomActions: {
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 12,
+    // 간격 없음 - 메인사진과 동일한 간격으로 배치됨
   },
   changeImageButton: {
     backgroundColor: '#ffffff',
