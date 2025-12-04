@@ -55,7 +55,17 @@ export default function DetailScreen({ route, navigation, timeline }) {
   const [isEditingWeddingDate, setIsEditingWeddingDate] = useState(false);
   const [showHallDatePicker, setShowHallDatePicker] = useState(null); // 웨딩홀 날짜 선택기 (hall.id 저장)
   const [showShopDatePicker, setShowShopDatePicker] = useState(null); // 드레스샵 날짜 선택기 (shop.id 저장)
-  const [studioInfo, setStudioInfo] = useState({ name: '', location: '', contact: '', memo: '' }); // 촬영업체 정보
+  const [studioInfo, setStudioInfo] = useState({
+    name: '',           // 업체명
+    contact: '',        // 연락처
+    location: '',       // 위치
+    package: '',        // 패키지 구성
+    price: '',          // 가격
+    shootingDate: '',   // 촬영일
+    albumDate: '',      // 앨범 수령 예정일
+    snapPhotographer: '', // 본식 스냅 작가
+    memo: ''            // 기타 메모
+  });
   const [isEditingStudio, setIsEditingStudio] = useState(false);
 
   // 데이터 불러오기
@@ -981,79 +991,194 @@ export default function DetailScreen({ route, navigation, timeline }) {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>📷 촬영업체 정보</Text>
-              {!isEditingStudio && (
-                <TouchableOpacity
-                  style={styles.editButton}
-                  onPress={() => setIsEditingStudio(true)}
-                >
-                  <Text style={styles.editButtonText}>✎ 수정</Text>
-                </TouchableOpacity>
-              )}
+              <TouchableOpacity
+                style={styles.editButton}
+                onPress={() => setIsEditingStudio(!isEditingStudio)}
+              >
+                <Text style={styles.editButtonText}>{isEditingStudio ? '완료' : '✎ 수정'}</Text>
+              </TouchableOpacity>
             </View>
+
             {isEditingStudio ? (
               <View style={styles.studioEditContainer}>
-                <TextInput
-                  style={styles.input}
-                  placeholder="업체명"
-                  value={studioInfo.name}
-                  onChangeText={(text) => setStudioInfo({ ...studioInfo, name: text })}
-                />
-                <TextInput
-                  style={styles.input}
-                  placeholder="위치"
-                  value={studioInfo.location}
-                  onChangeText={(text) => setStudioInfo({ ...studioInfo, location: text })}
-                />
-                <TextInput
-                  style={styles.input}
-                  placeholder="연락처"
-                  value={studioInfo.contact}
-                  onChangeText={(text) => setStudioInfo({ ...studioInfo, contact: text })}
-                  keyboardType="phone-pad"
-                />
-                <TextInput
-                  style={[styles.input, styles.memoInput]}
-                  placeholder="메모 (패키지 내용, 가격 등)"
-                  value={studioInfo.memo}
-                  onChangeText={(text) => setStudioInfo({ ...studioInfo, memo: text })}
-                  multiline
-                />
-                <TouchableOpacity
-                  style={styles.saveStudioButton}
-                  onPress={() => setIsEditingStudio(false)}
-                >
-                  <Text style={styles.saveStudioButtonText}>저장</Text>
-                </TouchableOpacity>
+                {/* 기본 정보 */}
+                <View style={styles.studioEditSection}>
+                  <Text style={styles.studioEditSectionTitle}>기본 정보</Text>
+                  <TextInput
+                    style={styles.studioInput}
+                    placeholder="스튜디오/업체명"
+                    placeholderTextColor={COLORS.textLight}
+                    value={studioInfo.name}
+                    onChangeText={(text) => setStudioInfo({ ...studioInfo, name: text })}
+                  />
+                  <TextInput
+                    style={styles.studioInput}
+                    placeholder="연락처 (예: 02-1234-5678)"
+                    placeholderTextColor={COLORS.textLight}
+                    value={studioInfo.contact}
+                    onChangeText={(text) => setStudioInfo({ ...studioInfo, contact: text })}
+                    keyboardType="phone-pad"
+                  />
+                  <TextInput
+                    style={styles.studioInput}
+                    placeholder="위치/주소"
+                    placeholderTextColor={COLORS.textLight}
+                    value={studioInfo.location}
+                    onChangeText={(text) => setStudioInfo({ ...studioInfo, location: text })}
+                  />
+                </View>
+
+                {/* 패키지 정보 */}
+                <View style={styles.studioEditSection}>
+                  <Text style={styles.studioEditSectionTitle}>패키지 정보</Text>
+                  <TextInput
+                    style={styles.studioInput}
+                    placeholder="패키지 구성 (예: 원본 200장, 보정 50장, 앨범 1권)"
+                    placeholderTextColor={COLORS.textLight}
+                    value={studioInfo.package}
+                    onChangeText={(text) => setStudioInfo({ ...studioInfo, package: text })}
+                  />
+                  <TextInput
+                    style={styles.studioInput}
+                    placeholder="가격 (예: 150만원)"
+                    placeholderTextColor={COLORS.textLight}
+                    value={studioInfo.price}
+                    onChangeText={(text) => setStudioInfo({ ...studioInfo, price: text })}
+                  />
+                </View>
+
+                {/* 일정 정보 */}
+                <View style={styles.studioEditSection}>
+                  <Text style={styles.studioEditSectionTitle}>일정</Text>
+                  <TextInput
+                    style={styles.studioInput}
+                    placeholder="촬영일 (예: 2025년 3월 15일)"
+                    placeholderTextColor={COLORS.textLight}
+                    value={studioInfo.shootingDate}
+                    onChangeText={(text) => setStudioInfo({ ...studioInfo, shootingDate: text })}
+                  />
+                  <TextInput
+                    style={styles.studioInput}
+                    placeholder="앨범 수령 예정일"
+                    placeholderTextColor={COLORS.textLight}
+                    value={studioInfo.albumDate}
+                    onChangeText={(text) => setStudioInfo({ ...studioInfo, albumDate: text })}
+                  />
+                </View>
+
+                {/* 본식 스냅 */}
+                <View style={styles.studioEditSection}>
+                  <Text style={styles.studioEditSectionTitle}>본식 스냅</Text>
+                  <TextInput
+                    style={styles.studioInput}
+                    placeholder="본식 스냅 작가/업체 (선택사항)"
+                    placeholderTextColor={COLORS.textLight}
+                    value={studioInfo.snapPhotographer}
+                    onChangeText={(text) => setStudioInfo({ ...studioInfo, snapPhotographer: text })}
+                  />
+                </View>
+
+                {/* 메모 */}
+                <View style={styles.studioEditSection}>
+                  <Text style={styles.studioEditSectionTitle}>기타 메모</Text>
+                  <TextInput
+                    style={[styles.studioInput, styles.studioMemoInput]}
+                    placeholder="추가 메모 (야외 촬영 장소, 컨셉, 요청사항 등)"
+                    placeholderTextColor={COLORS.textLight}
+                    value={studioInfo.memo}
+                    onChangeText={(text) => setStudioInfo({ ...studioInfo, memo: text })}
+                    multiline
+                    numberOfLines={4}
+                  />
+                </View>
               </View>
             ) : (
-              <View style={styles.studioInfoDisplay}>
+              <View style={styles.studioInfoCard}>
                 {studioInfo.name ? (
                   <>
-                    <View style={styles.infoRow}>
-                      <Text style={styles.infoLabel}>업체명:</Text>
-                      <Text style={styles.infoValue}>{studioInfo.name}</Text>
+                    {/* 업체명 헤더 */}
+                    <View style={styles.studioHeader}>
+                      <Text style={styles.studioName}>{studioInfo.name}</Text>
                     </View>
-                    {studioInfo.location && (
-                      <View style={styles.infoRow}>
-                        <Text style={styles.infoLabel}>위치:</Text>
-                        <Text style={styles.infoValue}>{studioInfo.location}</Text>
+
+                    {/* 연락처 & 위치 */}
+                    {(studioInfo.contact || studioInfo.location) && (
+                      <View style={styles.studioContactSection}>
+                        {studioInfo.contact && (
+                          <View style={styles.studioInfoItem}>
+                            <Text style={styles.studioInfoIcon}>📞</Text>
+                            <Text style={styles.studioInfoText}>{studioInfo.contact}</Text>
+                          </View>
+                        )}
+                        {studioInfo.location && (
+                          <View style={styles.studioInfoItem}>
+                            <Text style={styles.studioInfoIcon}>📍</Text>
+                            <Text style={styles.studioInfoText}>{studioInfo.location}</Text>
+                          </View>
+                        )}
                       </View>
                     )}
-                    {studioInfo.contact && (
-                      <View style={styles.infoRow}>
-                        <Text style={styles.infoLabel}>연락처:</Text>
-                        <Text style={styles.infoValue}>{studioInfo.contact}</Text>
+
+                    {/* 패키지 정보 */}
+                    {(studioInfo.package || studioInfo.price) && (
+                      <View style={styles.studioPackageSection}>
+                        <Text style={styles.studioSectionLabel}>패키지 정보</Text>
+                        {studioInfo.package && (
+                          <Text style={styles.studioPackageText}>{studioInfo.package}</Text>
+                        )}
+                        {studioInfo.price && (
+                          <Text style={styles.studioPriceText}>💰 {studioInfo.price}</Text>
+                        )}
                       </View>
                     )}
+
+                    {/* 일정 정보 */}
+                    {(studioInfo.shootingDate || studioInfo.albumDate) && (
+                      <View style={styles.studioScheduleSection}>
+                        <Text style={styles.studioSectionLabel}>일정</Text>
+                        {studioInfo.shootingDate && (
+                          <View style={styles.studioInfoItem}>
+                            <Text style={styles.studioInfoIcon}>📅</Text>
+                            <Text style={styles.studioInfoText}>촬영일: {studioInfo.shootingDate}</Text>
+                          </View>
+                        )}
+                        {studioInfo.albumDate && (
+                          <View style={styles.studioInfoItem}>
+                            <Text style={styles.studioInfoIcon}>📚</Text>
+                            <Text style={styles.studioInfoText}>앨범 수령: {studioInfo.albumDate}</Text>
+                          </View>
+                        )}
+                      </View>
+                    )}
+
+                    {/* 본식 스냅 */}
+                    {studioInfo.snapPhotographer && (
+                      <View style={styles.studioSnapSection}>
+                        <Text style={styles.studioSectionLabel}>본식 스냅</Text>
+                        <View style={styles.studioInfoItem}>
+                          <Text style={styles.studioInfoIcon}>📸</Text>
+                          <Text style={styles.studioInfoText}>{studioInfo.snapPhotographer}</Text>
+                        </View>
+                      </View>
+                    )}
+
+                    {/* 메모 */}
                     {studioInfo.memo && (
-                      <View style={styles.infoRow}>
-                        <Text style={styles.infoLabel}>메모:</Text>
-                        <Text style={styles.infoValue}>{studioInfo.memo}</Text>
+                      <View style={styles.studioMemoSection}>
+                        <Text style={styles.studioSectionLabel}>메모</Text>
+                        <Text style={styles.studioMemoText}>{studioInfo.memo}</Text>
                       </View>
                     )}
                   </>
                 ) : (
-                  <Text style={styles.emptyStudioText}>촬영업체 정보를 입력해주세요.</Text>
+                  <TouchableOpacity
+                    style={styles.emptyStudioContainer}
+                    onPress={() => setIsEditingStudio(true)}
+                  >
+                    <Text style={styles.emptyStudioIcon}>📷</Text>
+                    <Text style={styles.emptyStudioTitle}>촬영업체 정보 등록</Text>
+                    <Text style={styles.emptyStudioSubtitle}>탭하여 스튜디오 정보를 입력하세요</Text>
+                  </TouchableOpacity>
                 )}
               </View>
             )}
@@ -1827,30 +1952,141 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: 'GowunDodum_400Regular',
   },
+  // 촬영업체 정보 - 편집 모드
   studioEditContainer: {
+    gap: 16,
+  },
+  studioEditSection: {
     gap: 8,
   },
-  studioInfoDisplay: {
-    paddingVertical: 8,
+  studioEditSectionTitle: {
+    fontSize: 13,
+    fontFamily: 'GowunDodum_400Regular',
+    fontWeight: 'bold',
+    color: COLORS.darkPink,
+    marginBottom: 4,
   },
-  saveStudioButton: {
-    backgroundColor: COLORS.darkPink,
+  studioInput: {
+    backgroundColor: COLORS.white,
+    borderWidth: 1,
+    borderColor: COLORS.border,
     borderRadius: 8,
     padding: 12,
+    fontSize: 14,
+    fontFamily: 'GowunDodum_400Regular',
+    color: COLORS.textDark,
+  },
+  studioMemoInput: {
+    minHeight: 80,
+    textAlignVertical: 'top',
+  },
+  // 촬영업체 정보 - 표시 모드
+  studioInfoCard: {
+    backgroundColor: COLORS.white,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  studioHeader: {
+    backgroundColor: COLORS.darkPink,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+  },
+  studioName: {
+    fontSize: 18,
+    fontFamily: 'GowunDodum_400Regular',
+    fontWeight: 'bold',
+    color: COLORS.white,
+  },
+  studioContactSection: {
+    padding: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+    gap: 8,
+  },
+  studioInfoItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  studioInfoIcon: {
+    fontSize: 16,
+  },
+  studioInfoText: {
+    fontSize: 14,
+    fontFamily: 'GowunDodum_400Regular',
+    color: COLORS.textDark,
+    flex: 1,
+  },
+  studioPackageSection: {
+    padding: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+  },
+  studioSectionLabel: {
+    fontSize: 12,
+    fontFamily: 'GowunDodum_400Regular',
+    fontWeight: 'bold',
+    color: COLORS.textGray,
+    marginBottom: 8,
+  },
+  studioPackageText: {
+    fontSize: 14,
+    fontFamily: 'GowunDodum_400Regular',
+    color: COLORS.textDark,
+    lineHeight: 20,
+  },
+  studioPriceText: {
+    fontSize: 15,
+    fontFamily: 'GowunDodum_400Regular',
+    fontWeight: 'bold',
+    color: COLORS.darkPink,
     marginTop: 8,
   },
-  saveStudioButtonText: {
-    color: COLORS.white,
-    fontSize: 14,
-    fontWeight: 'bold',
-    fontFamily: 'GowunDodum_400Regular',
-    textAlign: 'center',
+  studioScheduleSection: {
+    padding: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+    gap: 8,
   },
-  emptyStudioText: {
+  studioSnapSection: {
+    padding: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+  },
+  studioMemoSection: {
+    padding: 14,
+  },
+  studioMemoText: {
     fontSize: 14,
     fontFamily: 'GowunDodum_400Regular',
-    color: COLORS.textLight,
-    textAlign: 'center',
-    paddingVertical: 16,
+    color: COLORS.textDark,
+    lineHeight: 20,
+  },
+  // 빈 상태
+  emptyStudioContainer: {
+    alignItems: 'center',
+    paddingVertical: 32,
+    paddingHorizontal: 20,
+    backgroundColor: COLORS.lightPink,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: COLORS.darkPink,
+    borderStyle: 'dashed',
+  },
+  emptyStudioIcon: {
+    fontSize: 40,
+    marginBottom: 12,
+  },
+  emptyStudioTitle: {
+    fontSize: 16,
+    fontFamily: 'GowunDodum_400Regular',
+    fontWeight: 'bold',
+    color: COLORS.darkPink,
+    marginBottom: 4,
+  },
+  emptyStudioSubtitle: {
+    fontSize: 13,
+    fontFamily: 'GowunDodum_400Regular',
+    color: COLORS.textGray,
   },
 });
