@@ -13,13 +13,13 @@ import { COLORS } from '../constants/colors';
 const { width } = Dimensions.get('window');
 
 const PRIORITY_ITEMS = [
-  { id: 'photo', name: '사진·영상', icon: '📸', desc: '인생샷을 남기고 싶어요' },
-  { id: 'dress', name: '드레스·스타일링', icon: '👗', desc: '예쁘게 빛나고 싶어요' },
-  { id: 'food', name: '하객 식사 퀄리티', icon: '🍽️', desc: '맛있게 대접하고 싶어요' },
-  { id: 'venue', name: '예식장 분위기', icon: '🏰', desc: '공간이 중요해요' },
-  { id: 'flower', name: '플라워·데코', icon: '🌸', desc: '화려하게 꾸미고 싶어요' },
-  { id: 'event', name: '이벤트·연출', icon: '🎉', desc: '특별한 순간을 만들고 싶어요' },
-  { id: 'parents', name: '양가 부모님 대접', icon: '👨‍👩‍👧‍👦', desc: '부모님께 효도하고 싶어요' },
+  { id: 'photo', name: '사진·영상', desc: '인생샷을 남기고 싶어요' },
+  { id: 'dress', name: '드레스·스타일링', desc: '예쁘게 빛나고 싶어요' },
+  { id: 'food', name: '하객 식사 퀄리티', desc: '맛있게 대접하고 싶어요' },
+  { id: 'venue', name: '예식장 분위기', desc: '공간이 중요해요' },
+  { id: 'flower', name: '플라워·데코', desc: '화려하게 꾸미고 싶어요' },
+  { id: 'event', name: '이벤트·연출', desc: '특별한 순간을 만들고 싶어요' },
+  { id: 'parents', name: '양가 부모님 대접', desc: '부모님께 효도하고 싶어요' },
 ];
 
 // 우선순위에 따른 비율 조정
@@ -123,10 +123,10 @@ export default function BudgetPriorityScreen({ navigation }) {
 
     try {
       await AsyncStorage.setItem('wedding-budget-data', JSON.stringify(updatedData));
-      // 메인 탭으로 돌아가기
+      // 예산 탭으로 이동
       navigation.reset({
         index: 0,
-        routes: [{ name: 'MainTabs' }],
+        routes: [{ name: 'MainTabs', params: { screen: 'Budget' } }],
       });
     } catch (error) {
       console.error('저장 실패:', error);
@@ -179,7 +179,7 @@ export default function BudgetPriorityScreen({ navigation }) {
       <View style={styles.content}>
         {/* 안내 */}
         <View style={styles.guideCard}>
-          <Text style={styles.guideTitle}>🎯 우리에게 중요한 건?</Text>
+          <Text style={styles.guideTitle}>우리에게 중요한 건?</Text>
           <Text style={styles.guideText}>
             두 분에게 가장 중요한 부분을 최대 3개 선택하고{'\n'}
             중요도를 표시해주세요. 예산 배분에 반영할게요.
@@ -203,7 +203,6 @@ export default function BudgetPriorityScreen({ navigation }) {
                   onPress={() => togglePriority(item.id)}
                   activeOpacity={canSelect ? 0.7 : 1}
                 >
-                  <Text style={styles.priorityIcon}>{item.icon}</Text>
                   <Text style={[
                     styles.priorityName,
                     isSelected && styles.priorityNameSelected
@@ -343,10 +342,6 @@ const styles = StyleSheet.create({
   },
   priorityCardDisabled: {
     opacity: 0.5,
-  },
-  priorityIcon: {
-    fontSize: 28,
-    marginBottom: 8,
   },
   priorityName: {
     fontSize: 16,

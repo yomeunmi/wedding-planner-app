@@ -108,19 +108,15 @@ export default function BudgetScreen({ navigation }) {
 
           <View style={styles.featureList}>
             <View style={styles.featureItem}>
-              <Text style={styles.featureIcon}>📊</Text>
               <Text style={styles.featureText}>총 예산 대비 지출 현황 한눈에</Text>
             </View>
             <View style={styles.featureItem}>
-              <Text style={styles.featureIcon}>🎯</Text>
               <Text style={styles.featureText}>우선순위에 따른 예산 배분</Text>
             </View>
             <View style={styles.featureItem}>
-              <Text style={styles.featureIcon}>💡</Text>
-              <Text style={styles.featureText}>업셀링 필터링 & 플래너 팁</Text>
+              <Text style={styles.featureText}>불필요한 옵션 걸러내기 & 플래너 팁</Text>
             </View>
             <View style={styles.featureItem}>
-              <Text style={styles.featureIcon}>🔄</Text>
               <Text style={styles.featureText}>예산 조정 마법사</Text>
             </View>
           </View>
@@ -147,7 +143,7 @@ export default function BudgetScreen({ navigation }) {
           style={styles.settingsButton}
           onPress={() => navigation.navigate('BudgetSetup')}
         >
-          <Text style={styles.settingsButtonText}>⚙️</Text>
+          <Text style={styles.settingsButtonText}>설정</Text>
         </TouchableOpacity>
       </View>
 
@@ -312,10 +308,15 @@ const styles = StyleSheet.create({
     color: COLORS.darkPink,
   },
   settingsButton: {
-    padding: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    backgroundColor: COLORS.white,
+    borderRadius: 8,
   },
   settingsButtonText: {
-    fontSize: 22,
+    fontSize: 13,
+    fontFamily: 'GowunDodum_400Regular',
+    color: COLORS.darkPink,
   },
   // 빈 상태
   emptyContainer: {
@@ -323,6 +324,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 30,
+    paddingTop: 40,
     paddingBottom: 100,
   },
   emptyIcon: {

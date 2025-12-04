@@ -164,7 +164,7 @@ export default function BudgetSetupScreen({ navigation }) {
         <View style={styles.content}>
           {/* 총 예산 입력 */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>💰 예식 당일 예산</Text>
+            <Text style={styles.sectionTitle}>예식 당일 예산</Text>
             <Text style={styles.sectionDesc}>
               예식 당일에 필요한 전체 예산을 입력해주세요
             </Text>
@@ -198,46 +198,43 @@ export default function BudgetSetupScreen({ navigation }) {
             </View>
           </View>
 
-          {/* 양가 지원 & 자기 돈 */}
+          {/* 양가 지원금 */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>💝 자금 구성 (선택)</Text>
+            <Text style={styles.sectionTitle}>양가 지원금</Text>
+            <Text style={styles.sectionDesc}>선택 사항이에요</Text>
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={styles.moneyInput}
+                placeholder="0"
+                placeholderTextColor={COLORS.textLight}
+                value={displayMoney(parentSupport)}
+                onChangeText={(text) => setParentSupport(formatInputMoney(text))}
+                keyboardType="numeric"
+              />
+              <Text style={styles.inputSuffix}>원</Text>
+            </View>
+          </View>
 
-            <View style={styles.halfInputRow}>
-              <View style={styles.halfInputContainer}>
-                <Text style={styles.inputLabel}>양가 지원금</Text>
-                <View style={styles.smallInputWrapper}>
-                  <TextInput
-                    style={styles.smallMoneyInput}
-                    placeholder="0"
-                    placeholderTextColor={COLORS.textLight}
-                    value={displayMoney(parentSupport)}
-                    onChangeText={(text) => setParentSupport(formatInputMoney(text))}
-                    keyboardType="numeric"
-                  />
-                  <Text style={styles.smallInputSuffix}>원</Text>
-                </View>
-              </View>
-
-              <View style={styles.halfInputContainer}>
-                <Text style={styles.inputLabel}>예비부부 자금</Text>
-                <View style={styles.smallInputWrapper}>
-                  <TextInput
-                    style={styles.smallMoneyInput}
-                    placeholder="0"
-                    placeholderTextColor={COLORS.textLight}
-                    value={displayMoney(ownSavings)}
-                    onChangeText={(text) => setOwnSavings(formatInputMoney(text))}
-                    keyboardType="numeric"
-                  />
-                  <Text style={styles.smallInputSuffix}>원</Text>
-                </View>
-              </View>
+          {/* 예비부부 자금 */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>예비부부 자금</Text>
+            <Text style={styles.sectionDesc}>선택 사항이에요</Text>
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={styles.moneyInput}
+                placeholder="0"
+                placeholderTextColor={COLORS.textLight}
+                value={displayMoney(ownSavings)}
+                onChangeText={(text) => setOwnSavings(formatInputMoney(text))}
+                keyboardType="numeric"
+              />
+              <Text style={styles.inputSuffix}>원</Text>
             </View>
           </View>
 
           {/* 예상 하객 수 */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>👥 예상 하객 수</Text>
+            <Text style={styles.sectionTitle}>예상 하객 수</Text>
             <View style={styles.inputContainer}>
               <TextInput
                 style={styles.guestInput}
@@ -253,7 +250,7 @@ export default function BudgetSetupScreen({ navigation }) {
 
           {/* 예식 타입 선택 */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>💒 예식 타입</Text>
+            <Text style={styles.sectionTitle}>예식 타입</Text>
             <Text style={styles.sectionDesc}>
               예식 타입에 따라 추천 예산 비율이 달라져요
             </Text>
@@ -268,7 +265,6 @@ export default function BudgetSetupScreen({ navigation }) {
                   ]}
                   onPress={() => setWeddingType(type.id)}
                 >
-                  <Text style={styles.typeIcon}>{type.icon}</Text>
                   <Text style={[
                     styles.typeName,
                     weddingType === type.id && styles.typeNameSelected
@@ -284,7 +280,7 @@ export default function BudgetSetupScreen({ navigation }) {
           {/* 예산 비율 미리보기 */}
           {budget > 0 && (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>📊 예산 배분 미리보기</Text>
+              <Text style={styles.sectionTitle}>예산 배분 미리보기</Text>
               <Text style={styles.sectionDesc}>
                 예식 타입을 기준으로 추천된 비율이에요
               </Text>
@@ -297,7 +293,6 @@ export default function BudgetSetupScreen({ navigation }) {
                   return (
                     <View key={cat.id} style={styles.chartRow}>
                       <View style={styles.chartLabelContainer}>
-                        <Text style={styles.chartIcon}>{cat.icon}</Text>
                         <Text style={styles.chartLabel}>{cat.name}</Text>
                       </View>
                       <View style={styles.chartBarContainer}>
