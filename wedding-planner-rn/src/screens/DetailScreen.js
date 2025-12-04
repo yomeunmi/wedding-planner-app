@@ -67,6 +67,18 @@ export default function DetailScreen({ route, navigation, timeline }) {
     memo: ''            // 기타 메모
   });
   const [isEditingStudio, setIsEditingStudio] = useState(false);
+  // 혼주 한복 - 한복집 업체 정보
+  const [hanbokShopInfo, setHanbokShopInfo] = useState({
+    name: '',           // 업체명
+    contact: '',        // 전화번호
+    location: '',       // 위치
+  });
+  const [isEditingHanbokShop, setIsEditingHanbokShop] = useState(false);
+  // 드레스샵 투어 - 간소화된 정보 (샵별 사진, 느낌, Pick 드레스)
+  const [tourDressShops, setTourDressShops] = useState([
+    { id: 1, name: '', feeling: '', photos: [], pickDresses: [], isEditing: true },
+  ]);
+  const [tempTourDressShops, setTempTourDressShops] = useState({});
 
   // 데이터 불러오기
   useEffect(() => {
@@ -76,7 +88,7 @@ export default function DetailScreen({ route, navigation, timeline }) {
   // 데이터 저장
   useEffect(() => {
     saveData();
-  }, [memo, weddingHalls, dressShops, dressImages, studioImages, makeupImages, studioInfo]);
+  }, [memo, weddingHalls, dressShops, dressImages, studioImages, makeupImages, studioInfo, hanbokShopInfo, tourDressShops]);
 
   const loadData = async () => {
     try {
@@ -115,6 +127,18 @@ export default function DetailScreen({ route, navigation, timeline }) {
       if (currentItem.id === 'wedding-photo-day') {
         const savedStudioInfo = await AsyncStorage.getItem('wedding-studio-info');
         if (savedStudioInfo) setStudioInfo(JSON.parse(savedStudioInfo));
+      }
+
+      // 혼주 한복 페이지에서 한복집 정보 로드
+      if (currentItem.id === 'parents-hanbok') {
+        const savedHanbokShopInfo = await AsyncStorage.getItem('hanbok-shop-info');
+        if (savedHanbokShopInfo) setHanbokShopInfo(JSON.parse(savedHanbokShopInfo));
+      }
+
+      // 드레스샵 투어 페이지에서 투어 드레스샵 정보 로드
+      if (currentItem.id === 'dress-tour') {
+        const savedTourDressShops = await AsyncStorage.getItem('tour-dress-shops');
+        if (savedTourDressShops) setTourDressShops(JSON.parse(savedTourDressShops));
       }
 
       // 본식 드레스 가봉 페이지에서 선택된 드레스샵 정보 로드
@@ -160,6 +184,16 @@ export default function DetailScreen({ route, navigation, timeline }) {
       // 웨딩촬영날 페이지에서 촬영업체 정보 저장
       if (currentItem.id === 'wedding-photo-day') {
         await AsyncStorage.setItem('wedding-studio-info', JSON.stringify(studioInfo));
+      }
+
+      // 혼주 한복 페이지에서 한복집 정보 저장
+      if (currentItem.id === 'parents-hanbok') {
+        await AsyncStorage.setItem('hanbok-shop-info', JSON.stringify(hanbokShopInfo));
+      }
+
+      // 드레스샵 투어 페이지에서 투어 드레스샵 정보 저장
+      if (currentItem.id === 'dress-tour') {
+        await AsyncStorage.setItem('tour-dress-shops', JSON.stringify(tourDressShops));
       }
     } catch (error) {
       console.error('데이터 저장 실패:', error);
@@ -486,6 +520,141 @@ export default function DetailScreen({ route, navigation, timeline }) {
     setMakeupImages(makeupImages.filter(img => img.id !== id));
   };
 
+  // ============ 드레스샵 투어 (간소화 버전) 관련 함수 ============
+  // 투어 드레스샵 추가
+  const addTourDressShop = () => {
+    const newId = tourDressShops.length > 0 ? Math.max(...tourDressShops.map(s => s.id)) + 1 : 1;
+    setTourDressShops([...tourDressShops, { id: newId, name: '', feeling: '', photos: [], pickDresses: [], isEditing: true }]);
+  };
+
+  // 투어 드레스샵 삭제
+  const removeTourDressShop = (id) => {
+    if (tourDressShops.length <= 1) {
+      Alert.alert('알림', '최소 1개의 드레스샵은 있어야 합니다.');
+      return;
+    }
+    setTourDressShops(tourDressShops.filter(shop => shop.id !== id));
+  };
+
+  // 투어 드레스샵 정보 업데이트
+  const updateTourDressShop = (id, field, value) => {
+    setTourDressShops(tourDressShops.map(shop =>
+      shop.id === id ? { ...shop, [field]: value } : shop
+    ));
+  };
+
+  // 투어 드레스샵 편집 시작
+  const startEditTourDressShop = (id) => {
+    const shop = tourDressShops.find(s => s.id === id);
+    setTempTourDressShops({
+      ...tempTourDressShops,
+      [id]: { ...shop }
+    });
+    setTourDressShops(tourDressShops.map(s =>
+      s.id === id ? { ...s, isEditing: true } : s
+    ));
+  };
+
+  // 투어 드레스샵 편집 저장
+  const saveTourDressShop = (id) => {
+    const shop = tourDressShops.find(s => s.id === id);
+    if (!shop.name) {
+      Alert.alert('알림', '드레스샵 이름은 필수 항목입니다.');
+      return;
+    }
+    setTourDressShops(tourDressShops.map(s =>
+      s.id === id ? { ...s, isEditing: false } : s
+    ));
+    const newTemp = { ...tempTourDressShops };
+    delete newTemp[id];
+    setTempTourDressShops(newTemp);
+  };
+
+  // 투어 드레스샵 편집 취소
+  const cancelEditTourDressShop = (id) => {
+    const tempShop = tempTourDressShops[id];
+    if (tempShop) {
+      setTourDressShops(tourDressShops.map(s =>
+        s.id === id ? { ...tempShop, isEditing: false } : s
+      ));
+      const newTemp = { ...tempTourDressShops };
+      delete newTemp[id];
+      setTempTourDressShops(newTemp);
+    }
+  };
+
+  // 드레스샵 사진 추가
+  const pickTourShopPhoto = async (shopId) => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsMultipleSelection: true,
+      quality: 0.8,
+    });
+
+    if (!result.canceled) {
+      const newPhotos = result.assets.map((asset, index) => ({
+        id: Date.now() + index,
+        uri: asset.uri,
+      }));
+      setTourDressShops(tourDressShops.map(shop =>
+        shop.id === shopId ? { ...shop, photos: [...shop.photos, ...newPhotos] } : shop
+      ));
+    }
+  };
+
+  // 드레스샵 사진 삭제
+  const removeTourShopPhoto = (shopId, photoId) => {
+    setTourDressShops(tourDressShops.map(shop =>
+      shop.id === shopId ? { ...shop, photos: shop.photos.filter(p => p.id !== photoId) } : shop
+    ));
+  };
+
+  // Pick 드레스 추가
+  const addPickDress = async (shopId) => {
+    const shop = tourDressShops.find(s => s.id === shopId);
+    if (shop.pickDresses.length >= 2) {
+      Alert.alert('알림', 'Pick 드레스는 최대 2벌까지 선택 가능합니다.');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [3, 4],
+      quality: 0.8,
+    });
+
+    if (!result.canceled) {
+      const newDress = {
+        id: Date.now(),
+        uri: result.assets[0].uri,
+        name: '',
+      };
+      setTourDressShops(tourDressShops.map(shop =>
+        shop.id === shopId ? { ...shop, pickDresses: [...shop.pickDresses, newDress] } : shop
+      ));
+    }
+  };
+
+  // Pick 드레스 삭제
+  const removePickDress = (shopId, dressId) => {
+    setTourDressShops(tourDressShops.map(shop =>
+      shop.id === shopId ? { ...shop, pickDresses: shop.pickDresses.filter(d => d.id !== dressId) } : shop
+    ));
+  };
+
+  // Pick 드레스 이름 업데이트
+  const updatePickDressName = (shopId, dressId, name) => {
+    setTourDressShops(tourDressShops.map(shop =>
+      shop.id === shopId ? {
+        ...shop,
+        pickDresses: shop.pickDresses.map(d =>
+          d.id === dressId ? { ...d, name } : d
+        )
+      } : shop
+    ));
+  };
+
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
@@ -789,10 +958,168 @@ export default function DetailScreen({ route, navigation, timeline }) {
           </View>
         )}
 
-        {/* 드레스샵 투어 정보 입력 - dress-tour일 때만 표시 */}
+        {/* 드레스샵 투어 정보 입력 (간소화 버전) - dress-tour일 때만 표시 */}
         {currentItem.id === 'dress-tour' && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>👗 투어 드레스샵 정보</Text>
+            <Text style={styles.sectionTitle}>👗 투어 드레스샵</Text>
+            <Text style={styles.sectionSubtitle}>샵별로 사진과 느낌을 기록하고, Pick 드레스를 선택하세요</Text>
+            {tourDressShops.map((shop, index) => (
+              <View key={shop.id} style={styles.tourShopCard}>
+                {/* 샵 헤더 */}
+                <View style={styles.tourShopHeader}>
+                  <View style={styles.tourShopTitleRow}>
+                    <Text style={styles.tourShopNumber}>#{index + 1}</Text>
+                    {shop.isEditing ? (
+                      <TextInput
+                        style={styles.tourShopNameInput}
+                        placeholder="드레스샵 이름 *"
+                        value={shop.name}
+                        onChangeText={(text) => updateTourDressShop(shop.id, 'name', text)}
+                      />
+                    ) : (
+                      <Text style={styles.tourShopName}>{shop.name || '이름 없음'}</Text>
+                    )}
+                  </View>
+                  <View style={styles.editActionButtons}>
+                    {shop.isEditing ? (
+                      <>
+                        <TouchableOpacity
+                          style={styles.saveEditButton}
+                          onPress={() => saveTourDressShop(shop.id)}
+                        >
+                          <Text style={styles.editButtonText}>저장</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={styles.cancelEditButton}
+                          onPress={() => cancelEditTourDressShop(shop.id)}
+                        >
+                          <Text style={styles.editButtonText}>취소</Text>
+                        </TouchableOpacity>
+                      </>
+                    ) : (
+                      <TouchableOpacity
+                        style={styles.startEditButton}
+                        onPress={() => startEditTourDressShop(shop.id)}
+                      >
+                        <Text style={styles.editIconText}>✎</Text>
+                      </TouchableOpacity>
+                    )}
+                    {tourDressShops.length > 1 && (
+                      <TouchableOpacity
+                        style={styles.deleteItemButton}
+                        onPress={() => removeTourDressShop(shop.id)}
+                      >
+                        <Text style={styles.deleteItemText}>×</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                </View>
+
+                {/* 느낌 메모 */}
+                <View style={styles.feelingSection}>
+                  <Text style={styles.feelingLabel}>💭 느낌 메모</Text>
+                  <TextInput
+                    style={[styles.feelingInput, !shop.isEditing && styles.inputDisabled]}
+                    placeholder="이 드레스샵의 분위기, 서비스, 드레스 스타일 등..."
+                    value={shop.feeling}
+                    onChangeText={(text) => updateTourDressShop(shop.id, 'feeling', text)}
+                    multiline
+                    editable={shop.isEditing}
+                  />
+                </View>
+
+                {/* 샵 사진 */}
+                <View style={styles.tourPhotoSection}>
+                  <View style={styles.tourPhotoHeader}>
+                    <Text style={styles.tourPhotoLabel}>📷 사진</Text>
+                    {shop.isEditing && (
+                      <TouchableOpacity
+                        style={styles.addTourPhotoButton}
+                        onPress={() => pickTourShopPhoto(shop.id)}
+                      >
+                        <Text style={styles.addTourPhotoButtonText}>+ 추가</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                  {shop.photos.length > 0 ? (
+                    <View style={styles.tourPhotoGrid}>
+                      {shop.photos.map((photo) => (
+                        <View key={photo.id} style={styles.tourPhotoContainer}>
+                          <Image source={{ uri: photo.uri }} style={styles.tourPhoto} />
+                          {shop.isEditing && (
+                            <TouchableOpacity
+                              style={styles.deleteTourPhotoButton}
+                              onPress={() => removeTourShopPhoto(shop.id, photo.id)}
+                            >
+                              <Text style={styles.deleteTourPhotoText}>×</Text>
+                            </TouchableOpacity>
+                          )}
+                        </View>
+                      ))}
+                    </View>
+                  ) : (
+                    <Text style={styles.noPhotoText}>아직 사진이 없습니다</Text>
+                  )}
+                </View>
+
+                {/* Pick 드레스 섹션 */}
+                <View style={styles.pickDressSection}>
+                  <View style={styles.pickDressHeader}>
+                    <Text style={styles.pickDressLabel}>✨ Pick! 드레스</Text>
+                    <Text style={styles.pickDressCount}>{shop.pickDresses.length}/2</Text>
+                  </View>
+                  <Text style={styles.pickDressSubtext}>마음에 드는 드레스 최대 2벌 선점</Text>
+
+                  <View style={styles.pickDressGrid}>
+                    {shop.pickDresses.map((dress) => (
+                      <View key={dress.id} style={styles.pickDressCard}>
+                        <Image source={{ uri: dress.uri }} style={styles.pickDressImage} />
+                        <View style={styles.pickDressBadge}>
+                          <Text style={styles.pickDressBadgeText}>PICK!</Text>
+                        </View>
+                        {shop.isEditing && (
+                          <TouchableOpacity
+                            style={styles.deletePickDressButton}
+                            onPress={() => removePickDress(shop.id, dress.id)}
+                          >
+                            <Text style={styles.deletePickDressText}>×</Text>
+                          </TouchableOpacity>
+                        )}
+                        <TextInput
+                          style={styles.pickDressNameInput}
+                          placeholder="드레스 이름"
+                          value={dress.name}
+                          onChangeText={(text) => updatePickDressName(shop.id, dress.id, text)}
+                          editable={shop.isEditing}
+                        />
+                      </View>
+                    ))}
+
+                    {shop.pickDresses.length < 2 && shop.isEditing && (
+                      <TouchableOpacity
+                        style={styles.addPickDressButton}
+                        onPress={() => addPickDress(shop.id)}
+                      >
+                        <Text style={styles.addPickDressIcon}>+</Text>
+                        <Text style={styles.addPickDressText}>Pick 드레스 추가</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                </View>
+              </View>
+            ))}
+
+            {/* 드레스샵 추가 버튼 */}
+            <TouchableOpacity style={styles.addItemButton} onPress={addTourDressShop}>
+              <Text style={styles.addItemButtonText}>+ 드레스샵 추가하기</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* 드레스샵 선택 - 투어 드레스샵 정보 입력 */}
+        {currentItem.id === 'dress-shop-selection' && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>👗 드레스샵 정보</Text>
             {dressShops.map((shop, index) => (
               <View key={shop.id} style={[
                 styles.hallCard,
@@ -1178,6 +1505,81 @@ export default function DetailScreen({ route, navigation, timeline }) {
                     <Text style={styles.emptyStudioIcon}>📷</Text>
                     <Text style={styles.emptyStudioTitle}>촬영업체 정보 등록</Text>
                     <Text style={styles.emptyStudioSubtitle}>탭하여 스튜디오 정보를 입력하세요</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            )}
+          </View>
+        )}
+
+        {/* 혼주 한복 - 한복집 업체 정보 */}
+        {currentItem.id === 'parents-hanbok' && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>✾ 한복집 정보</Text>
+              <TouchableOpacity
+                style={styles.editButton}
+                onPress={() => setIsEditingHanbokShop(!isEditingHanbokShop)}
+              >
+                <Text style={styles.editButtonText}>{isEditingHanbokShop ? '완료' : '✎ 수정'}</Text>
+              </TouchableOpacity>
+            </View>
+
+            {isEditingHanbokShop ? (
+              <View style={styles.hanbokShopEditContainer}>
+                <TextInput
+                  style={styles.hanbokShopInput}
+                  placeholder="한복집 이름"
+                  placeholderTextColor={COLORS.textLight}
+                  value={hanbokShopInfo.name}
+                  onChangeText={(text) => setHanbokShopInfo({ ...hanbokShopInfo, name: text })}
+                />
+                <TextInput
+                  style={styles.hanbokShopInput}
+                  placeholder="전화번호 (예: 02-1234-5678)"
+                  placeholderTextColor={COLORS.textLight}
+                  value={hanbokShopInfo.contact}
+                  onChangeText={(text) => setHanbokShopInfo({ ...hanbokShopInfo, contact: text })}
+                  keyboardType="phone-pad"
+                />
+                <TextInput
+                  style={styles.hanbokShopInput}
+                  placeholder="위치/주소"
+                  placeholderTextColor={COLORS.textLight}
+                  value={hanbokShopInfo.location}
+                  onChangeText={(text) => setHanbokShopInfo({ ...hanbokShopInfo, location: text })}
+                />
+              </View>
+            ) : (
+              <View style={styles.hanbokShopInfoCard}>
+                {hanbokShopInfo.name ? (
+                  <>
+                    <View style={styles.hanbokShopHeader}>
+                      <Text style={styles.hanbokShopName}>{hanbokShopInfo.name}</Text>
+                    </View>
+                    <View style={styles.hanbokShopDetails}>
+                      {hanbokShopInfo.contact && (
+                        <View style={styles.hanbokShopInfoItem}>
+                          <Text style={styles.hanbokShopInfoIcon}>📞</Text>
+                          <Text style={styles.hanbokShopInfoText}>{hanbokShopInfo.contact}</Text>
+                        </View>
+                      )}
+                      {hanbokShopInfo.location && (
+                        <View style={styles.hanbokShopInfoItem}>
+                          <Text style={styles.hanbokShopInfoIcon}>📍</Text>
+                          <Text style={styles.hanbokShopInfoText}>{hanbokShopInfo.location}</Text>
+                        </View>
+                      )}
+                    </View>
+                  </>
+                ) : (
+                  <TouchableOpacity
+                    style={styles.emptyHanbokShopContainer}
+                    onPress={() => setIsEditingHanbokShop(true)}
+                  >
+                    <Text style={styles.emptyHanbokShopIcon}>✾</Text>
+                    <Text style={styles.emptyHanbokShopTitle}>한복집 정보 등록</Text>
+                    <Text style={styles.emptyHanbokShopSubtitle}>탭하여 한복집 정보를 입력하세요</Text>
                   </TouchableOpacity>
                 )}
               </View>
@@ -2085,6 +2487,341 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   emptyStudioSubtitle: {
+    fontSize: 13,
+    fontFamily: 'GowunDodum_400Regular',
+    color: COLORS.textGray,
+  },
+  // 섹션 부제목
+  sectionSubtitle: {
+    fontSize: 13,
+    fontFamily: 'GowunDodum_400Regular',
+    color: COLORS.textGray,
+    marginBottom: 16,
+    marginTop: -8,
+  },
+  // ============ 드레스샵 투어 (간소화) 스타일 ============
+  tourShopCard: {
+    backgroundColor: COLORS.white,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: COLORS.lightPink,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  tourShopHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+  },
+  tourShopTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    gap: 8,
+  },
+  tourShopNumber: {
+    fontSize: 14,
+    fontFamily: 'GowunDodum_400Regular',
+    fontWeight: 'bold',
+    color: COLORS.darkPink,
+    backgroundColor: COLORS.lightPink,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+  },
+  tourShopNameInput: {
+    flex: 1,
+    fontSize: 16,
+    fontFamily: 'GowunDodum_400Regular',
+    color: COLORS.textDark,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.darkPink,
+    paddingVertical: 4,
+  },
+  tourShopName: {
+    flex: 1,
+    fontSize: 16,
+    fontFamily: 'GowunDodum_400Regular',
+    fontWeight: 'bold',
+    color: COLORS.textDark,
+  },
+  feelingSection: {
+    marginBottom: 16,
+  },
+  feelingLabel: {
+    fontSize: 14,
+    fontFamily: 'GowunDodum_400Regular',
+    fontWeight: 'bold',
+    color: COLORS.darkPink,
+    marginBottom: 8,
+  },
+  feelingInput: {
+    backgroundColor: COLORS.background,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 14,
+    fontFamily: 'GowunDodum_400Regular',
+    color: COLORS.textDark,
+    minHeight: 80,
+    textAlignVertical: 'top',
+  },
+  tourPhotoSection: {
+    marginBottom: 16,
+  },
+  tourPhotoHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  tourPhotoLabel: {
+    fontSize: 14,
+    fontFamily: 'GowunDodum_400Regular',
+    fontWeight: 'bold',
+    color: COLORS.darkPink,
+  },
+  addTourPhotoButton: {
+    backgroundColor: COLORS.lightPink,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  addTourPhotoButtonText: {
+    fontSize: 12,
+    fontFamily: 'GowunDodum_400Regular',
+    color: COLORS.darkPink,
+    fontWeight: 'bold',
+  },
+  tourPhotoGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  tourPhotoContainer: {
+    width: 70,
+    height: 70,
+    borderRadius: 8,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  tourPhoto: {
+    width: '100%',
+    height: '100%',
+  },
+  deleteTourPhotoButton: {
+    position: 'absolute',
+    top: 2,
+    right: 2,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  deleteTourPhotoText: {
+    color: COLORS.white,
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  noPhotoText: {
+    fontSize: 13,
+    fontFamily: 'GowunDodum_400Regular',
+    color: COLORS.textLight,
+    textAlign: 'center',
+    paddingVertical: 20,
+  },
+  // Pick 드레스 섹션
+  pickDressSection: {
+    backgroundColor: COLORS.lightPink,
+    borderRadius: 12,
+    padding: 14,
+  },
+  pickDressHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  pickDressLabel: {
+    fontSize: 15,
+    fontFamily: 'GowunDodum_400Regular',
+    fontWeight: 'bold',
+    color: COLORS.darkPink,
+  },
+  pickDressCount: {
+    fontSize: 13,
+    fontFamily: 'GowunDodum_400Regular',
+    color: COLORS.darkPink,
+    fontWeight: 'bold',
+  },
+  pickDressSubtext: {
+    fontSize: 12,
+    fontFamily: 'GowunDodum_400Regular',
+    color: COLORS.textGray,
+    marginTop: 4,
+    marginBottom: 12,
+  },
+  pickDressGrid: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  pickDressCard: {
+    width: 120,
+    backgroundColor: COLORS.white,
+    borderRadius: 12,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: COLORS.darkPink,
+    position: 'relative',
+  },
+  pickDressImage: {
+    width: '100%',
+    height: 150,
+  },
+  pickDressBadge: {
+    position: 'absolute',
+    top: 8,
+    left: 8,
+    backgroundColor: COLORS.darkPink,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
+  },
+  pickDressBadgeText: {
+    fontSize: 10,
+    fontFamily: 'GowunDodum_400Regular',
+    fontWeight: 'bold',
+    color: COLORS.white,
+  },
+  deletePickDressButton: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  deletePickDressText: {
+    color: COLORS.white,
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  pickDressNameInput: {
+    padding: 8,
+    fontSize: 12,
+    fontFamily: 'GowunDodum_400Regular',
+    color: COLORS.textDark,
+    textAlign: 'center',
+    borderTopWidth: 1,
+    borderTopColor: COLORS.border,
+  },
+  addPickDressButton: {
+    width: 120,
+    height: 180,
+    backgroundColor: COLORS.white,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: COLORS.darkPink,
+    borderStyle: 'dashed',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  addPickDressIcon: {
+    fontSize: 32,
+    color: COLORS.darkPink,
+    marginBottom: 4,
+  },
+  addPickDressText: {
+    fontSize: 11,
+    fontFamily: 'GowunDodum_400Regular',
+    color: COLORS.darkPink,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  // ============ 혼주 한복 스타일 ============
+  hanbokShopEditContainer: {
+    gap: 12,
+  },
+  hanbokShopInput: {
+    backgroundColor: COLORS.white,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 14,
+    fontFamily: 'GowunDodum_400Regular',
+    color: COLORS.textDark,
+  },
+  hanbokShopInfoCard: {
+    backgroundColor: COLORS.white,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  hanbokShopHeader: {
+    backgroundColor: COLORS.darkPink,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+  },
+  hanbokShopName: {
+    fontSize: 17,
+    fontFamily: 'GowunDodum_400Regular',
+    fontWeight: 'bold',
+    color: COLORS.white,
+  },
+  hanbokShopDetails: {
+    padding: 14,
+    gap: 10,
+  },
+  hanbokShopInfoItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  hanbokShopInfoIcon: {
+    fontSize: 16,
+  },
+  hanbokShopInfoText: {
+    fontSize: 14,
+    fontFamily: 'GowunDodum_400Regular',
+    color: COLORS.textDark,
+    flex: 1,
+  },
+  emptyHanbokShopContainer: {
+    alignItems: 'center',
+    paddingVertical: 28,
+    paddingHorizontal: 20,
+    backgroundColor: COLORS.lightPink,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: COLORS.darkPink,
+    borderStyle: 'dashed',
+  },
+  emptyHanbokShopIcon: {
+    fontSize: 36,
+    marginBottom: 10,
+  },
+  emptyHanbokShopTitle: {
+    fontSize: 15,
+    fontFamily: 'GowunDodum_400Regular',
+    fontWeight: 'bold',
+    color: COLORS.darkPink,
+    marginBottom: 4,
+  },
+  emptyHanbokShopSubtitle: {
     fontSize: 13,
     fontFamily: 'GowunDodum_400Regular',
     color: COLORS.textGray,

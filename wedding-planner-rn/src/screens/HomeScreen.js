@@ -133,9 +133,9 @@ const styles = StyleSheet.create({
     paddingBottom: 100, // 탭바 높이 고려
   },
   headerSection: {
-    paddingTop: 70,
+    paddingTop: 60,
     paddingHorizontal: 20,
-    paddingBottom: 16,
+    paddingBottom: 8,
     backgroundColor: COLORS.lightPink,
   },
   banner: {
@@ -172,7 +172,8 @@ const styles = StyleSheet.create({
   imageSection: {
     flex: 1,
     paddingHorizontal: 20,
-    justifyContent: 'center',
+    paddingTop: 4,
+    justifyContent: 'flex-start',
     alignItems: 'center',
   },
   squareImage: {
@@ -195,8 +196,8 @@ const styles = StyleSheet.create({
   },
   bottomActions: {
     paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 16,
+    paddingTop: 8,
+    paddingBottom: 12,
   },
   changeImageButton: {
     backgroundColor: '#ffffff',
