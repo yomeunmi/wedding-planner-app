@@ -53,31 +53,50 @@ export default function TimelineScreen({ navigation, timeline }) {
     navigation.getParent()?.navigate('Detail', { item });
   };
 
+  // 아이템별 D-Day 계산
+  const getItemDDay = (itemDate) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const targetDate = new Date(itemDate);
+    targetDate.setHours(0, 0, 0, 0);
+    const diffTime = targetDate.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
+
   // 필터링된 아이템 목록
   const filteredItems = showOnlyPending ? items.filter(item => !item.completed) : items;
 
-  const renderItem = ({ item }) => (
-    <TouchableOpacity
-      style={[styles.timelineItem, item.completed && styles.completedItem]}
-      onPress={() => handleItemPress(item)}
-    >
-      <View style={styles.timelineIcon}>
-        <Text style={styles.icon}>{item.icon}</Text>
-      </View>
-      <View style={styles.timelineContent}>
-        <View style={styles.titleRow}>
-          <Text style={[styles.timelineTitle, item.completed && styles.completedText]}>
-            {item.title}
-          </Text>
-          {item.completed && (
-            <Text style={styles.checkMark}>✓ 완료</Text>
-          )}
+  const renderItem = ({ item }) => {
+    const itemDDay = getItemDDay(item.date);
+    const dDayText = itemDDay > 0 ? `D-${itemDDay}` : itemDDay === 0 ? 'D-Day' : `D+${Math.abs(itemDDay)}`;
+
+    return (
+      <TouchableOpacity
+        style={[styles.timelineItem, item.completed && styles.completedItem]}
+        onPress={() => handleItemPress(item)}
+      >
+        <View style={styles.timelineIcon}>
+          <Text style={styles.icon}>{item.icon}</Text>
         </View>
-        <Text style={styles.timelineDate}>{timeline.formatDate(item.date)}</Text>
-      </View>
-      <Text style={styles.arrow}>›</Text>
-    </TouchableOpacity>
-  );
+        <View style={styles.timelineContent}>
+          <View style={styles.titleRow}>
+            <Text style={[styles.timelineTitle, item.completed && styles.completedText]}>
+              {item.title}
+            </Text>
+            {item.completed && (
+              <Text style={styles.checkMark}>✓ 완료</Text>
+            )}
+          </View>
+          <View style={styles.dateRow}>
+            <Text style={styles.timelineDate}>{timeline.formatDate(item.date)}</Text>
+            <Text style={[styles.itemDDay, itemDDay <= 0 && styles.itemDDayPast]}>{dDayText}</Text>
+          </View>
+        </View>
+        <Text style={styles.arrow}>›</Text>
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -258,10 +277,24 @@ const styles = StyleSheet.create({
     color: COLORS.darkPink,
     marginLeft: 8,
   },
+  dateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   timelineDate: {
     fontSize: 14,
     fontFamily: 'GowunDodum_400Regular',
     fontWeight: 'bold',
+    color: COLORS.textGray,
+  },
+  itemDDay: {
+    fontSize: 12,
+    fontFamily: 'GowunDodum_400Regular',
+    fontWeight: 'bold',
+    color: COLORS.darkPink,
+  },
+  itemDDayPast: {
     color: COLORS.textGray,
   },
   arrow: {

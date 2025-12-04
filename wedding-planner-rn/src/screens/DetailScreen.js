@@ -55,6 +55,8 @@ export default function DetailScreen({ route, navigation, timeline }) {
   const [isEditingWeddingDate, setIsEditingWeddingDate] = useState(false);
   const [showHallDatePicker, setShowHallDatePicker] = useState(null); // 웨딩홀 날짜 선택기 (hall.id 저장)
   const [showShopDatePicker, setShowShopDatePicker] = useState(null); // 드레스샵 날짜 선택기 (shop.id 저장)
+  const [studioInfo, setStudioInfo] = useState({ name: '', location: '', contact: '', memo: '' }); // 촬영업체 정보
+  const [isEditingStudio, setIsEditingStudio] = useState(false);
 
   // 데이터 불러오기
   useEffect(() => {
@@ -64,7 +66,7 @@ export default function DetailScreen({ route, navigation, timeline }) {
   // 데이터 저장
   useEffect(() => {
     saveData();
-  }, [memo, weddingHalls, dressShops, dressImages, studioImages, makeupImages]);
+  }, [memo, weddingHalls, dressShops, dressImages, studioImages, makeupImages, studioInfo]);
 
   const loadData = async () => {
     try {
@@ -97,6 +99,12 @@ export default function DetailScreen({ route, navigation, timeline }) {
       if (currentItem.id === 'makeup') {
         const savedImages = await AsyncStorage.getItem(`makeup-images-${currentItem.id}`);
         if (savedImages) setMakeupImages(JSON.parse(savedImages));
+      }
+
+      // 웨딩촬영날 페이지에서 촬영업체 정보 로드
+      if (currentItem.id === 'wedding-photo-day') {
+        const savedStudioInfo = await AsyncStorage.getItem('wedding-studio-info');
+        if (savedStudioInfo) setStudioInfo(JSON.parse(savedStudioInfo));
       }
 
       // 본식 드레스 가봉 페이지에서 선택된 드레스샵 정보 로드
@@ -137,6 +145,11 @@ export default function DetailScreen({ route, navigation, timeline }) {
 
       if (currentItem.id === 'makeup') {
         await AsyncStorage.setItem(`makeup-images-${currentItem.id}`, JSON.stringify(makeupImages));
+      }
+
+      // 웨딩촬영날 페이지에서 촬영업체 정보 저장
+      if (currentItem.id === 'wedding-photo-day') {
+        await AsyncStorage.setItem('wedding-studio-info', JSON.stringify(studioInfo));
       }
     } catch (error) {
       console.error('데이터 저장 실패:', error);
@@ -963,6 +976,90 @@ export default function DetailScreen({ route, navigation, timeline }) {
           </View>
         )}
 
+        {/* 촬영업체 정보 - wedding-photo-day일 때 표시 */}
+        {currentItem.id === 'wedding-photo-day' && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>📷 촬영업체 정보</Text>
+              {!isEditingStudio && (
+                <TouchableOpacity
+                  style={styles.editButton}
+                  onPress={() => setIsEditingStudio(true)}
+                >
+                  <Text style={styles.editButtonText}>✎ 수정</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+            {isEditingStudio ? (
+              <View style={styles.studioEditContainer}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="업체명"
+                  value={studioInfo.name}
+                  onChangeText={(text) => setStudioInfo({ ...studioInfo, name: text })}
+                />
+                <TextInput
+                  style={styles.input}
+                  placeholder="위치"
+                  value={studioInfo.location}
+                  onChangeText={(text) => setStudioInfo({ ...studioInfo, location: text })}
+                />
+                <TextInput
+                  style={styles.input}
+                  placeholder="연락처"
+                  value={studioInfo.contact}
+                  onChangeText={(text) => setStudioInfo({ ...studioInfo, contact: text })}
+                  keyboardType="phone-pad"
+                />
+                <TextInput
+                  style={[styles.input, styles.memoInput]}
+                  placeholder="메모 (패키지 내용, 가격 등)"
+                  value={studioInfo.memo}
+                  onChangeText={(text) => setStudioInfo({ ...studioInfo, memo: text })}
+                  multiline
+                />
+                <TouchableOpacity
+                  style={styles.saveStudioButton}
+                  onPress={() => setIsEditingStudio(false)}
+                >
+                  <Text style={styles.saveStudioButtonText}>저장</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <View style={styles.studioInfoDisplay}>
+                {studioInfo.name ? (
+                  <>
+                    <View style={styles.infoRow}>
+                      <Text style={styles.infoLabel}>업체명:</Text>
+                      <Text style={styles.infoValue}>{studioInfo.name}</Text>
+                    </View>
+                    {studioInfo.location && (
+                      <View style={styles.infoRow}>
+                        <Text style={styles.infoLabel}>위치:</Text>
+                        <Text style={styles.infoValue}>{studioInfo.location}</Text>
+                      </View>
+                    )}
+                    {studioInfo.contact && (
+                      <View style={styles.infoRow}>
+                        <Text style={styles.infoLabel}>연락처:</Text>
+                        <Text style={styles.infoValue}>{studioInfo.contact}</Text>
+                      </View>
+                    )}
+                    {studioInfo.memo && (
+                      <View style={styles.infoRow}>
+                        <Text style={styles.infoLabel}>메모:</Text>
+                        <Text style={styles.infoValue}>{studioInfo.memo}</Text>
+                      </View>
+                    )}
+                  </>
+                ) : (
+                  <Text style={styles.emptyStudioText}>촬영업체 정보를 입력해주세요.</Text>
+                )}
+              </View>
+            )}
+          </View>
+        )}
+
         {/* 메모 입력 */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>메모</Text>
@@ -1729,5 +1826,31 @@ const styles = StyleSheet.create({
     color: COLORS.white,
     fontSize: 14,
     fontFamily: 'GowunDodum_400Regular',
+  },
+  studioEditContainer: {
+    gap: 8,
+  },
+  studioInfoDisplay: {
+    paddingVertical: 8,
+  },
+  saveStudioButton: {
+    backgroundColor: COLORS.darkPink,
+    borderRadius: 8,
+    padding: 12,
+    marginTop: 8,
+  },
+  saveStudioButtonText: {
+    color: COLORS.white,
+    fontSize: 14,
+    fontWeight: 'bold',
+    fontFamily: 'GowunDodum_400Regular',
+    textAlign: 'center',
+  },
+  emptyStudioText: {
+    fontSize: 14,
+    fontFamily: 'GowunDodum_400Regular',
+    color: COLORS.textLight,
+    textAlign: 'center',
+    paddingVertical: 16,
   },
 });
