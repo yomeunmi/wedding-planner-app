@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -6,9 +6,107 @@ import {
   FlatList,
   TouchableOpacity,
   Alert,
+  Animated,
+  PanResponder,
+  Dimensions,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { COLORS } from '../constants/colors';
+
+const SCREEN_WIDTH = Dimensions.get('window').width;
+const SWIPE_THRESHOLD = -80;
+
+// 스와이프 가능한 행 컴포넌트
+const SwipeableRow = ({ children, onDelete, itemId, activeSwipeId, setActiveSwipeId }) => {
+  const translateX = useRef(new Animated.Value(0)).current;
+  const isActive = activeSwipeId === itemId;
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => false,
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        return Math.abs(gestureState.dx) > 10 && Math.abs(gestureState.dy) < 10;
+      },
+      onPanResponderGrant: () => {
+        translateX.setOffset(translateX._value);
+        translateX.setValue(0);
+      },
+      onPanResponderMove: (_, gestureState) => {
+        if (gestureState.dx < 0) {
+          translateX.setValue(Math.max(gestureState.dx, -100));
+        } else if (gestureState.dx > 0) {
+          translateX.setValue(Math.min(gestureState.dx, 0));
+        }
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        translateX.flattenOffset();
+        if (gestureState.dx < SWIPE_THRESHOLD) {
+          // 삭제 버튼 표시
+          Animated.spring(translateX, {
+            toValue: -80,
+            useNativeDriver: true,
+          }).start();
+          setActiveSwipeId(itemId);
+        } else {
+          // 원래 위치로
+          Animated.spring(translateX, {
+            toValue: 0,
+            useNativeDriver: true,
+          }).start();
+          if (isActive) {
+            setActiveSwipeId(null);
+          }
+        }
+      },
+    })
+  ).current;
+
+  // 다른 아이템이 스와이프되면 현재 아이템 닫기
+  useEffect(() => {
+    if (activeSwipeId && activeSwipeId !== itemId) {
+      Animated.spring(translateX, {
+        toValue: 0,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [activeSwipeId]);
+
+  const closeSwipe = () => {
+    Animated.spring(translateX, {
+      toValue: 0,
+      useNativeDriver: true,
+    }).start();
+    setActiveSwipeId(null);
+  };
+
+  return (
+    <View style={styles.swipeContainer}>
+      {/* 삭제 버튼 (배경) */}
+      <View style={styles.deleteButtonContainer}>
+        <TouchableOpacity
+          style={styles.deleteButton}
+          onPress={() => {
+            closeSwipe();
+            onDelete();
+          }}
+        >
+          <Text style={styles.deleteButtonText}>삭제</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* 스와이프 가능한 콘텐츠 */}
+      <Animated.View
+        style={[
+          styles.swipeableContent,
+          { transform: [{ translateX }] },
+        ]}
+        {...panResponder.panHandlers}
+      >
+        {children}
+      </Animated.View>
+    </View>
+  );
+};
 
 export default function TimelineScreen({ navigation, timeline }) {
   const [items, setItems] = useState([]);
@@ -16,6 +114,8 @@ export default function TimelineScreen({ navigation, timeline }) {
   const [completedCount, setCompletedCount] = useState(0);
   const [nickname, setNickname] = useState('');
   const [showOnlyPending, setShowOnlyPending] = useState(false);
+  const [activeSwipeId, setActiveSwipeId] = useState(null);
+  const [deletedItemIds, setDeletedItemIds] = useState([]);
 
   useEffect(() => {
     loadTimeline();
@@ -31,9 +131,17 @@ export default function TimelineScreen({ navigation, timeline }) {
 
   const loadTimeline = async () => {
     await timeline.load();
-    setItems([...timeline.timeline]);
+
+    // 삭제된 항목 ID 로드
+    const savedDeletedIds = await AsyncStorage.getItem('timeline-deleted-items');
+    const deletedIds = savedDeletedIds ? JSON.parse(savedDeletedIds) : [];
+    setDeletedItemIds(deletedIds);
+
+    // 삭제된 항목 제외하고 표시
+    const filteredTimeline = timeline.timeline.filter(item => !deletedIds.includes(item.id));
+    setItems([...filteredTimeline]);
     setDDay(timeline.getDDay());
-    setCompletedCount(timeline.getCompletedCount());
+    setCompletedCount(filteredTimeline.filter(item => item.completed).length);
 
     // 닉네임 로드
     const savedNickname = await AsyncStorage.getItem('wedding-nickname');
@@ -50,7 +158,35 @@ export default function TimelineScreen({ navigation, timeline }) {
   };
 
   const handleItemPress = (item) => {
+    if (activeSwipeId) {
+      setActiveSwipeId(null);
+      return;
+    }
     navigation.getParent()?.navigate('Detail', { item });
+  };
+
+  const handleDeleteItem = async (itemId, itemTitle) => {
+    Alert.alert(
+      '항목 삭제',
+      `"${itemTitle}" 항목을 삭제하시겠습니까?\n삭제된 항목은 타임라인에서 숨겨집니다.`,
+      [
+        { text: '취소', style: 'cancel' },
+        {
+          text: '삭제',
+          style: 'destructive',
+          onPress: async () => {
+            const newDeletedIds = [...deletedItemIds, itemId];
+            setDeletedItemIds(newDeletedIds);
+            await AsyncStorage.setItem('timeline-deleted-items', JSON.stringify(newDeletedIds));
+
+            // UI 업데이트
+            const filteredItems = items.filter(item => item.id !== itemId);
+            setItems(filteredItems);
+            setCompletedCount(filteredItems.filter(item => item.completed).length);
+          },
+        },
+      ]
+    );
   };
 
   // 아이템별 D-Day 계산
@@ -71,10 +207,46 @@ export default function TimelineScreen({ navigation, timeline }) {
     const itemDDay = getItemDDay(item.date);
     const dDayText = itemDDay > 0 ? `D-${itemDDay}` : itemDDay === 0 ? 'D-Day' : `D+${Math.abs(itemDDay)}`;
 
-    return (
+    // 결혼식 당일은 삭제 불가
+    const canDelete = item.id !== 'wedding-day';
+
+    return canDelete ? (
+      <SwipeableRow
+        itemId={item.id}
+        onDelete={() => handleDeleteItem(item.id, item.title)}
+        activeSwipeId={activeSwipeId}
+        setActiveSwipeId={setActiveSwipeId}
+      >
+        <TouchableOpacity
+          style={[styles.timelineItem, item.completed && styles.completedItem]}
+          onPress={() => handleItemPress(item)}
+          activeOpacity={0.7}
+        >
+          <View style={styles.timelineIcon}>
+            <Text style={styles.icon}>{item.icon}</Text>
+          </View>
+          <View style={styles.timelineContent}>
+            <View style={styles.titleRow}>
+              <Text style={[styles.timelineTitle, item.completed && styles.completedText]}>
+                {item.title}
+              </Text>
+              {item.completed && (
+                <Text style={styles.checkMark}>✓ 완료</Text>
+              )}
+            </View>
+            <View style={styles.dateRow}>
+              <Text style={styles.timelineDate}>{timeline.formatDate(item.date)}</Text>
+              <Text style={[styles.itemDDay, itemDDay <= 0 && styles.itemDDayPast]}>{dDayText}</Text>
+            </View>
+          </View>
+          <Text style={styles.arrow}>›</Text>
+        </TouchableOpacity>
+      </SwipeableRow>
+    ) : (
       <TouchableOpacity
         style={[styles.timelineItem, item.completed && styles.completedItem]}
         onPress={() => handleItemPress(item)}
+        activeOpacity={0.7}
       >
         <View style={styles.timelineIcon}>
           <Text style={styles.icon}>{item.icon}</Text>
@@ -146,6 +318,7 @@ export default function TimelineScreen({ navigation, timeline }) {
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
+        onScrollBeginDrag={() => setActiveSwipeId(null)}
       />
     </View>
   );
@@ -225,11 +398,41 @@ const styles = StyleSheet.create({
   listContent: {
     padding: 16,
   },
+  swipeContainer: {
+    marginBottom: 12,
+    position: 'relative',
+  },
+  deleteButtonContainer: {
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    bottom: 0,
+    width: 80,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  deleteButton: {
+    backgroundColor: '#FF4444',
+    width: 70,
+    height: '90%',
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  deleteButtonText: {
+    color: COLORS.white,
+    fontSize: 14,
+    fontFamily: 'GowunDodum_400Regular',
+    fontWeight: 'bold',
+  },
+  swipeableContent: {
+    backgroundColor: COLORS.background,
+  },
   timelineItem: {
     backgroundColor: COLORS.white,
     borderRadius: 12,
     padding: 16,
-    marginBottom: 12,
+    marginBottom: 0,
     flexDirection: 'row',
     alignItems: 'center',
     shadowColor: '#000',

@@ -1031,7 +1031,7 @@ export default function DetailScreen({ route, navigation, timeline }) {
                 {/* 샵 사진 */}
                 <View style={styles.tourPhotoSection}>
                   <View style={styles.tourPhotoHeader}>
-                    <Text style={styles.tourPhotoLabel}>📷 사진</Text>
+                    <Text style={styles.tourPhotoLabel}>사진</Text>
                     {shop.isEditing && (
                       <TouchableOpacity
                         style={styles.addTourPhotoButton}
@@ -1317,7 +1317,7 @@ export default function DetailScreen({ route, navigation, timeline }) {
         {currentItem.id === 'wedding-photo-day' && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>📷 촬영업체 정보</Text>
+              <Text style={styles.sectionTitle}>촬영업체 정보</Text>
               <TouchableOpacity
                 style={styles.editButton}
                 onPress={() => setIsEditingStudio(!isEditingStudio)}
@@ -1483,7 +1483,7 @@ export default function DetailScreen({ route, navigation, timeline }) {
                       <View style={styles.studioSnapSection}>
                         <Text style={styles.studioSectionLabel}>본식 스냅</Text>
                         <View style={styles.studioInfoItem}>
-                          <Text style={styles.studioInfoIcon}>📸</Text>
+                          <Text style={styles.studioInfoIcon}>⦿</Text>
                           <Text style={styles.studioInfoText}>{studioInfo.snapPhotographer}</Text>
                         </View>
                       </View>
@@ -1502,7 +1502,7 @@ export default function DetailScreen({ route, navigation, timeline }) {
                     style={styles.emptyStudioContainer}
                     onPress={() => setIsEditingStudio(true)}
                   >
-                    <Text style={styles.emptyStudioIcon}>📷</Text>
+                    <Text style={styles.emptyStudioIcon}>⦿</Text>
                     <Text style={styles.emptyStudioTitle}>촬영업체 정보 등록</Text>
                     <Text style={styles.emptyStudioSubtitle}>탭하여 스튜디오 정보를 입력하세요</Text>
                   </TouchableOpacity>

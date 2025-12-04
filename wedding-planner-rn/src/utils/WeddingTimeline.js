@@ -68,23 +68,13 @@ export class WeddingTimeline {
         description: '여러 웨딩홀을 방문하여 비교해보세요. 주말에 실제 예식이 진행되는 모습을 보면 더 좋습니다.',
         minM: 10, maxM: 12, priority: 1,
         category: 'wedding-halls',
-        isWeekend: true, // 주말로 조정
+        isWeekend: true,
         tips: [
           '최소 3~4곳의 웨딩홀을 방문하여 비교해보세요.',
           '주말 예식 현장을 직접 보면 분위기를 파악하기 좋습니다.',
           '식사 메뉴와 품질을 꼭 시식해보세요.',
           '계약은 서두르지 말고 충분히 비교 후 결정하세요.',
-          '하객 규모를 미리 예상하여 홀 크기를 선택하세요.'
-        ]
-      },
-      {
-        id: 'wedding-hall-contract',
-        title: '웨딩홀 계약',
-        icon: '♥',
-        description: '마음에 드는 웨딩홀을 선택하고 계약합니다. 계약 조건과 취소 규정을 꼼꼼히 확인하세요.',
-        minM: 8, maxM: 10, priority: 2,
-        category: 'wedding-halls',
-        tips: [
+          '하객 규모를 미리 예상하여 홀 크기를 선택하세요.',
           '계약금과 잔금 일정을 확인하세요.',
           '취소 시 환불 규정을 꼼꼼히 확인하세요.',
           '식사 메뉴와 단가를 확정하세요.',
@@ -97,7 +87,7 @@ export class WeddingTimeline {
         title: '신혼집 준비',
         icon: '⌂',
         description: '신혼집 계약과 가전, 가구, 생활용품 등 혼수를 준비합니다.',
-        minM: 8, maxM: 12, priority: 3,
+        minM: 8, maxM: 12, priority: 2,
         category: 'home',
         tips: [
           '전세/월세/자가 계약 및 입주 날짜 확인.',
@@ -112,10 +102,10 @@ export class WeddingTimeline {
       },
       {
         id: 'dress-shop-selection',
-        title: '드레스샵 상담',
+        title: '드레스샵 선택',
         icon: '◇',
         description: '웨딩드레스샵을 알아보고 스타일과 예산을 비교합니다. SNS와 후기를 참고하여 선택하세요.',
-        minM: 7, maxM: 9, priority: 4,
+        minM: 7, maxM: 9, priority: 3,
         category: 'dress',
         tips: [
           'SNS나 인스타그램에서 드레스샵 포트폴리오 검색.',
@@ -131,7 +121,7 @@ export class WeddingTimeline {
         title: '신혼여행 예약',
         icon: '✈',
         description: '신혼여행 행선지와 일정을 결정하고 항공권과 숙소를 예약합니다.',
-        minM: 6, maxM: 10, priority: 5,
+        minM: 6, maxM: 10, priority: 4,
         category: 'honeymoon',
         tips: [
           '나라/도시, 여행 기간, 예산을 먼저 결정하세요.',
@@ -146,10 +136,10 @@ export class WeddingTimeline {
       },
       {
         id: 'dress-tour',
-        title: '드레스샵 선택·계약',
+        title: '드레스샵 투어',
         icon: '◆',
         description: '웨딩드레스와 턱시도를 선택합니다. 여러 곳을 방문하여 다양한 스타일을 착용해보세요.',
-        minM: 6, maxM: 8, priority: 6,
+        minM: 6, maxM: 8, priority: 5,
         category: 'dress',
         isWeekend: true,
         tips: [
@@ -166,7 +156,7 @@ export class WeddingTimeline {
         title: '본식 스냅 계약',
         icon: '⦾',
         description: '웨딩 스튜디오를 선택하고 촬영 일정을 예약합니다. 포트폴리오와 패키지를 비교하여 선택하세요.',
-        minM: 5, maxM: 8, priority: 7,
+        minM: 5, maxM: 8, priority: 6,
         category: 'studios',
         tips: [
           '포트폴리오를 꼼꼼히 확인하고 본인의 스타일과 맞는지 체크하세요.',
@@ -182,7 +172,7 @@ export class WeddingTimeline {
         title: '신랑 예복 맞춤',
         icon: '◈',
         description: '신랑의 예복을 준비합니다. 턱시도, 예복, 한복 등 원하는 스타일을 선택하고 맞춤 제작합니다.',
-        minM: 5, maxM: 7, priority: 8,
+        minM: 5, maxM: 7, priority: 7,
         category: 'dress',
         tips: [
           '신부 드레스와 조화를 이루는 색상과 스타일을 선택하세요.',
@@ -196,31 +186,21 @@ export class WeddingTimeline {
       },
       {
         id: 'makeup',
-        title: '메이크업샵 상담',
+        title: '메이크업샵 예약',
         icon: '✿',
-        description: '본식 당일 메이크업과 헤어를 담당할 샵을 상담합니다. 포트폴리오를 확인하세요.',
-        minM: 5, maxM: 7, priority: 9,
+        description: '본식 당일 메이크업과 헤어를 담당할 샵을 예약합니다. 포트폴리오를 확인하고 리허설을 통해 스타일을 미리 확인하세요.',
+        minM: 4, maxM: 7, priority: 8,
         category: 'makeup',
         tips: [
           '포트폴리오에서 본인이 원하는 스타일을 찾아보세요.',
+          '리허설 메이크업을 꼭 받아보세요.',
+          '예식 시간을 고려하여 메이크업 시간을 예약하세요.',
           '동행 메이크업(어머니, 들러리 등) 서비스를 확인하세요.',
           '피부 관리 패키지 시작 시점과 마지막 관리일(D-1~3일) 계획.',
+          '네일아트는 본식 2~3일 전에 예약하세요.',
           '헤어 컬러나 펌은 리허설과 본식을 고려해서 시기 조정.',
           '왁싱, 속눈썹 연장, 반영구 메이크업 필요 여부 결정.',
           '혼주 헤어/메이크업 샵도 함께 예약하세요.'
-        ]
-      },
-      {
-        id: 'makeup-booking',
-        title: '메이크업샵 예약 확정',
-        icon: '✿',
-        description: '메이크업샵을 최종 선택하고 예약을 확정합니다.',
-        minM: 4, maxM: 6, priority: 10,
-        category: 'makeup',
-        tips: [
-          '리허설 메이크업을 꼭 받아보세요.',
-          '예식 시간을 고려하여 메이크업 시간을 예약하세요.',
-          '네일아트는 본식 2~3일 전에 예약하세요.'
         ]
       },
       {
@@ -228,7 +208,7 @@ export class WeddingTimeline {
         title: '웨딩촬영날',
         icon: '⦿',
         description: '웨딩 스튜디오에서 본식 전 촬영을 진행합니다. 계절과 날씨를 고려하여 야외 촬영 장소를 선택하세요.',
-        minM: 3, maxM: 5, priority: 11,
+        minM: 3, maxM: 5, priority: 9,
         category: 'studios',
         isWeekend: true,
         tips: [
@@ -245,7 +225,7 @@ export class WeddingTimeline {
         title: '예물 및 예단',
         icon: '◇',
         description: '양가에서 주고받을 예물과 예단을 준비합니다.',
-        minM: 3, maxM: 5, priority: 12,
+        minM: 3, maxM: 5, priority: 10,
         category: 'gifts',
         tips: [
           '커플링, 예물 반지/시계/목걸이 범위 결정.',
@@ -258,55 +238,11 @@ export class WeddingTimeline {
         ]
       },
       {
-        id: 'dress-fitting-1',
-        title: '드레스 1차 피팅',
-        icon: '✦',
-        description: '첫 번째 드레스 피팅입니다. 기본 수선 사항을 확인합니다.',
-        minM: 3, maxM: 3, priority: 13,
-        category: 'dress',
-        tips: [
-          '실제 착용할 속옷을 꼭 챙겨가세요.',
-          '웨딩슈즈도 함께 가져가세요.',
-          '수선이 필요한 부분을 꼼꼼히 체크하세요.'
-        ]
-      },
-      {
-        id: 'wedding-ceremony',
-        title: '예식 진행 준비',
-        icon: '◉',
-        description: '예식 당일 진행을 위한 주례, 사회자, 축가, 식순 등을 준비합니다.',
-        minM: 2, maxM: 3, priority: 14,
-        category: 'ceremony',
-        tips: [
-          '주례 있을지 없을지 결정 (주례 없으면 사회자+영상으로 구성).',
-          '주례 있을 경우: 섭외할 분 미리 연락, 사례 준비.',
-          '사회자 섭외 (친구/지인 또는 프로 사회자).',
-          '사회 대본 초안 작성 후 식장 코디네이터와 조율.',
-          '축가할 친구나 연주팀 섭외, 곡 선정.',
-          '입장곡/퇴장곡/케이크 커팅 등 타이밍별 BGM 리스트.',
-          '포토 슬라이드/식전 영상 재생 여부 결정.',
-          '폐백 여부 결정, 부케 전달 이벤트 계획.'
-        ]
-      },
-      {
-        id: 'dress-fitting-2',
-        title: '드레스 2차 피팅',
-        icon: '✦',
-        description: '두 번째 드레스 피팅입니다. 수선 상태를 확인하고 추가 조정합니다.',
-        minM: 2, maxM: 2, priority: 15,
-        category: 'dress',
-        tips: [
-          '1차 피팅 후 수선된 부분을 확인하세요.',
-          '체중 변화가 있으면 알려주세요.',
-          '액세서리와 함께 착용해보세요.'
-        ]
-      },
-      {
         id: 'invitation-card',
         title: '청첩장 제작·발송',
         icon: '✉',
         description: '결혼식 초대장을 제작하고 발송합니다. 모바일 청첩장과 종이 청첩장을 함께 준비하세요.',
-        minM: 1.5, maxM: 2, priority: 16,
+        minM: 1.5, maxM: 2, priority: 11,
         category: 'invitation',
         tips: [
           '양가 부모님께 하객 명단과 연락처 먼저 받기.',
@@ -320,11 +256,29 @@ export class WeddingTimeline {
         ]
       },
       {
+        id: 'wedding-ceremony',
+        title: '예식 진행 준비',
+        icon: '◉',
+        description: '예식 당일 진행을 위한 주례, 사회자, 축가, 식순 등을 준비합니다.',
+        minM: 1, maxM: 2, priority: 12,
+        category: 'ceremony',
+        tips: [
+          '주례 있을지 없을지 결정 (주례 없으면 사회자+영상으로 구성).',
+          '주례 있을 경우: 섭외할 분 미리 연락, 사례 준비.',
+          '사회자 섭외 (친구/지인 또는 프로 사회자).',
+          '사회 대본 초안 작성 후 식장 코디네이터와 조율.',
+          '축가할 친구나 연주팀 섭외, 곡 선정.',
+          '입장곡/퇴장곡/케이크 커팅 등 타이밍별 BGM 리스트.',
+          '포토 슬라이드/식전 영상 재생 여부 결정.',
+          '폐백 여부 결정, 부케 전달 이벤트 계획.'
+        ]
+      },
+      {
         id: 'parents-hanbok',
         title: '혼주 한복',
         icon: '✾',
         description: '양가 부모님의 한복을 준비합니다. 예식 분위기와 조화를 이루는 색상과 디자인을 선택하세요.',
-        minM: 1, maxM: 2, priority: 17,
+        minM: 1, maxM: 2, priority: 13,
         category: 'hanbok',
         tips: [
           '부모님 체형과 취향을 고려하여 선택하세요.',
@@ -336,25 +290,11 @@ export class WeddingTimeline {
         ]
       },
       {
-        id: 'makeup-rehearsal',
-        title: '메이크업 리허설',
-        icon: '✿',
-        description: '본식 전 메이크업과 헤어 리허설을 진행합니다. 원하는 스타일을 미리 확인하세요.',
-        minM: 0.5, maxM: 1, priority: 18,
-        category: 'makeup',
-        tips: [
-          '본식 때 입을 드레스 사진을 가져가세요.',
-          '원하는 스타일 참고 사진을 준비하세요.',
-          '리허설 결과를 사진으로 남겨두세요.',
-          '수정이 필요한 부분을 메모하세요.'
-        ]
-      },
-      {
         id: 'dress-fitting-3',
-        title: '드레스 최종 피팅',
+        title: '본식 가봉',
         icon: '✦',
         description: '결혼식 직전, 마지막 드레스 피팅입니다. 모든 것이 완벽한지 최종 확인합니다.',
-        minM: 0.5, maxM: 0.5, priority: 19,
+        minM: 0.5, maxM: 1, priority: 14,
         category: 'dress',
         tips: [
           '가봉일 2주 전부터는 체중 변화가 없도록 유지하세요.',
