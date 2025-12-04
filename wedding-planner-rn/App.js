@@ -14,6 +14,11 @@ import TimelineConfirmScreen from './src/screens/TimelineConfirmScreen';
 import BackgroundImageScreen from './src/screens/BackgroundImageScreen';
 import HomeScreen from './src/screens/HomeScreen';
 import TimelineScreen from './src/screens/TimelineScreen';
+import BudgetScreen from './src/screens/BudgetScreen';
+import BudgetSetupScreen from './src/screens/BudgetSetupScreen';
+import BudgetPriorityScreen from './src/screens/BudgetPriorityScreen';
+import BudgetCategoryDetailScreen from './src/screens/BudgetCategoryDetailScreen';
+import BudgetWizardScreen from './src/screens/BudgetWizardScreen';
 import NotificationScreen from './src/screens/NotificationScreen';
 import DetailScreen from './src/screens/DetailScreen';
 import MyPageScreen from './src/screens/MyPageScreen';
@@ -247,6 +252,21 @@ export default function App() {
           {(props) => <TimelineScreen {...props} timeline={timeline} />}
         </Tab.Screen>
         <Tab.Screen
+          name="Budget"
+          options={{
+            tabBarLabel: '예산',
+            tabBarIcon: ({ color, focused }) => (
+              <Ionicons
+                name={focused ? 'wallet' : 'wallet-outline'}
+                size={22}
+                color={color}
+              />
+            ),
+          }}
+        >
+          {(props) => <BudgetScreen {...props} />}
+        </Tab.Screen>
+        <Tab.Screen
           name="Notifications"
           options={{
             tabBarLabel: '알림',
@@ -302,6 +322,10 @@ export default function App() {
           <Stack.Screen name="Detail">
             {(props) => <DetailScreen {...props} timeline={timeline} />}
           </Stack.Screen>
+          <Stack.Screen name="BudgetSetup" component={BudgetSetupScreen} />
+          <Stack.Screen name="BudgetPriority" component={BudgetPriorityScreen} />
+          <Stack.Screen name="BudgetCategoryDetail" component={BudgetCategoryDetailScreen} />
+          <Stack.Screen name="BudgetWizard" component={BudgetWizardScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </Animated.View>
