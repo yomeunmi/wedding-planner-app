@@ -2,7 +2,7 @@
   "expo": {
     "name": "웨딩플랜메이트",
     "slug": "wedding-planner",
-    "version": "1.0.1",
+    "version": "0.0.6",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -14,7 +14,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.yomeunmi.weddingplanner",
-      "buildNumber": "5",
+      "buildNumber": "6",
       "infoPlist": {
         "UIBackgroundModes": ["remote-notification"]
       }
