@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,9 +11,32 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { COLORS } from '../constants/colors';
+import StepIndicator from '../components/StepIndicator';
+
+const ONBOARDING_STEPS = ['날짜 설정', '타임라인', '예산 설정', '배경 선택'];
+const TOTAL_STEPS = 4;
 
 export default function BackgroundImageScreen({ navigation }) {
   const [selectedImage, setSelectedImage] = useState(null);
+  const [isOnboarding, setIsOnboarding] = useState(false);
+
+  useEffect(() => {
+    checkIfOnboarding();
+  }, []);
+
+  const checkIfOnboarding = async () => {
+    try {
+      const onboardingProgress = await AsyncStorage.getItem('onboarding-progress');
+      if (onboardingProgress) {
+        const progress = JSON.parse(onboardingProgress);
+        if (progress.step >= 3) {
+          setIsOnboarding(true);
+        }
+      }
+    } catch (error) {
+      console.error('온보딩 상태 확인 실패:', error);
+    }
+  };
 
   const pickImage = async () => {
     // 권한 요청
@@ -36,6 +59,11 @@ export default function BackgroundImageScreen({ navigation }) {
     }
   };
 
+  const completeOnboarding = async () => {
+    // 온보딩 완료 표시
+    await AsyncStorage.removeItem('onboarding-progress');
+  };
+
   const handleConfirm = async () => {
     if (!selectedImage) {
       Alert.alert('알림', '배경사진을 선택해주세요.');
@@ -45,17 +73,34 @@ export default function BackgroundImageScreen({ navigation }) {
     // 배경사진 저장
     await AsyncStorage.setItem('wedding-background-image', selectedImage);
 
+    // 온보딩 완료
+    await completeOnboarding();
+
     // 메인 화면(탭 네비게이션)으로 이동
     navigation.replace('MainTabs');
   };
 
   const handleSkip = async () => {
+    // 온보딩 완료
+    await completeOnboarding();
+
     // 나중에 설정하기
     navigation.replace('MainTabs');
   };
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* 온보딩 중일 때 스텝 인디케이터 표시 */}
+      {isOnboarding && (
+        <View style={styles.stepIndicatorContainer}>
+          <StepIndicator
+            currentStep={4}
+            totalSteps={TOTAL_STEPS}
+            stepLabels={ONBOARDING_STEPS}
+          />
+        </View>
+      )}
+
       <View style={styles.content}>
         <Text style={styles.title}>배경사진 설정</Text>
         <Text style={styles.subtitle}>
@@ -84,7 +129,9 @@ export default function BackgroundImageScreen({ navigation }) {
             style={styles.confirmButton}
             onPress={handleConfirm}
           >
-            <Text style={styles.confirmButtonText}>확인</Text>
+            <Text style={styles.confirmButtonText}>
+              {isOnboarding ? '시작하기 💕' : '확인'}
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.skipButton} onPress={handleSkip}>
@@ -101,6 +148,10 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
+  stepIndicatorContainer: {
+    paddingTop: 10,
+    backgroundColor: COLORS.background,
+  },
   content: {
     flex: 1,
     padding: 24,
@@ -111,7 +162,7 @@ const styles = StyleSheet.create({
     fontFamily: 'GowunDodum_400Regular',
     color: COLORS.darkPink,
     textAlign: 'center',
-    marginTop: 40,
+    marginTop: 20,
     marginBottom: 8,
   },
   subtitle: {

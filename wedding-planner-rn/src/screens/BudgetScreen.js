@@ -6,6 +6,9 @@ import {
   ScrollView,
   TouchableOpacity,
   Dimensions,
+  Modal,
+  TextInput,
+  Alert,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -13,20 +16,28 @@ import { COLORS } from '../constants/colors';
 
 const { width } = Dimensions.get('window');
 
-// 카테고리 기본 데이터
+// 카테고리 기본 데이터 (혼수, 신혼여행 포함)
 const DEFAULT_CATEGORIES = [
-  { id: 'venue', name: '예식장·식대', icon: '🏛️', defaultRatio: 0.50 },
-  { id: 'sdm', name: '스드메', icon: '👗', defaultRatio: 0.18 },
-  { id: 'photo', name: '사진·영상', icon: '📸', defaultRatio: 0.12 },
-  { id: 'flower', name: '플라워·데코', icon: '🌸', defaultRatio: 0.07 },
+  { id: 'venue', name: '예식장·식대', icon: '🏛️', defaultRatio: 0.38 },
+  { id: 'sdm', name: '스드메', icon: '👗', defaultRatio: 0.14 },
+  { id: 'photo', name: '사진·영상', icon: '📸', defaultRatio: 0.10 },
+  { id: 'flower', name: '플라워·데코', icon: '🌸', defaultRatio: 0.05 },
   { id: 'ceremony', name: '사회·축가', icon: '🎤', defaultRatio: 0.03 },
-  { id: 'etc', name: '기타', icon: '🎁', defaultRatio: 0.05 },
-  { id: 'reserve', name: '예비비', icon: '💰', defaultRatio: 0.05 },
+  { id: 'honeymoon', name: '신혼여행', icon: '✈️', defaultRatio: 0.15 },
+  { id: 'dowry', name: '혼수', icon: '🏠', defaultRatio: 0.10 },
+  { id: 'etc', name: '기타', icon: '🎁', defaultRatio: 0.02 },
+  { id: 'reserve', name: '예비비', icon: '💰', defaultRatio: 0.03 },
 ];
 
 export default function BudgetScreen({ navigation }) {
   const [budgetData, setBudgetData] = useState(null);
   const [isSetupComplete, setIsSetupComplete] = useState(false);
+  const [customCategories, setCustomCategories] = useState([]);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingCategory, setEditingCategory] = useState(null);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [newCategoryBudget, setNewCategoryBudget] = useState('');
 
   useFocusEffect(
     useCallback(() => {
@@ -41,12 +52,171 @@ export default function BudgetScreen({ navigation }) {
         const data = JSON.parse(saved);
         setBudgetData(data);
         setIsSetupComplete(data.isSetupComplete || false);
+        // 커스텀 카테고리 로드
+        if (data.customCategories) {
+          setCustomCategories(data.customCategories);
+        }
       } else {
         setIsSetupComplete(false);
       }
     } catch (error) {
       console.error('예산 데이터 로드 실패:', error);
     }
+  };
+
+  // 새 예산 카테고리 추가
+  const handleAddCategory = async () => {
+    if (!newCategoryName.trim()) {
+      Alert.alert('알림', '카테고리 이름을 입력해주세요.');
+      return;
+    }
+    if (!newCategoryBudget || parseInt(newCategoryBudget) <= 0) {
+      Alert.alert('알림', '예산 금액을 입력해주세요.');
+      return;
+    }
+
+    const newCategory = {
+      id: `custom-${Date.now()}`,
+      name: newCategoryName.trim(),
+      icon: '📌',
+      isCustom: true,
+    };
+
+    const newCustomCategories = [...customCategories, newCategory];
+    const budgetAmount = parseInt(newCategoryBudget);
+
+    // 예산 데이터 업데이트
+    const updatedCategories = {
+      ...budgetData.categories,
+      [newCategory.id]: {
+        budgetAmount,
+        confirmedAmount: 0,
+        items: [],
+      },
+    };
+
+    const updatedData = {
+      ...budgetData,
+      categories: updatedCategories,
+      customCategories: newCustomCategories,
+      updatedAt: new Date().toISOString(),
+    };
+
+    try {
+      await AsyncStorage.setItem('wedding-budget-data', JSON.stringify(updatedData));
+      setBudgetData(updatedData);
+      setCustomCategories(newCustomCategories);
+      setShowAddModal(false);
+      setNewCategoryName('');
+      setNewCategoryBudget('');
+      Alert.alert('완료', '새 예산 항목이 추가되었습니다.');
+    } catch (error) {
+      console.error('카테고리 추가 실패:', error);
+      Alert.alert('오류', '예산 항목 추가에 실패했습니다.');
+    }
+  };
+
+  // 예산 카테고리 수정
+  const handleEditCategory = async () => {
+    if (!editingCategory) return;
+    if (!newCategoryName.trim()) {
+      Alert.alert('알림', '카테고리 이름을 입력해주세요.');
+      return;
+    }
+    if (!newCategoryBudget || parseInt(newCategoryBudget) <= 0) {
+      Alert.alert('알림', '예산 금액을 입력해주세요.');
+      return;
+    }
+
+    const budgetAmount = parseInt(newCategoryBudget);
+
+    // 커스텀 카테고리인 경우 이름도 수정
+    let newCustomCategories = customCategories;
+    if (editingCategory.isCustom) {
+      newCustomCategories = customCategories.map(cat =>
+        cat.id === editingCategory.id ? { ...cat, name: newCategoryName.trim() } : cat
+      );
+    }
+
+    // 예산 데이터 업데이트
+    const updatedCategories = {
+      ...budgetData.categories,
+      [editingCategory.id]: {
+        ...budgetData.categories[editingCategory.id],
+        budgetAmount,
+      },
+    };
+
+    const updatedData = {
+      ...budgetData,
+      categories: updatedCategories,
+      customCategories: newCustomCategories,
+      updatedAt: new Date().toISOString(),
+    };
+
+    try {
+      await AsyncStorage.setItem('wedding-budget-data', JSON.stringify(updatedData));
+      setBudgetData(updatedData);
+      setCustomCategories(newCustomCategories);
+      setShowEditModal(false);
+      setEditingCategory(null);
+      setNewCategoryName('');
+      setNewCategoryBudget('');
+      Alert.alert('완료', '예산이 수정되었습니다.');
+    } catch (error) {
+      console.error('카테고리 수정 실패:', error);
+      Alert.alert('오류', '예산 수정에 실패했습니다.');
+    }
+  };
+
+  // 예산 카테고리 삭제 (커스텀 카테고리만 가능)
+  const handleDeleteCategory = (categoryId) => {
+    Alert.alert(
+      '예산 항목 삭제',
+      '이 예산 항목을 삭제하시겠습니까?',
+      [
+        { text: '취소', style: 'cancel' },
+        {
+          text: '삭제',
+          style: 'destructive',
+          onPress: async () => {
+            const newCustomCategories = customCategories.filter(cat => cat.id !== categoryId);
+            const updatedCategories = { ...budgetData.categories };
+            delete updatedCategories[categoryId];
+
+            const updatedData = {
+              ...budgetData,
+              categories: updatedCategories,
+              customCategories: newCustomCategories,
+              updatedAt: new Date().toISOString(),
+            };
+
+            try {
+              await AsyncStorage.setItem('wedding-budget-data', JSON.stringify(updatedData));
+              setBudgetData(updatedData);
+              setCustomCategories(newCustomCategories);
+              Alert.alert('완료', '예산 항목이 삭제되었습니다.');
+            } catch (error) {
+              console.error('카테고리 삭제 실패:', error);
+              Alert.alert('오류', '예산 항목 삭제에 실패했습니다.');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  // 카테고리 편집 모달 열기
+  const openEditModal = (category, catData) => {
+    setEditingCategory(category);
+    setNewCategoryName(category.name);
+    setNewCategoryBudget(String(catData.budgetAmount || 0));
+    setShowEditModal(true);
+  };
+
+  // 모든 카테고리 (기본 + 커스텀) 가져오기
+  const getAllCategories = () => {
+    return [...DEFAULT_CATEGORIES, ...customCategories];
   };
 
   // 전체 예산 계산
@@ -195,9 +365,17 @@ export default function BudgetScreen({ navigation }) {
 
       {/* 카테고리별 예산 리스트 */}
       <View style={styles.categorySection}>
-        <Text style={styles.sectionTitle}>카테고리별 예산</Text>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>카테고리별 예산</Text>
+          <TouchableOpacity
+            style={styles.addCategoryButton}
+            onPress={() => setShowAddModal(true)}
+          >
+            <Text style={styles.addCategoryButtonText}>+ 항목 추가</Text>
+          </TouchableOpacity>
+        </View>
 
-        {DEFAULT_CATEGORIES.map((category) => {
+        {getAllCategories().map((category) => {
           const catData = budgetData?.categories?.[category.id] || {};
           const budget = catData.budgetAmount || 0;
           const confirmed = catData.confirmedAmount || 0;
@@ -216,38 +394,56 @@ export default function BudgetScreen({ navigation }) {
           }
 
           return (
-            <TouchableOpacity
-              key={category.id}
-              style={styles.categoryCard}
-              onPress={() => navigation.navigate('BudgetCategoryDetail', {
-                categoryId: category.id,
-                categoryName: category.name,
-                categoryIcon: category.icon
-              })}
-            >
-              <View style={styles.categoryLeft}>
-                <Text style={styles.categoryIcon}>{category.icon}</Text>
-                <View style={styles.categoryInfo}>
-                  <Text style={styles.categoryName}>{category.name}</Text>
-                  <Text style={styles.categoryBudget}>
-                    예산: {formatMoney(budget)}원
-                  </Text>
+            <View key={category.id} style={styles.categoryCardWrapper}>
+              <TouchableOpacity
+                style={styles.categoryCard}
+                onPress={() => navigation.navigate('BudgetCategoryDetail', {
+                  categoryId: category.id,
+                  categoryName: category.name,
+                  categoryIcon: category.icon
+                })}
+              >
+                <View style={styles.categoryLeft}>
+                  <Text style={styles.categoryIcon}>{category.icon}</Text>
+                  <View style={styles.categoryInfo}>
+                    <Text style={styles.categoryName}>{category.name}</Text>
+                    <Text style={styles.categoryBudget}>
+                      예산: {formatMoney(budget)}원
+                    </Text>
+                  </View>
                 </View>
-              </View>
-              <View style={styles.categoryRight}>
-                <Text style={[styles.categoryStatus, { color: statusColor }]}>
-                  {statusIcon} {confirmed > 0 ? `${formatMoney(confirmed)}원` : '미정'}
-                </Text>
-                {confirmed > 0 && diff !== 0 && (
-                  <Text style={[
-                    styles.categoryDiff,
-                    { color: diff >= 0 ? '#4CAF50' : '#F44336' }
-                  ]}>
-                    {diff >= 0 ? `-${formatMoney(diff)}` : `+${formatMoney(Math.abs(diff))}`}
+                <View style={styles.categoryRight}>
+                  <Text style={[styles.categoryStatus, { color: statusColor }]}>
+                    {statusIcon} {confirmed > 0 ? `${formatMoney(confirmed)}원` : '미정'}
                   </Text>
+                  {confirmed > 0 && diff !== 0 && (
+                    <Text style={[
+                      styles.categoryDiff,
+                      { color: diff >= 0 ? '#4CAF50' : '#F44336' }
+                    ]}>
+                      {diff >= 0 ? `-${formatMoney(diff)}` : `+${formatMoney(Math.abs(diff))}`}
+                    </Text>
+                  )}
+                </View>
+              </TouchableOpacity>
+              {/* 편집/삭제 버튼 */}
+              <View style={styles.categoryActions}>
+                <TouchableOpacity
+                  style={styles.editCategoryButton}
+                  onPress={() => openEditModal(category, catData)}
+                >
+                  <Text style={styles.editCategoryText}>✎</Text>
+                </TouchableOpacity>
+                {category.isCustom && (
+                  <TouchableOpacity
+                    style={styles.deleteCategoryButton}
+                    onPress={() => handleDeleteCategory(category.id)}
+                  >
+                    <Text style={styles.deleteCategoryText}>×</Text>
+                  </TouchableOpacity>
                 )}
               </View>
-            </TouchableOpacity>
+            </View>
           );
         })}
       </View>
@@ -283,6 +479,105 @@ export default function BudgetScreen({ navigation }) {
       </View>
 
       <View style={styles.bottomSpacing} />
+
+      {/* 예산 항목 추가 모달 */}
+      <Modal
+        visible={showAddModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowAddModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>예산 항목 추가</Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="항목 이름"
+              value={newCategoryName}
+              onChangeText={setNewCategoryName}
+            />
+            <TextInput
+              style={styles.modalInput}
+              placeholder="예산 금액 (원)"
+              value={newCategoryBudget}
+              onChangeText={setNewCategoryBudget}
+              keyboardType="numeric"
+            />
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.modalCancelButton}
+                onPress={() => {
+                  setShowAddModal(false);
+                  setNewCategoryName('');
+                  setNewCategoryBudget('');
+                }}
+              >
+                <Text style={styles.modalCancelText}>취소</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalConfirmButton}
+                onPress={handleAddCategory}
+              >
+                <Text style={styles.modalConfirmText}>추가</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* 예산 항목 수정 모달 */}
+      <Modal
+        visible={showEditModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowEditModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>예산 수정</Text>
+            {editingCategory?.isCustom && (
+              <TextInput
+                style={styles.modalInput}
+                placeholder="항목 이름"
+                value={newCategoryName}
+                onChangeText={setNewCategoryName}
+              />
+            )}
+            {!editingCategory?.isCustom && (
+              <View style={styles.modalCategoryInfo}>
+                <Text style={styles.modalCategoryIcon}>{editingCategory?.icon}</Text>
+                <Text style={styles.modalCategoryName}>{editingCategory?.name}</Text>
+              </View>
+            )}
+            <TextInput
+              style={styles.modalInput}
+              placeholder="예산 금액 (원)"
+              value={newCategoryBudget}
+              onChangeText={setNewCategoryBudget}
+              keyboardType="numeric"
+            />
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.modalCancelButton}
+                onPress={() => {
+                  setShowEditModal(false);
+                  setEditingCategory(null);
+                  setNewCategoryName('');
+                  setNewCategoryBudget('');
+                }}
+              >
+                <Text style={styles.modalCancelText}>취소</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalConfirmButton}
+                onPress={handleEditCategory}
+              >
+                <Text style={styles.modalConfirmText}>저장</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }
@@ -585,5 +880,138 @@ const styles = StyleSheet.create({
   },
   bottomSpacing: {
     height: 120,
+  },
+  // 섹션 헤더
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  addCategoryButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    backgroundColor: COLORS.darkPink,
+    borderRadius: 8,
+  },
+  addCategoryButtonText: {
+    fontSize: 12,
+    fontFamily: 'GowunDodum_400Regular',
+    color: COLORS.white,
+    fontWeight: '600',
+  },
+  // 카테고리 카드 래퍼
+  categoryCardWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  categoryActions: {
+    flexDirection: 'row',
+    marginLeft: 8,
+    gap: 4,
+  },
+  editCategoryButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: COLORS.border,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  editCategoryText: {
+    fontSize: 14,
+    color: COLORS.textGray,
+  },
+  deleteCategoryButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#FF6B6B',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  deleteCategoryText: {
+    fontSize: 18,
+    color: COLORS.white,
+    fontWeight: 'bold',
+  },
+  // 모달 스타일
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    width: width - 60,
+    backgroundColor: COLORS.white,
+    borderRadius: 16,
+    padding: 24,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    fontFamily: 'GowunDodum_400Regular',
+    color: COLORS.darkPink,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  modalInput: {
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: 10,
+    padding: 14,
+    fontSize: 15,
+    fontFamily: 'GowunDodum_400Regular',
+    marginBottom: 12,
+  },
+  modalCategoryInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    padding: 12,
+    backgroundColor: COLORS.lightPink,
+    borderRadius: 10,
+  },
+  modalCategoryIcon: {
+    fontSize: 24,
+    marginRight: 10,
+  },
+  modalCategoryName: {
+    fontSize: 16,
+    fontFamily: 'GowunDodum_400Regular',
+    color: COLORS.textDark,
+    fontWeight: '600',
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 8,
+  },
+  modalCancelButton: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 10,
+    backgroundColor: COLORS.border,
+    alignItems: 'center',
+  },
+  modalCancelText: {
+    fontSize: 15,
+    fontFamily: 'GowunDodum_400Regular',
+    color: COLORS.textGray,
+  },
+  modalConfirmButton: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 10,
+    backgroundColor: COLORS.darkPink,
+    alignItems: 'center',
+  },
+  modalConfirmText: {
+    fontSize: 15,
+    fontWeight: 'bold',
+    fontFamily: 'GowunDodum_400Regular',
+    color: COLORS.white,
   },
 });

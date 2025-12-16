@@ -13,15 +13,19 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { COLORS } from '../constants/colors';
+import StepIndicator from '../components/StepIndicator';
 
 const { width } = Dimensions.get('window');
 
-// 예식 타입별 기본 비율
+const ONBOARDING_STEPS = ['날짜 설정', '타임라인', '예산 설정', '배경 선택'];
+const TOTAL_STEPS = 4;
+
+// 예식 타입별 기본 비율 (혼수, 신혼여행 포함)
 const WEDDING_TYPE_RATIOS = {
-  hotel: { venue: 0.55, sdm: 0.15, photo: 0.12, flower: 0.06, ceremony: 0.03, etc: 0.04, reserve: 0.05 },
-  hall: { venue: 0.50, sdm: 0.18, photo: 0.12, flower: 0.07, ceremony: 0.03, etc: 0.05, reserve: 0.05 },
-  house: { venue: 0.45, sdm: 0.18, photo: 0.15, flower: 0.10, ceremony: 0.03, etc: 0.04, reserve: 0.05 },
-  small: { venue: 0.40, sdm: 0.20, photo: 0.18, flower: 0.08, ceremony: 0.04, etc: 0.05, reserve: 0.05 },
+  hotel: { venue: 0.40, sdm: 0.12, photo: 0.10, flower: 0.05, ceremony: 0.03, honeymoon: 0.15, dowry: 0.10, etc: 0.02, reserve: 0.03 },
+  hall: { venue: 0.38, sdm: 0.14, photo: 0.10, flower: 0.05, ceremony: 0.03, honeymoon: 0.15, dowry: 0.10, etc: 0.02, reserve: 0.03 },
+  house: { venue: 0.35, sdm: 0.14, photo: 0.12, flower: 0.08, ceremony: 0.03, honeymoon: 0.13, dowry: 0.10, etc: 0.02, reserve: 0.03 },
+  small: { venue: 0.30, sdm: 0.16, photo: 0.14, flower: 0.06, ceremony: 0.04, honeymoon: 0.15, dowry: 0.10, etc: 0.02, reserve: 0.03 },
 };
 
 const WEDDING_TYPES = [
@@ -37,22 +41,40 @@ const CATEGORIES = [
   { id: 'photo', name: '사진·영상', icon: '📸', color: '#45B7D1' },
   { id: 'flower', name: '플라워·데코', icon: '🌸', color: '#96CEB4' },
   { id: 'ceremony', name: '사회·축가', icon: '🎤', color: '#FFEAA7' },
+  { id: 'honeymoon', name: '신혼여행', icon: '✈️', color: '#87CEEB' },
+  { id: 'dowry', name: '혼수', icon: '🏠', color: '#DEB887' },
   { id: 'etc', name: '기타', icon: '🎁', color: '#DDA0DD' },
   { id: 'reserve', name: '예비비', icon: '💰', color: '#B8B8B8' },
 ];
 
-export default function BudgetSetupScreen({ navigation }) {
+export default function BudgetSetupScreen({ navigation, route }) {
   const [totalBudget, setTotalBudget] = useState('');
   const [parentSupport, setParentSupport] = useState('');
   const [ownSavings, setOwnSavings] = useState('');
-  const [includeHoneymoon, setIncludeHoneymoon] = useState(false);
+  const [includeHoneymoon, setIncludeHoneymoon] = useState(true);
   const [expectedGuests, setExpectedGuests] = useState('');
   const [weddingType, setWeddingType] = useState('hall');
   const [categoryRatios, setCategoryRatios] = useState(WEDDING_TYPE_RATIOS.hall);
+  const [isOnboarding, setIsOnboarding] = useState(false);
 
   useEffect(() => {
     loadExistingData();
+    checkIfOnboarding();
   }, []);
+
+  const checkIfOnboarding = async () => {
+    try {
+      // 예산 데이터가 없으면 온보딩 중
+      const budgetData = await AsyncStorage.getItem('wedding-budget-data');
+      const onboardingProgress = await AsyncStorage.getItem('onboarding-progress');
+
+      if (!budgetData || (onboardingProgress && JSON.parse(onboardingProgress).step === 3)) {
+        setIsOnboarding(true);
+      }
+    } catch (error) {
+      console.error('온보딩 상태 확인 실패:', error);
+    }
+  };
 
   useEffect(() => {
     // 예식 타입이 변경되면 비율 업데이트
@@ -151,15 +173,28 @@ export default function BudgetSetupScreen({ navigation }) {
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
         {/* 헤더 */}
         <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-          >
-            <Text style={styles.backButtonText}>←</Text>
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>예산 설정</Text>
-          <View style={styles.headerRight} />
+          {!isOnboarding && (
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => navigation.goBack()}
+            >
+              <Text style={styles.backButtonText}>←</Text>
+            </TouchableOpacity>
+          )}
+          <Text style={[styles.headerTitle, isOnboarding && { flex: 1, textAlign: 'center' }]}>예산 설정</Text>
+          {!isOnboarding && <View style={styles.headerRight} />}
         </View>
+
+        {/* 온보딩 중일 때 스텝 인디케이터 표시 */}
+        {isOnboarding && (
+          <View style={styles.stepIndicatorContainer}>
+            <StepIndicator
+              currentStep={3}
+              totalSteps={TOTAL_STEPS}
+              stepLabels={ONBOARDING_STEPS}
+            />
+          </View>
+        )}
 
         <View style={styles.content}>
           {/* 총 예산 입력 */}
@@ -188,14 +223,19 @@ export default function BudgetSetupScreen({ navigation }) {
             )}
 
             <View style={styles.toggleRow}>
-              <Text style={styles.toggleLabel}>신혼여행/혼수도 이 예산에 포함</Text>
+              <Text style={styles.toggleLabel}>신혼여행/혼수 예산 별도 관리</Text>
               <Switch
-                value={includeHoneymoon}
-                onValueChange={setIncludeHoneymoon}
+                value={!includeHoneymoon}
+                onValueChange={(val) => setIncludeHoneymoon(!val)}
                 trackColor={{ false: COLORS.border, true: COLORS.lightPink }}
-                thumbColor={includeHoneymoon ? COLORS.darkPink : '#f4f3f4'}
+                thumbColor={!includeHoneymoon ? COLORS.darkPink : '#f4f3f4'}
               />
             </View>
+            {!includeHoneymoon && (
+              <Text style={styles.toggleHint}>
+                * 별도 관리 시 예산 비율에서 제외됩니다
+              </Text>
+            )}
           </View>
 
           {/* 양가 지원금 */}
@@ -577,5 +617,15 @@ const styles = StyleSheet.create({
   },
   bottomSpacing: {
     height: 40,
+  },
+  stepIndicatorContainer: {
+    backgroundColor: COLORS.background,
+    paddingVertical: 10,
+  },
+  toggleHint: {
+    fontSize: 12,
+    fontFamily: 'GowunDodum_400Regular',
+    color: COLORS.textLight,
+    marginTop: 8,
   },
 });

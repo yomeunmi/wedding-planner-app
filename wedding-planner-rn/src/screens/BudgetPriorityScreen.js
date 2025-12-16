@@ -9,8 +9,12 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { COLORS } from '../constants/colors';
+import StepIndicator from '../components/StepIndicator';
 
 const { width } = Dimensions.get('window');
+
+const ONBOARDING_STEPS = ['날짜 설정', '타임라인', '예산 설정', '배경 선택'];
+const TOTAL_STEPS = 4;
 
 const PRIORITY_ITEMS = [
   { id: 'photo', name: '사진·영상', desc: '인생샷을 남기고 싶어요' },
@@ -20,6 +24,7 @@ const PRIORITY_ITEMS = [
   { id: 'flower', name: '플라워·데코', desc: '화려하게 꾸미고 싶어요' },
   { id: 'event', name: '이벤트·연출', desc: '특별한 순간을 만들고 싶어요' },
   { id: 'parents', name: '양가 부모님 대접', desc: '부모님께 효도하고 싶어요' },
+  { id: 'honeymoon', name: '신혼여행', desc: '로맨틱한 여행을 가고 싶어요' },
 ];
 
 // 우선순위에 따른 비율 조정
@@ -31,15 +36,18 @@ const PRIORITY_ADJUSTMENTS = {
   flower: { flower: 0.05 },
   event: { ceremony: 0.03, etc: 0.02 },
   parents: { venue: 0.03, etc: 0.02 },
+  honeymoon: { honeymoon: 0.05 },
 };
 
 export default function BudgetPriorityScreen({ navigation }) {
   const [budgetData, setBudgetData] = useState(null);
   const [selectedPriorities, setSelectedPriorities] = useState([]);
   const [priorityLevels, setPriorityLevels] = useState({});
+  const [isOnboarding, setIsOnboarding] = useState(false);
 
   useEffect(() => {
     loadData();
+    checkIfOnboarding();
   }, []);
 
   const loadData = async () => {
@@ -57,6 +65,20 @@ export default function BudgetPriorityScreen({ navigation }) {
       }
     } catch (error) {
       console.error('데이터 로드 실패:', error);
+    }
+  };
+
+  const checkIfOnboarding = async () => {
+    try {
+      const onboardingProgress = await AsyncStorage.getItem('onboarding-progress');
+      if (onboardingProgress) {
+        const progress = JSON.parse(onboardingProgress);
+        if (progress.step === 3) {
+          setIsOnboarding(true);
+        }
+      }
+    } catch (error) {
+      console.error('온보딩 상태 확인 실패:', error);
     }
   };
 
@@ -108,7 +130,9 @@ export default function BudgetPriorityScreen({ navigation }) {
     // 카테고리별 예산 재계산
     const categories = { ...budgetData.categories };
     Object.keys(categories).forEach(catId => {
-      categories[catId].budgetAmount = Math.round(budgetData.totalBudget * newRatios[catId]);
+      if (newRatios[catId] !== undefined) {
+        categories[catId].budgetAmount = Math.round(budgetData.totalBudget * newRatios[catId]);
+      }
     });
 
     const updatedData = {
@@ -123,11 +147,18 @@ export default function BudgetPriorityScreen({ navigation }) {
 
     try {
       await AsyncStorage.setItem('wedding-budget-data', JSON.stringify(updatedData));
-      // 예산 탭으로 이동
-      navigation.reset({
-        index: 0,
-        routes: [{ name: 'MainTabs', params: { screen: 'Budget' } }],
-      });
+
+      if (isOnboarding) {
+        // 온보딩 중이면 BackgroundImage로 이동
+        await AsyncStorage.setItem('onboarding-progress', JSON.stringify({ step: 4 }));
+        navigation.replace('BackgroundImage');
+      } else {
+        // 메인 탭에서 진입했으면 예산 탭으로 이동
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'MainTabs', params: { screen: 'Budget' } }],
+        });
+      }
     } catch (error) {
       console.error('저장 실패:', error);
     }
@@ -166,15 +197,28 @@ export default function BudgetPriorityScreen({ navigation }) {
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* 헤더 */}
       <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Text style={styles.backButtonText}>←</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>우선순위 설정</Text>
-        <View style={styles.headerRight} />
+        {!isOnboarding && (
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+          >
+            <Text style={styles.backButtonText}>←</Text>
+          </TouchableOpacity>
+        )}
+        <Text style={[styles.headerTitle, isOnboarding && { flex: 1, textAlign: 'center' }]}>우선순위 설정</Text>
+        {!isOnboarding && <View style={styles.headerRight} />}
       </View>
+
+      {/* 온보딩 중일 때 스텝 인디케이터 표시 */}
+      {isOnboarding && (
+        <View style={styles.stepIndicatorContainer}>
+          <StepIndicator
+            currentStep={3}
+            totalSteps={TOTAL_STEPS}
+            stepLabels={ONBOARDING_STEPS}
+          />
+        </View>
+      )}
 
       <View style={styles.content}>
         {/* 안내 */}
@@ -256,7 +300,7 @@ export default function BudgetPriorityScreen({ navigation }) {
             onPress={handleSave}
           >
             <Text style={styles.completeButtonText}>
-              예산 분배 보기
+              {isOnboarding ? '다음' : '예산 분배 보기'}
             </Text>
           </TouchableOpacity>
         </View>
@@ -299,6 +343,10 @@ const styles = StyleSheet.create({
   },
   headerRight: {
     width: 40,
+  },
+  stepIndicatorContainer: {
+    backgroundColor: COLORS.background,
+    paddingVertical: 10,
   },
   content: {
     padding: 20,

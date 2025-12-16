@@ -506,15 +506,22 @@ export class WeddingTimeline {
     return this.timeline.find(item => item.id === itemId);
   }
 
-  // 날짜 업데이트
+  // 날짜 업데이트 및 순서 자동 조정
   async updateItemDate(itemId, newDate) {
     const item = this.timeline.find(i => i.id === itemId);
     if (item) {
       item.date = new Date(newDate);
+      // 날짜순으로 재정렬
+      this.sortTimelineByDate();
       await this.save();
       return true;
     }
     return false;
+  }
+
+  // 타임라인 날짜순 정렬
+  sortTimelineByDate() {
+    this.timeline.sort((a, b) => new Date(a.date) - new Date(b.date));
   }
 
   // 알림 권한 요청 및 초기화

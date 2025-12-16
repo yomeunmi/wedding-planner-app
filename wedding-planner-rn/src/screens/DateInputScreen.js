@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,13 +9,55 @@ import {
   ScrollView,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { COLORS } from '../constants/colors';
+import StepIndicator from '../components/StepIndicator';
+
+const ONBOARDING_STEPS = ['날짜 설정', '타임라인', '예산 설정', '배경 선택'];
+const TOTAL_STEPS = 4;
 
 export default function DateInputScreen({ navigation, timeline }) {
   const [weddingDate, setWeddingDate] = useState(new Date());
   const [startDate, setStartDate] = useState(new Date());
   const [showWeddingPicker, setShowWeddingPicker] = useState(false);
   const [showStartPicker, setShowStartPicker] = useState(false);
+
+  // 저장된 온보딩 진행 상태 로드
+  useEffect(() => {
+    loadSavedProgress();
+  }, []);
+
+  const loadSavedProgress = async () => {
+    try {
+      const savedProgress = await AsyncStorage.getItem('onboarding-progress');
+      if (savedProgress) {
+        const { step, data } = JSON.parse(savedProgress);
+        if (data?.weddingDate) {
+          setWeddingDate(new Date(data.weddingDate));
+        }
+        if (data?.startDate) {
+          setStartDate(new Date(data.startDate));
+        }
+      }
+    } catch (error) {
+      console.error('진행 상태 로드 실패:', error);
+    }
+  };
+
+  const saveProgress = async () => {
+    try {
+      const progress = {
+        step: 1,
+        data: {
+          weddingDate: weddingDate.toISOString(),
+          startDate: startDate.toISOString(),
+        },
+      };
+      await AsyncStorage.setItem('onboarding-progress', JSON.stringify(progress));
+    } catch (error) {
+      console.error('진행 상태 저장 실패:', error);
+    }
+  };
 
   const formatDate = (date) => {
     const year = date.getFullYear();
@@ -45,6 +87,9 @@ export default function DateInputScreen({ navigation, timeline }) {
     timeline.setDates(weddingDate, startDate);
     await timeline.save();
 
+    // 진행 상태 저장
+    await saveProgress();
+
     // 알림 권한 요청 및 초기화
     await timeline.initializeNotifications();
 
@@ -55,6 +100,15 @@ export default function DateInputScreen({ navigation, timeline }) {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.content}>
+        {/* 스텝 인디케이터 */}
+        <View style={styles.stepIndicatorContainer}>
+          <StepIndicator
+            currentStep={1}
+            totalSteps={TOTAL_STEPS}
+            stepLabels={ONBOARDING_STEPS}
+          />
+        </View>
+
         <Text style={styles.title}>웨딩 플래너</Text>
         <Text style={styles.subtitle}>결혼 준비 일정 설정</Text>
 
@@ -100,7 +154,7 @@ export default function DateInputScreen({ navigation, timeline }) {
             style={styles.submitButton}
             onPress={handleCreateTimeline}
           >
-            <Text style={styles.submitButtonText}>일정 만들기</Text>
+            <Text style={styles.submitButtonText}>다음</Text>
           </TouchableOpacity>
         </View>
 
@@ -123,13 +177,16 @@ const styles = StyleSheet.create({
   content: {
     padding: 24,
   },
+  stepIndicatorContainer: {
+    marginTop: 60,
+    marginBottom: 20,
+  },
   title: {
     fontSize: 32,
     fontWeight: 'bold',
     fontFamily: 'GowunDodum_400Regular',
     color: COLORS.darkPink,
     textAlign: 'center',
-    marginTop: 80,
     marginBottom: 8,
   },
   subtitle: {

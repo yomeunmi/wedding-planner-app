@@ -10,16 +10,36 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { COLORS } from '../constants/colors';
+import StepIndicator from '../components/StepIndicator';
+
+const ONBOARDING_STEPS = ['날짜 설정', '타임라인', '예산 설정', '배경 선택'];
+const TOTAL_STEPS = 4;
 
 export default function TimelineConfirmScreen({ navigation, timeline }) {
   const [items, setItems] = useState([]);
 
   useEffect(() => {
     loadTimeline();
+    saveProgress();
   }, []);
 
   const loadTimeline = () => {
     setItems([...timeline.timeline]);
+  };
+
+  const saveProgress = async () => {
+    try {
+      const progress = {
+        step: 2,
+        data: {
+          weddingDate: timeline.weddingDate?.toISOString(),
+          startDate: timeline.startDate?.toISOString(),
+        },
+      };
+      await AsyncStorage.setItem('onboarding-progress', JSON.stringify(progress));
+    } catch (error) {
+      console.error('진행 상태 저장 실패:', error);
+    }
   };
 
   const handleConfirm = async () => {
@@ -36,8 +56,11 @@ export default function TimelineConfirmScreen({ navigation, timeline }) {
       console.log('알림 스케줄링 오류:', error);
     }
 
-    // 배경사진 설정 여부 확인 후 이동
-    navigation.replace('BackgroundImage');
+    // 진행 상태 저장 후 로딩 화면으로 이동
+    await AsyncStorage.setItem('onboarding-progress', JSON.stringify({ step: 3 }));
+
+    // 로딩 화면으로 이동 후 예산 설정으로
+    navigation.replace('OnboardingLoading');
   };
 
   const renderItem = ({ item }) => (
@@ -54,10 +77,19 @@ export default function TimelineConfirmScreen({ navigation, timeline }) {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* 스텝 인디케이터 */}
+      <View style={styles.stepIndicatorContainer}>
+        <StepIndicator
+          currentStep={2}
+          totalSteps={TOTAL_STEPS}
+          stepLabels={ONBOARDING_STEPS}
+        />
+      </View>
+
       <View style={styles.header}>
         <Text style={styles.title}>타임라인이 생성되었습니다!</Text>
         <Text style={styles.subtitle}>
-          아래 일정을 확인하고 메인 화면으로 이동하세요
+          아래 일정을 확인하고 다음 단계로 이동하세요
         </Text>
       </View>
 
@@ -71,7 +103,7 @@ export default function TimelineConfirmScreen({ navigation, timeline }) {
 
       <View style={styles.footer}>
         <TouchableOpacity style={styles.confirmButton} onPress={handleConfirm}>
-          <Text style={styles.confirmButtonText}>이 일정대로 갈께요 💗</Text>
+          <Text style={styles.confirmButtonText}>다음: 예산 설정하기 💰</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -83,8 +115,13 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
+  stepIndicatorContainer: {
+    paddingTop: 10,
+    backgroundColor: COLORS.white,
+  },
   header: {
     padding: 24,
+    paddingTop: 10,
     backgroundColor: COLORS.white,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,

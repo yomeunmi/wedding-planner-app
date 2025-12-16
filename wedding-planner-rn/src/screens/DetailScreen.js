@@ -212,7 +212,7 @@ export default function DetailScreen({ route, navigation, timeline }) {
       setTempDate(selectedDate);
       await timeline.updateItemDate(currentItem.id, selectedDate);
       setCurrentItem({ ...currentItem, date: selectedDate });
-      Alert.alert('알림', '날짜가 변경되었습니다.');
+      Alert.alert('알림', '날짜가 변경되었습니다.\n타임라인 순서가 자동으로 조정됩니다.');
     }
   };
 
@@ -786,6 +786,65 @@ export default function DetailScreen({ route, navigation, timeline }) {
         {/* 웨딩홀 투어 정보 입력 - wedding-hall-tour일 때만 표시 */}
         {currentItem.id === 'wedding-hall-tour' && (
           <View style={styles.section}>
+            {/* 결혼식 날짜 변경 섹션 - 상단에 위치 */}
+            <View style={styles.weddingDateChangeSection}>
+              <Text style={styles.weddingDateChangeLabel}>💒 결혼식 날짜</Text>
+              {!isEditingWeddingDate ? (
+                <View style={styles.weddingDateRow}>
+                  <Text style={styles.currentWeddingDate}>
+                    {timeline.formatDate(timeline.weddingDate)}
+                  </Text>
+                  <TouchableOpacity
+                    style={styles.editWeddingDateButton}
+                    onPress={() => {
+                      setTempWeddingDate(timeline.weddingDate);
+                      setIsEditingWeddingDate(true);
+                    }}
+                  >
+                    <Text style={styles.editWeddingDateButtonText}>✎ 수정</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <View style={styles.weddingDateEditContainer}>
+                  <View style={styles.weddingDateRow}>
+                    <Text style={styles.currentWeddingDate}>
+                      {timeline.formatDate(tempWeddingDate)}
+                    </Text>
+                    <TouchableOpacity
+                      style={styles.changeWeddingDateButton}
+                      onPress={() => {
+                        setShowWeddingDatePicker(true);
+                      }}
+                    >
+                      <Text style={styles.changeWeddingDateButtonText}>날짜 선택</Text>
+                    </TouchableOpacity>
+                  </View>
+                  {showWeddingDatePicker && (
+                    <DateTimePicker
+                      value={tempWeddingDate}
+                      mode="date"
+                      onChange={handleWeddingDateChange}
+                    />
+                  )}
+                  {/* 저장/취소 버튼 */}
+                  <View style={styles.weddingDateActionButtons}>
+                    <TouchableOpacity
+                      style={styles.cancelWeddingDateButton}
+                      onPress={cancelWeddingDateChange}
+                    >
+                      <Text style={styles.cancelWeddingDateButtonText}>취소</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.saveWeddingDateButton}
+                      onPress={saveWeddingDate}
+                    >
+                      <Text style={styles.saveWeddingDateButtonText}>저장</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
+            </View>
+
             <Text style={styles.sectionTitle}>🏛️ 투어 웨딩홀 정보</Text>
             {weddingHalls.map((hall, index) => (
               <View key={hall.id} style={[
@@ -896,65 +955,6 @@ export default function DetailScreen({ route, navigation, timeline }) {
             <TouchableOpacity style={styles.addItemButton} onPress={addWeddingHall}>
               <Text style={styles.addItemButtonText}>+ 웨딩홀 추가하기</Text>
             </TouchableOpacity>
-
-            {/* 결혼식 날짜 변경 섹션 */}
-            <View style={styles.weddingDateChangeSection}>
-              <Text style={styles.weddingDateChangeLabel}>💒 결혼식 날짜</Text>
-              {!isEditingWeddingDate ? (
-                <View style={styles.weddingDateRow}>
-                  <Text style={styles.currentWeddingDate}>
-                    {timeline.formatDate(timeline.weddingDate)}
-                  </Text>
-                  <TouchableOpacity
-                    style={styles.editWeddingDateButton}
-                    onPress={() => {
-                      setTempWeddingDate(timeline.weddingDate);
-                      setIsEditingWeddingDate(true);
-                    }}
-                  >
-                    <Text style={styles.editWeddingDateButtonText}>✎ 수정</Text>
-                  </TouchableOpacity>
-                </View>
-              ) : (
-                <View style={styles.weddingDateEditContainer}>
-                  <View style={styles.weddingDateRow}>
-                    <Text style={styles.currentWeddingDate}>
-                      {timeline.formatDate(tempWeddingDate)}
-                    </Text>
-                    <TouchableOpacity
-                      style={styles.changeWeddingDateButton}
-                      onPress={() => {
-                        setShowWeddingDatePicker(true);
-                      }}
-                    >
-                      <Text style={styles.changeWeddingDateButtonText}>날짜 선택</Text>
-                    </TouchableOpacity>
-                  </View>
-                  {showWeddingDatePicker && (
-                    <DateTimePicker
-                      value={tempWeddingDate}
-                      mode="date"
-                      onChange={handleWeddingDateChange}
-                    />
-                  )}
-                  {/* 저장/취소 버튼 */}
-                  <View style={styles.weddingDateActionButtons}>
-                    <TouchableOpacity
-                      style={styles.cancelWeddingDateButton}
-                      onPress={cancelWeddingDateChange}
-                    >
-                      <Text style={styles.cancelWeddingDateButtonText}>취소</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.saveWeddingDateButton}
-                      onPress={saveWeddingDate}
-                    >
-                      <Text style={styles.saveWeddingDateButtonText}>저장</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              )}
-            </View>
           </View>
         )}
 

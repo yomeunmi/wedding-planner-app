@@ -12,6 +12,7 @@ import { WeddingTimeline } from './src/utils/WeddingTimeline';
 import DateInputScreen from './src/screens/DateInputScreen';
 import TimelineConfirmScreen from './src/screens/TimelineConfirmScreen';
 import BackgroundImageScreen from './src/screens/BackgroundImageScreen';
+import OnboardingLoadingScreen from './src/screens/OnboardingLoadingScreen';
 import HomeScreen from './src/screens/HomeScreen';
 import TimelineScreen from './src/screens/TimelineScreen';
 import BudgetScreen from './src/screens/BudgetScreen';
@@ -317,6 +318,9 @@ export default function App() {
           </Stack.Screen>
           <Stack.Screen name="BackgroundImage">
             {(props) => <BackgroundImageScreen {...props} />}
+          </Stack.Screen>
+          <Stack.Screen name="OnboardingLoading">
+            {(props) => <OnboardingLoadingScreen {...props} />}
           </Stack.Screen>
           <Stack.Screen name="MainTabs" component={MainTabs} />
           <Stack.Screen name="Detail">
