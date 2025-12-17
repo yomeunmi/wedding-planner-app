@@ -669,7 +669,7 @@ const styles = StyleSheet.create({
   addItemRow: {
     alignItems: 'flex-end',
     paddingHorizontal: 16,
-    paddingBottom: 4,
+    paddingBottom: 0,
     backgroundColor: COLORS.background,
   },
   addItemSmallButton: {

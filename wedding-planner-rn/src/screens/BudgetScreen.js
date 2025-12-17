@@ -461,15 +461,7 @@ export default function BudgetScreen({ navigation }) {
 
       {/* 카테고리별 예산 리스트 */}
       <View style={styles.categorySection}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>카테고리별 예산</Text>
-          <TouchableOpacity
-            style={styles.addCategoryButton}
-            onPress={() => setShowAddModal(true)}
-          >
-            <Text style={styles.addCategoryButtonText}>+ 항목 추가</Text>
-          </TouchableOpacity>
-        </View>
+        <Text style={styles.sectionTitle}>카테고리별 예산</Text>
 
         {getAllCategories().map((category) => {
           const catData = budgetData?.categories?.[category.id] || {};
@@ -524,6 +516,16 @@ export default function BudgetScreen({ navigation }) {
 
         {/* 스와이프 삭제 안내 */}
         <Text style={styles.swipeHint}>← 항목을 좌측으로 밀어 삭제할 수 있어요</Text>
+
+        {/* 항목 추가 버튼 */}
+        <View style={styles.addItemRow}>
+          <TouchableOpacity
+            style={styles.addItemSmallButton}
+            onPress={() => setShowAddModal(true)}
+          >
+            <Text style={styles.addItemSmallButtonText}>+ 항목추가</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* 액션 버튼 */}
@@ -943,25 +945,6 @@ const styles = StyleSheet.create({
   bottomSpacing: {
     height: 120,
   },
-  // 섹션 헤더
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  addCategoryButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    backgroundColor: COLORS.darkPink,
-    borderRadius: 8,
-  },
-  addCategoryButtonText: {
-    fontSize: 12,
-    fontFamily: 'GowunDodum_400Regular',
-    color: COLORS.white,
-    fontWeight: '600',
-  },
   // 카테고리 카드 래퍼
   // 스와이프 관련 스타일
   swipeContainer: {
@@ -1002,6 +985,19 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 8,
     marginBottom: 4,
+  },
+  addItemRow: {
+    alignItems: 'flex-end',
+    paddingBottom: 0,
+  },
+  addItemSmallButton: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  addItemSmallButtonText: {
+    fontSize: 11,
+    fontFamily: 'GowunDodum_400Regular',
+    color: COLORS.darkPink,
   },
   // 모달 스타일
   modalOverlay: {
