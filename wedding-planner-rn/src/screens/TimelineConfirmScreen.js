@@ -80,8 +80,8 @@ export default function TimelineConfirmScreen({ navigation, timeline }) {
     setShowDatePicker(false);
     if (selectedDate && editingItem) {
       await timeline.updateItemDate(editingItem.id, selectedDate);
-      // 타임라인 다시 로드 (정렬된 상태로)
-      setItems([...timeline.timeline]);
+      // 타임라인 다시 로드 (정렬된 상태로 새 배열 생성)
+      setItems(timeline.timeline.map(item => ({ ...item })));
       setEditingItem(null);
     }
   };

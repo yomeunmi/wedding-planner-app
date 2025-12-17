@@ -381,16 +381,9 @@ export default function BudgetScreen({ navigation }) {
           const confirmed = catData.confirmedAmount || 0;
           const diff = budget - confirmed;
 
-          let statusIcon = '⏳';
           let statusColor = COLORS.textGray;
           if (confirmed > 0) {
-            if (diff >= 0) {
-              statusIcon = '✅';
-              statusColor = '#4CAF50';
-            } else {
-              statusIcon = '⚠️';
-              statusColor = '#FF9800';
-            }
+            statusColor = diff >= 0 ? '#4CAF50' : '#FF9800';
           }
 
           return (
@@ -403,18 +396,15 @@ export default function BudgetScreen({ navigation }) {
                   categoryIcon: category.icon
                 })}
               >
-                <View style={styles.categoryLeft}>
-                  <Text style={styles.categoryIcon}>{category.icon}</Text>
-                  <View style={styles.categoryInfo}>
-                    <Text style={styles.categoryName}>{category.name}</Text>
-                    <Text style={styles.categoryBudget}>
-                      예산: {formatMoney(budget)}원
-                    </Text>
-                  </View>
+                <View style={styles.categoryInfo}>
+                  <Text style={styles.categoryName}>{category.name}</Text>
+                  <Text style={styles.categoryBudget}>
+                    예산: {formatMoney(budget)}원
+                  </Text>
                 </View>
                 <View style={styles.categoryRight}>
                   <Text style={[styles.categoryStatus, { color: statusColor }]}>
-                    {statusIcon} {confirmed > 0 ? `${formatMoney(confirmed)}원` : '미정'}
+                    {confirmed > 0 ? `${formatMoney(confirmed)}원` : '미정'}
                   </Text>
                   {confirmed > 0 && diff !== 0 && (
                     <Text style={[
@@ -771,10 +761,10 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   categoryCard: {
+    flex: 1,
     backgroundColor: COLORS.white,
     borderRadius: 12,
-    padding: 16,
-    marginBottom: 10,
+    padding: 12,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -783,15 +773,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
-  },
-  categoryLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  categoryIcon: {
-    fontSize: 24,
-    marginRight: 12,
   },
   categoryInfo: {
     flex: 1,
@@ -904,35 +885,36 @@ const styles = StyleSheet.create({
   categoryCardWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 6,
   },
   categoryActions: {
     flexDirection: 'row',
-    marginLeft: 8,
+    marginLeft: 6,
     gap: 4,
+    flexShrink: 0,
   },
   editCategoryButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     backgroundColor: COLORS.border,
     justifyContent: 'center',
     alignItems: 'center',
   },
   editCategoryText: {
-    fontSize: 14,
+    fontSize: 12,
     color: COLORS.textGray,
   },
   deleteCategoryButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     backgroundColor: '#FF6B6B',
     justifyContent: 'center',
     alignItems: 'center',
   },
   deleteCategoryText: {
-    fontSize: 18,
+    fontSize: 16,
     color: COLORS.white,
     fontWeight: 'bold',
   },

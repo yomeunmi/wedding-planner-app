@@ -290,33 +290,41 @@ export default function BudgetSetupScreen({ navigation, route }) {
             </View>
           </View>
 
-          {/* 예식 타입 선택 */}
+          {/* 예식 타입 선택 - 토글 형식 */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>예식 타입</Text>
             <Text style={styles.sectionDesc}>
               예식 타입에 따라 추천 예산 비율이 달라져요
             </Text>
 
-            <View style={styles.typeGrid}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.typeToggleContainer}
+            >
               {WEDDING_TYPES.map((type) => (
                 <TouchableOpacity
                   key={type.id}
                   style={[
-                    styles.typeCard,
-                    weddingType === type.id && styles.typeCardSelected
+                    styles.typeToggle,
+                    weddingType === type.id && styles.typeToggleSelected
                   ]}
                   onPress={() => setWeddingType(type.id)}
                 >
                   <Text style={[
-                    styles.typeName,
-                    weddingType === type.id && styles.typeNameSelected
+                    styles.typeToggleText,
+                    weddingType === type.id && styles.typeToggleTextSelected
                   ]}>
                     {type.name}
                   </Text>
-                  <Text style={styles.typeDesc}>{type.desc}</Text>
                 </TouchableOpacity>
               ))}
-            </View>
+            </ScrollView>
+            {weddingType && (
+              <Text style={styles.typeSelectedDesc}>
+                {WEDDING_TYPES.find(t => t.id === weddingType)?.desc}
+              </Text>
+            )}
           </View>
 
           {/* 예산 비율 미리보기 */}
@@ -512,42 +520,38 @@ const styles = StyleSheet.create({
     fontFamily: 'GowunDodum_400Regular',
     color: COLORS.textGray,
   },
-  typeGrid: {
+  typeToggleContainer: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
+    gap: 8,
+    paddingVertical: 4,
   },
-  typeCard: {
-    width: (width - 70) / 2,
+  typeToggle: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
     backgroundColor: COLORS.background,
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: 'transparent',
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
-  typeCardSelected: {
+  typeToggleSelected: {
+    backgroundColor: COLORS.darkPink,
     borderColor: COLORS.darkPink,
-    backgroundColor: COLORS.lightPink,
   },
-  typeIcon: {
-    fontSize: 28,
-    marginBottom: 8,
-  },
-  typeName: {
+  typeToggleText: {
     fontSize: 14,
-    fontWeight: '600',
     fontFamily: 'GowunDodum_400Regular',
     color: COLORS.textDark,
-    marginBottom: 4,
   },
-  typeNameSelected: {
-    color: COLORS.darkPink,
+  typeToggleTextSelected: {
+    color: COLORS.white,
+    fontWeight: '600',
   },
-  typeDesc: {
-    fontSize: 11,
+  typeSelectedDesc: {
+    fontSize: 13,
     fontFamily: 'GowunDodum_400Regular',
-    color: COLORS.textGray,
+    color: COLORS.darkPink,
+    marginTop: 12,
+    textAlign: 'center',
   },
   chartContainer: {
     gap: 10,
