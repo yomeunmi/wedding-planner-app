@@ -10,6 +10,7 @@ import {
   Dimensions,
   KeyboardAvoidingView,
   Platform,
+  Modal,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { COLORS } from '../constants/colors';
@@ -20,33 +21,37 @@ const { width } = Dimensions.get('window');
 const ONBOARDING_STEPS = ['날짜 설정', '타임라인', '예산 설정', '배경 선택'];
 const TOTAL_STEPS = 4;
 
-// 예식 타입별 기본 비율 (혼수, 신혼여행 포함)
+// 예식 타입별 기본 비율 (플라워/데코, 사회/축가, 예비비, 기타 제거됨)
 const WEDDING_TYPE_RATIOS = {
-  hotel: { venue: 0.40, sdm: 0.12, photo: 0.10, flower: 0.05, ceremony: 0.03, honeymoon: 0.15, dowry: 0.10, etc: 0.02, reserve: 0.03 },
-  hall: { venue: 0.38, sdm: 0.14, photo: 0.10, flower: 0.05, ceremony: 0.03, honeymoon: 0.15, dowry: 0.10, etc: 0.02, reserve: 0.03 },
-  house: { venue: 0.35, sdm: 0.14, photo: 0.12, flower: 0.08, ceremony: 0.03, honeymoon: 0.13, dowry: 0.10, etc: 0.02, reserve: 0.03 },
-  small: { venue: 0.30, sdm: 0.16, photo: 0.14, flower: 0.06, ceremony: 0.04, honeymoon: 0.15, dowry: 0.10, etc: 0.02, reserve: 0.03 },
-  religious: { venue: 0.25, sdm: 0.15, photo: 0.12, flower: 0.05, ceremony: 0.08, honeymoon: 0.18, dowry: 0.12, etc: 0.02, reserve: 0.03 },
+  hotel: { venue: 0.48, sdm: 0.14, photo: 0.12, honeymoon: 0.16, dowry: 0.10 },
+  hall: { venue: 0.46, sdm: 0.16, photo: 0.12, honeymoon: 0.16, dowry: 0.10 },
+  house: { venue: 0.43, sdm: 0.16, photo: 0.15, honeymoon: 0.14, dowry: 0.12 },
+  small: { venue: 0.40, sdm: 0.18, photo: 0.16, honeymoon: 0.16, dowry: 0.10 },
+  religious: { venue: 0.38, sdm: 0.17, photo: 0.15, honeymoon: 0.18, dowry: 0.12 },
 };
 
 const WEDDING_TYPES = [
-  { id: 'hotel', name: '호텔 웨딩', icon: '🏨', desc: '격식있는 럭셔리' },
-  { id: 'hall', name: '웨딩홀', icon: '🏛️', desc: '합리적인 선택' },
-  { id: 'house', name: '하우스 웨딩', icon: '🏡', desc: '감성적인 분위기' },
-  { id: 'small', name: '스몰 웨딩', icon: '💒', desc: '소규모·프라이빗' },
-  { id: 'religious', name: '종교기관', icon: '⛪', desc: '교회·성당·사찰' },
+  { id: 'hotel', name: '호텔 웨딩', desc: '격식있는 럭셔리' },
+  { id: 'hall', name: '웨딩홀', desc: '합리적인 선택' },
+  { id: 'house', name: '하우스 웨딩', desc: '감성적인 분위기' },
+  { id: 'small', name: '스몰 웨딩', desc: '소규모·프라이빗' },
+  { id: 'religious', name: '종교기관', desc: '교회·성당·사찰' },
 ];
 
+// 카테고리 (플라워/데코, 사회/축가는 예식장에 포함, 예비비/기타 제거)
 const CATEGORIES = [
-  { id: 'venue', name: '예식장·식대', icon: '🏛️', color: '#FF6B6B' },
-  { id: 'sdm', name: '스드메', icon: '👗', color: '#4ECDC4' },
-  { id: 'photo', name: '사진·영상', icon: '📸', color: '#45B7D1' },
-  { id: 'flower', name: '플라워·데코', icon: '🌸', color: '#96CEB4' },
-  { id: 'ceremony', name: '사회·축가', icon: '🎤', color: '#FFEAA7' },
-  { id: 'honeymoon', name: '신혼여행', icon: '✈️', color: '#87CEEB' },
-  { id: 'dowry', name: '혼수', icon: '🏠', color: '#DEB887' },
-  { id: 'etc', name: '기타', icon: '🎁', color: '#DDA0DD' },
-  { id: 'reserve', name: '예비비', icon: '💰', color: '#B8B8B8' },
+  { id: 'venue', name: '예식장·식대', color: '#FF6B6B' },
+  { id: 'sdm', name: '스드메', color: '#4ECDC4' },
+  { id: 'photo', name: '사진·영상', color: '#45B7D1' },
+  { id: 'honeymoon', name: '신혼여행', color: '#87CEEB' },
+  { id: 'dowry', name: '혼수', color: '#DEB887' },
+];
+
+// 빠른 금액 입력 버튼 값
+const QUICK_AMOUNTS = [
+  { label: '+10만', value: 100000 },
+  { label: '+100만', value: 1000000 },
+  { label: '+1000만', value: 10000000 },
 ];
 
 export default function BudgetSetupScreen({ navigation, route }) {
@@ -55,9 +60,11 @@ export default function BudgetSetupScreen({ navigation, route }) {
   const [ownSavings, setOwnSavings] = useState('');
   const [includeHoneymoon, setIncludeHoneymoon] = useState(true);
   const [expectedGuests, setExpectedGuests] = useState('');
+  const [foodCostPerPerson, setFoodCostPerPerson] = useState('70000'); // 1인당 식대
   const [weddingType, setWeddingType] = useState('hall');
   const [categoryRatios, setCategoryRatios] = useState(WEDDING_TYPE_RATIOS.hall);
   const [isOnboarding, setIsOnboarding] = useState(false);
+  const [showTypeDropdown, setShowTypeDropdown] = useState(false);
 
   useEffect(() => {
     loadExistingData();
@@ -66,7 +73,6 @@ export default function BudgetSetupScreen({ navigation, route }) {
 
   const checkIfOnboarding = async () => {
     try {
-      // 예산 데이터가 없으면 온보딩 중
       const budgetData = await AsyncStorage.getItem('wedding-budget-data');
       const onboardingProgress = await AsyncStorage.getItem('onboarding-progress');
 
@@ -79,7 +85,6 @@ export default function BudgetSetupScreen({ navigation, route }) {
   };
 
   useEffect(() => {
-    // 예식 타입이 변경되면 비율 업데이트
     setCategoryRatios(WEDDING_TYPE_RATIOS[weddingType]);
   }, [weddingType]);
 
@@ -93,6 +98,7 @@ export default function BudgetSetupScreen({ navigation, route }) {
         if (data.ownSavings) setOwnSavings(String(data.ownSavings));
         if (data.includeHoneymoon !== undefined) setIncludeHoneymoon(data.includeHoneymoon);
         if (data.expectedGuests) setExpectedGuests(String(data.expectedGuests));
+        if (data.foodCostPerPerson) setFoodCostPerPerson(String(data.foodCostPerPerson));
         if (data.weddingType) setWeddingType(data.weddingType);
         if (data.categoryRatios) setCategoryRatios(data.categoryRatios);
       }
@@ -124,6 +130,19 @@ export default function BudgetSetupScreen({ navigation, route }) {
     return num.toLocaleString();
   };
 
+  // 빠른 금액 추가 함수
+  const addQuickAmount = (setter, currentValue, amount) => {
+    const current = currentValue ? parseInt(currentValue) : 0;
+    setter(String(current + amount));
+  };
+
+  // 예식장 식대 계산 (하객수 × 1인당 식대)
+  const calculateVenueFoodCost = () => {
+    const guests = expectedGuests ? parseInt(expectedGuests) : 0;
+    const costPerPerson = foodCostPerPerson ? parseInt(foodCostPerPerson) : 70000;
+    return guests * costPerPerson;
+  };
+
   const handleSave = async () => {
     if (!totalBudget) {
       alert('총 예산을 입력해주세요.');
@@ -131,12 +150,20 @@ export default function BudgetSetupScreen({ navigation, route }) {
     }
 
     const budget = parseInt(totalBudget);
+    const venueFoodCost = calculateVenueFoodCost();
 
     // 카테고리별 예산 계산
     const categories = {};
     CATEGORIES.forEach(cat => {
+      let budgetAmount = Math.round(budget * categoryRatios[cat.id]);
+
+      // 예식장·식대의 경우 최소한 식대 비용 반영
+      if (cat.id === 'venue' && venueFoodCost > 0) {
+        budgetAmount = Math.max(budgetAmount, venueFoodCost);
+      }
+
       categories[cat.id] = {
-        budgetAmount: Math.round(budget * categoryRatios[cat.id]),
+        budgetAmount,
         confirmedAmount: 0,
         items: [],
       };
@@ -148,6 +175,7 @@ export default function BudgetSetupScreen({ navigation, route }) {
       ownSavings: ownSavings ? parseInt(ownSavings) : 0,
       includeHoneymoon,
       expectedGuests: expectedGuests ? parseInt(expectedGuests) : 0,
+      foodCostPerPerson: foodCostPerPerson ? parseInt(foodCostPerPerson) : 70000,
       weddingType,
       categoryRatios,
       categories,
@@ -166,6 +194,7 @@ export default function BudgetSetupScreen({ navigation, route }) {
   };
 
   const budget = totalBudget ? parseInt(totalBudget) : 0;
+  const selectedType = WEDDING_TYPES.find(t => t.id === weddingType);
 
   return (
     <KeyboardAvoidingView
@@ -218,6 +247,25 @@ export default function BudgetSetupScreen({ navigation, route }) {
               <Text style={styles.inputSuffix}>원</Text>
             </View>
 
+            {/* 빠른 금액 입력 버튼 */}
+            <View style={styles.quickAmountContainer}>
+              {QUICK_AMOUNTS.map((item) => (
+                <TouchableOpacity
+                  key={item.label}
+                  style={styles.quickAmountButton}
+                  onPress={() => addQuickAmount(setTotalBudget, totalBudget, item.value)}
+                >
+                  <Text style={styles.quickAmountText}>{item.label}</Text>
+                </TouchableOpacity>
+              ))}
+              <TouchableOpacity
+                style={[styles.quickAmountButton, styles.quickAmountReset]}
+                onPress={() => setTotalBudget('')}
+              >
+                <Text style={styles.quickAmountResetText}>초기화</Text>
+              </TouchableOpacity>
+            </View>
+
             {budget > 0 && (
               <Text style={styles.budgetPreview}>
                 = {formatBudgetPreview(totalBudget)}원
@@ -255,6 +303,24 @@ export default function BudgetSetupScreen({ navigation, route }) {
               />
               <Text style={styles.inputSuffix}>원</Text>
             </View>
+            {/* 빠른 금액 입력 버튼 */}
+            <View style={styles.quickAmountContainer}>
+              {QUICK_AMOUNTS.map((item) => (
+                <TouchableOpacity
+                  key={item.label}
+                  style={styles.quickAmountButton}
+                  onPress={() => addQuickAmount(setParentSupport, parentSupport, item.value)}
+                >
+                  <Text style={styles.quickAmountText}>{item.label}</Text>
+                </TouchableOpacity>
+              ))}
+              <TouchableOpacity
+                style={[styles.quickAmountButton, styles.quickAmountReset]}
+                onPress={() => setParentSupport('')}
+              >
+                <Text style={styles.quickAmountResetText}>초기화</Text>
+              </TouchableOpacity>
+            </View>
           </View>
 
           {/* 예비부부 자금 */}
@@ -272,58 +338,80 @@ export default function BudgetSetupScreen({ navigation, route }) {
               />
               <Text style={styles.inputSuffix}>원</Text>
             </View>
-          </View>
-
-          {/* 예상 하객 수 */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>예상 하객 수</Text>
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={styles.guestInput}
-                placeholder="예: 200"
-                placeholderTextColor={COLORS.textLight}
-                value={expectedGuests}
-                onChangeText={(text) => setExpectedGuests(text.replace(/[^0-9]/g, ''))}
-                keyboardType="numeric"
-              />
-              <Text style={styles.inputSuffix}>명</Text>
+            {/* 빠른 금액 입력 버튼 */}
+            <View style={styles.quickAmountContainer}>
+              {QUICK_AMOUNTS.map((item) => (
+                <TouchableOpacity
+                  key={item.label}
+                  style={styles.quickAmountButton}
+                  onPress={() => addQuickAmount(setOwnSavings, ownSavings, item.value)}
+                >
+                  <Text style={styles.quickAmountText}>{item.label}</Text>
+                </TouchableOpacity>
+              ))}
+              <TouchableOpacity
+                style={[styles.quickAmountButton, styles.quickAmountReset]}
+                onPress={() => setOwnSavings('')}
+              >
+                <Text style={styles.quickAmountResetText}>초기화</Text>
+              </TouchableOpacity>
             </View>
           </View>
 
-          {/* 예식 타입 선택 - 토글 형식 */}
+          {/* 예상 하객 수 및 1인당 식대 */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>예상 하객 수</Text>
+            <Text style={styles.sectionDesc}>예식장·식대 예산 계산에 반영됩니다</Text>
+            <View style={styles.guestRow}>
+              <View style={styles.guestInputWrapper}>
+                <TextInput
+                  style={styles.guestInput}
+                  placeholder="예: 200"
+                  placeholderTextColor={COLORS.textLight}
+                  value={expectedGuests}
+                  onChangeText={(text) => setExpectedGuests(text.replace(/[^0-9]/g, ''))}
+                  keyboardType="numeric"
+                />
+                <Text style={styles.inputSuffix}>명</Text>
+              </View>
+              <Text style={styles.multiplySign}>×</Text>
+              <View style={styles.guestInputWrapper}>
+                <TextInput
+                  style={styles.guestInput}
+                  placeholder="70000"
+                  placeholderTextColor={COLORS.textLight}
+                  value={displayMoney(foodCostPerPerson)}
+                  onChangeText={(text) => setFoodCostPerPerson(formatInputMoney(text))}
+                  keyboardType="numeric"
+                />
+                <Text style={styles.inputSuffix}>원/인</Text>
+              </View>
+            </View>
+            {expectedGuests && foodCostPerPerson && (
+              <Text style={styles.calculatedCost}>
+                예상 식대: {formatBudgetPreview(String(calculateVenueFoodCost()))}원
+              </Text>
+            )}
+          </View>
+
+          {/* 예식 타입 선택 - 드롭다운 */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>예식 타입</Text>
             <Text style={styles.sectionDesc}>
               예식 타입에 따라 추천 예산 비율이 달라져요
             </Text>
 
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.typeToggleContainer}
+            <TouchableOpacity
+              style={styles.dropdown}
+              onPress={() => setShowTypeDropdown(true)}
             >
-              {WEDDING_TYPES.map((type) => (
-                <TouchableOpacity
-                  key={type.id}
-                  style={[
-                    styles.typeToggle,
-                    weddingType === type.id && styles.typeToggleSelected
-                  ]}
-                  onPress={() => setWeddingType(type.id)}
-                >
-                  <Text style={[
-                    styles.typeToggleText,
-                    weddingType === type.id && styles.typeToggleTextSelected
-                  ]}>
-                    {type.name}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-            {weddingType && (
-              <Text style={styles.typeSelectedDesc}>
-                {WEDDING_TYPES.find(t => t.id === weddingType)?.desc}
+              <Text style={styles.dropdownText}>
+                {selectedType?.name || '선택해주세요'}
               </Text>
+              <Text style={styles.dropdownArrow}>▼</Text>
+            </TouchableOpacity>
+            {selectedType && (
+              <Text style={styles.typeSelectedDesc}>{selectedType.desc}</Text>
             )}
           </View>
 
@@ -335,11 +423,19 @@ export default function BudgetSetupScreen({ navigation, route }) {
                 예식 타입을 기준으로 추천된 비율이에요
               </Text>
 
-              {/* 간단한 막대 그래프 */}
               <View style={styles.chartContainer}>
-                {CATEGORIES.map((cat, index) => {
+                {CATEGORIES.map((cat) => {
                   const ratio = categoryRatios[cat.id];
-                  const amount = Math.round(budget * ratio);
+                  let amount = Math.round(budget * ratio);
+
+                  // 예식장의 경우 식대 비용 표시
+                  if (cat.id === 'venue') {
+                    const venueFoodCost = calculateVenueFoodCost();
+                    if (venueFoodCost > amount) {
+                      amount = venueFoodCost;
+                    }
+                  }
+
                   return (
                     <View key={cat.id} style={styles.chartRow}>
                       <View style={styles.chartLabelContainer}>
@@ -379,6 +475,45 @@ export default function BudgetSetupScreen({ navigation, route }) {
           <View style={styles.bottomSpacing} />
         </View>
       </ScrollView>
+
+      {/* 예식 타입 드롭다운 모달 */}
+      <Modal
+        visible={showTypeDropdown}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowTypeDropdown(false)}
+      >
+        <TouchableOpacity
+          style={styles.dropdownOverlay}
+          activeOpacity={1}
+          onPress={() => setShowTypeDropdown(false)}
+        >
+          <View style={styles.dropdownModal}>
+            <Text style={styles.dropdownModalTitle}>예식 타입 선택</Text>
+            {WEDDING_TYPES.map((type) => (
+              <TouchableOpacity
+                key={type.id}
+                style={[
+                  styles.dropdownOption,
+                  weddingType === type.id && styles.dropdownOptionSelected
+                ]}
+                onPress={() => {
+                  setWeddingType(type.id);
+                  setShowTypeDropdown(false);
+                }}
+              >
+                <Text style={[
+                  styles.dropdownOptionText,
+                  weddingType === type.id && styles.dropdownOptionTextSelected
+                ]}>
+                  {type.name}
+                </Text>
+                <Text style={styles.dropdownOptionDesc}>{type.desc}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </KeyboardAvoidingView>
   );
 }
@@ -455,16 +590,44 @@ const styles = StyleSheet.create({
   },
   guestInput: {
     flex: 1,
-    fontSize: 18,
-    fontFamily: 'GowunDodum_400Regular',
-    color: COLORS.textDark,
-    paddingVertical: 12,
-  },
-  inputSuffix: {
     fontSize: 16,
     fontFamily: 'GowunDodum_400Regular',
+    color: COLORS.textDark,
+    paddingVertical: 10,
+  },
+  inputSuffix: {
+    fontSize: 14,
+    fontFamily: 'GowunDodum_400Regular',
     color: COLORS.textGray,
-    marginLeft: 8,
+    marginLeft: 4,
+  },
+  // 빠른 금액 입력 버튼
+  quickAmountContainer: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 12,
+  },
+  quickAmountButton: {
+    flex: 1,
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+    backgroundColor: COLORS.lightPink,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  quickAmountText: {
+    fontSize: 13,
+    fontFamily: 'GowunDodum_400Regular',
+    color: COLORS.darkPink,
+    fontWeight: '600',
+  },
+  quickAmountReset: {
+    backgroundColor: COLORS.border,
+  },
+  quickAmountResetText: {
+    fontSize: 13,
+    fontFamily: 'GowunDodum_400Regular',
+    color: COLORS.textGray,
   },
   budgetPreview: {
     fontSize: 14,
@@ -487,72 +650,117 @@ const styles = StyleSheet.create({
     fontFamily: 'GowunDodum_400Regular',
     color: COLORS.textDark,
   },
-  halfInputRow: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  halfInputContainer: {
-    flex: 1,
-  },
-  inputLabel: {
-    fontSize: 13,
+  toggleHint: {
+    fontSize: 12,
     fontFamily: 'GowunDodum_400Regular',
-    color: COLORS.textGray,
-    marginBottom: 8,
+    color: COLORS.textLight,
+    marginTop: 8,
   },
-  smallInputWrapper: {
+  // 하객 수 입력
+  guestRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  guestInputWrapper: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: COLORS.background,
-    borderRadius: 10,
+    borderRadius: 12,
     paddingHorizontal: 12,
-    paddingVertical: 2,
-  },
-  smallMoneyInput: {
-    flex: 1,
-    fontSize: 15,
-    fontFamily: 'GowunDodum_400Regular',
-    color: COLORS.textDark,
-    paddingVertical: 10,
-  },
-  smallInputSuffix: {
-    fontSize: 14,
-    fontFamily: 'GowunDodum_400Regular',
-    color: COLORS.textGray,
-  },
-  typeToggleContainer: {
-    flexDirection: 'row',
-    gap: 8,
     paddingVertical: 4,
   },
-  typeToggle: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 20,
+  multiplySign: {
+    fontSize: 16,
+    color: COLORS.textGray,
+    fontWeight: '600',
+  },
+  calculatedCost: {
+    fontSize: 14,
+    fontFamily: 'GowunDodum_400Regular',
+    color: COLORS.darkPink,
+    marginTop: 12,
+    textAlign: 'right',
+  },
+  // 드롭다운
+  dropdown: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     backgroundColor: COLORS.background,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
     borderWidth: 1,
     borderColor: COLORS.border,
   },
-  typeToggleSelected: {
-    backgroundColor: COLORS.darkPink,
-    borderColor: COLORS.darkPink,
-  },
-  typeToggleText: {
-    fontSize: 14,
+  dropdownText: {
+    fontSize: 16,
     fontFamily: 'GowunDodum_400Regular',
     color: COLORS.textDark,
   },
-  typeToggleTextSelected: {
-    color: COLORS.white,
-    fontWeight: '600',
+  dropdownArrow: {
+    fontSize: 12,
+    color: COLORS.textGray,
   },
   typeSelectedDesc: {
     fontSize: 13,
     fontFamily: 'GowunDodum_400Regular',
     color: COLORS.darkPink,
-    marginTop: 12,
+    marginTop: 8,
     textAlign: 'center',
   },
+  // 드롭다운 모달
+  dropdownOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  dropdownModal: {
+    width: '100%',
+    backgroundColor: COLORS.white,
+    borderRadius: 16,
+    padding: 20,
+  },
+  dropdownModalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    fontFamily: 'GowunDodum_400Regular',
+    color: COLORS.darkPink,
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  dropdownOption: {
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    marginBottom: 8,
+    backgroundColor: COLORS.background,
+  },
+  dropdownOptionSelected: {
+    backgroundColor: COLORS.lightPink,
+    borderWidth: 1,
+    borderColor: COLORS.darkPink,
+  },
+  dropdownOptionText: {
+    fontSize: 16,
+    fontFamily: 'GowunDodum_400Regular',
+    color: COLORS.textDark,
+    fontWeight: '600',
+  },
+  dropdownOptionTextSelected: {
+    color: COLORS.darkPink,
+  },
+  dropdownOptionDesc: {
+    fontSize: 13,
+    fontFamily: 'GowunDodum_400Regular',
+    color: COLORS.textGray,
+    marginTop: 2,
+  },
+  // 차트
   chartContainer: {
     gap: 10,
   },
@@ -564,10 +772,6 @@ const styles = StyleSheet.create({
     width: 90,
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  chartIcon: {
-    fontSize: 14,
-    marginRight: 4,
   },
   chartLabel: {
     fontSize: 12,
@@ -627,11 +831,5 @@ const styles = StyleSheet.create({
   stepIndicatorContainer: {
     backgroundColor: COLORS.background,
     paddingVertical: 10,
-  },
-  toggleHint: {
-    fontSize: 12,
-    fontFamily: 'GowunDodum_400Regular',
-    color: COLORS.textLight,
-    marginTop: 8,
   },
 });

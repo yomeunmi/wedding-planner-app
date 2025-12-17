@@ -8,6 +8,7 @@ import {
   SafeAreaView,
   Alert,
   Modal,
+  Platform,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -22,6 +23,7 @@ export default function TimelineConfirmScreen({ navigation, timeline }) {
   const [editingItem, setEditingItem] = useState(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [tempDate, setTempDate] = useState(new Date());
+  const [originalDate, setOriginalDate] = useState(null);
 
   useEffect(() => {
     loadTimeline();
@@ -49,7 +51,6 @@ export default function TimelineConfirmScreen({ navigation, timeline }) {
 
   const handleConfirm = async () => {
     try {
-      // 알림 권한 요청 및 스케줄링
       const notificationsEnabled = await AsyncStorage.getItem('notifications-enabled');
       if (notificationsEnabled !== 'false') {
         const hasPermission = await timeline.initializeNotifications();
@@ -61,29 +62,73 @@ export default function TimelineConfirmScreen({ navigation, timeline }) {
       console.log('알림 스케줄링 오류:', error);
     }
 
-    // 진행 상태 저장 후 로딩 화면으로 이동
     await AsyncStorage.setItem('onboarding-progress', JSON.stringify({ step: 3 }));
-
-    // 로딩 화면으로 이동 후 예산 설정으로
     navigation.replace('OnboardingLoading');
   };
 
   // 날짜 편집 시작
   const startEditDate = (item) => {
     setEditingItem(item);
+    setOriginalDate(new Date(item.date));
     setTempDate(new Date(item.date));
     setShowDatePicker(true);
   };
 
-  // 날짜 변경 처리
-  const handleDateChange = async (event, selectedDate) => {
-    setShowDatePicker(false);
-    if (selectedDate && editingItem) {
-      await timeline.updateItemDate(editingItem.id, selectedDate);
-      // 타임라인 다시 로드 (정렬된 상태로 새 배열 생성)
-      setItems(timeline.timeline.map(item => ({ ...item })));
+  // 날짜 변경 처리 (Android)
+  const handleDateChangeAndroid = async (event, selectedDate) => {
+    if (event.type === 'dismissed') {
+      setShowDatePicker(false);
       setEditingItem(null);
+      return;
     }
+
+    if (event.type === 'set' && selectedDate && editingItem) {
+      setShowDatePicker(false);
+
+      // 날짜가 실제로 변경되었는지 확인
+      const oldDate = originalDate;
+      const newDate = selectedDate;
+
+      if (oldDate.toDateString() !== newDate.toDateString()) {
+        await timeline.updateItemDate(editingItem.id, selectedDate);
+        // 정렬된 타임라인으로 상태 업데이트
+        setItems([...timeline.timeline].map(item => ({ ...item })));
+        Alert.alert('완료', '날짜가 변경되었습니다.');
+      }
+
+      setEditingItem(null);
+      setOriginalDate(null);
+    }
+  };
+
+  // 날짜 변경 처리 (iOS - 임시 날짜만 업데이트)
+  const handleDateChangeIOS = (event, selectedDate) => {
+    if (selectedDate) {
+      setTempDate(selectedDate);
+    }
+  };
+
+  // iOS 날짜 선택 확인
+  const confirmDateChangeIOS = async () => {
+    if (editingItem && originalDate) {
+      // 날짜가 실제로 변경되었는지 확인
+      if (originalDate.toDateString() !== tempDate.toDateString()) {
+        await timeline.updateItemDate(editingItem.id, tempDate);
+        // 정렬된 타임라인으로 상태 업데이트
+        setItems([...timeline.timeline].map(item => ({ ...item })));
+        Alert.alert('완료', '날짜가 변경되었습니다.');
+      }
+    }
+    setShowDatePicker(false);
+    setEditingItem(null);
+    setOriginalDate(null);
+  };
+
+  // iOS 날짜 선택 취소
+  const cancelDateChangeIOS = () => {
+    setShowDatePicker(false);
+    setEditingItem(null);
+    setOriginalDate(null);
   };
 
   const renderItem = ({ item }) => (
@@ -129,6 +174,7 @@ export default function TimelineConfirmScreen({ navigation, timeline }) {
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
+        extraData={items}
       />
 
       <View style={styles.footer}>
@@ -137,13 +183,45 @@ export default function TimelineConfirmScreen({ navigation, timeline }) {
         </TouchableOpacity>
       </View>
 
-      {/* 날짜 선택 피커 */}
-      {showDatePicker && (
+      {/* Android 날짜 선택 피커 */}
+      {Platform.OS === 'android' && showDatePicker && (
         <DateTimePicker
           value={tempDate}
           mode="date"
-          onChange={handleDateChange}
+          display="default"
+          onChange={handleDateChangeAndroid}
         />
+      )}
+
+      {/* iOS 날짜 선택 모달 */}
+      {Platform.OS === 'ios' && (
+        <Modal
+          visible={showDatePicker}
+          transparent
+          animationType="slide"
+          onRequestClose={cancelDateChangeIOS}
+        >
+          <View style={styles.iosPickerOverlay}>
+            <View style={styles.iosPickerContainer}>
+              <View style={styles.iosPickerHeader}>
+                <TouchableOpacity onPress={cancelDateChangeIOS}>
+                  <Text style={styles.iosPickerCancel}>취소</Text>
+                </TouchableOpacity>
+                <Text style={styles.iosPickerTitle}>날짜 선택</Text>
+                <TouchableOpacity onPress={confirmDateChangeIOS}>
+                  <Text style={styles.iosPickerConfirm}>확인</Text>
+                </TouchableOpacity>
+              </View>
+              <DateTimePicker
+                value={tempDate}
+                mode="date"
+                display="spinner"
+                onChange={handleDateChangeIOS}
+                style={styles.iosPicker}
+              />
+            </View>
+          </View>
+        </Modal>
       )}
     </SafeAreaView>
   );
@@ -254,5 +332,45 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     fontFamily: 'GowunDodum_400Regular',
+  },
+  // iOS 피커 스타일
+  iosPickerOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+  },
+  iosPickerContainer: {
+    backgroundColor: COLORS.white,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingBottom: 30,
+  },
+  iosPickerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+  },
+  iosPickerTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    fontFamily: 'GowunDodum_400Regular',
+    color: COLORS.textDark,
+  },
+  iosPickerCancel: {
+    fontSize: 16,
+    fontFamily: 'GowunDodum_400Regular',
+    color: COLORS.textGray,
+  },
+  iosPickerConfirm: {
+    fontSize: 16,
+    fontWeight: '600',
+    fontFamily: 'GowunDodum_400Regular',
+    color: COLORS.darkPink,
+  },
+  iosPicker: {
+    height: 200,
   },
 });

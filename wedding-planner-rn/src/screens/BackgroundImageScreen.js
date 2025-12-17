@@ -107,21 +107,25 @@ export default function BackgroundImageScreen({ navigation }) {
           메인 화면에 표시할{'\n'}커플 사진을 선택해주세요
         </Text>
 
-        <View style={styles.imagePreviewContainer}>
+        {/* 사진 영역 - 터치하면 사진 선택 */}
+        <TouchableOpacity
+          style={styles.imagePreviewContainer}
+          onPress={pickImage}
+          activeOpacity={0.8}
+        >
           {selectedImage ? (
-            <Image source={{ uri: selectedImage }} style={styles.imagePreview} />
+            <>
+              <Image source={{ uri: selectedImage }} style={styles.imagePreview} />
+              <View style={styles.imageOverlay}>
+                <Text style={styles.changePhotoText}>다른 사진 선택</Text>
+              </View>
+            </>
           ) : (
             <View style={styles.placeholderContainer}>
-              <Text style={styles.placeholderIcon}>📷</Text>
-              <Text style={styles.placeholderText}>사진을 선택해주세요</Text>
+              <Text style={styles.placeholderIcon}>+</Text>
+              <Text style={styles.placeholderText}>탭하여 사진 선택</Text>
             </View>
           )}
-        </View>
-
-        <TouchableOpacity style={styles.selectButton} onPress={pickImage}>
-          <Text style={styles.selectButtonText}>
-            {selectedImage ? '다른 사진 선택' : '사진 선택'}
-          </Text>
         </TouchableOpacity>
 
         <View style={styles.buttonContainer}>
@@ -130,7 +134,7 @@ export default function BackgroundImageScreen({ navigation }) {
             onPress={handleConfirm}
           >
             <Text style={styles.confirmButtonText}>
-              {isOnboarding ? '시작하기 💕' : '확인'}
+              {isOnboarding ? '시작하기' : '확인'}
             </Text>
           </TouchableOpacity>
 
@@ -190,6 +194,20 @@ const styles = StyleSheet.create({
     height: '100%',
     resizeMode: 'cover',
   },
+  imageOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    paddingVertical: 12,
+  },
+  changePhotoText: {
+    color: COLORS.white,
+    fontSize: 14,
+    fontFamily: 'GowunDodum_400Regular',
+    textAlign: 'center',
+  },
   placeholderContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -199,26 +217,12 @@ const styles = StyleSheet.create({
   placeholderIcon: {
     fontSize: 60,
     marginBottom: 16,
+    color: COLORS.darkPink,
   },
   placeholderText: {
     fontSize: 16,
     fontFamily: 'GowunDodum_400Regular',
     color: COLORS.textGray,
-  },
-  selectButton: {
-    backgroundColor: COLORS.white,
-    borderWidth: 2,
-    borderColor: COLORS.darkPink,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-  },
-  selectButtonText: {
-    color: COLORS.darkPink,
-    fontSize: 16,
-    fontWeight: '600',
-    fontFamily: 'GowunDodum_400Regular',
-    textAlign: 'center',
   },
   buttonContainer: {
     gap: 12,

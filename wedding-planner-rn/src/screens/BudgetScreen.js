@@ -16,17 +16,13 @@ import { COLORS } from '../constants/colors';
 
 const { width } = Dimensions.get('window');
 
-// 카테고리 기본 데이터 (혼수, 신혼여행 포함)
+// 카테고리 기본 데이터 (플라워/데코, 사회/축가는 예식장에 포함, 예비비/기타 제거)
 const DEFAULT_CATEGORIES = [
-  { id: 'venue', name: '예식장·식대', icon: '🏛️', defaultRatio: 0.38 },
-  { id: 'sdm', name: '스드메', icon: '👗', defaultRatio: 0.14 },
-  { id: 'photo', name: '사진·영상', icon: '📸', defaultRatio: 0.10 },
-  { id: 'flower', name: '플라워·데코', icon: '🌸', defaultRatio: 0.05 },
-  { id: 'ceremony', name: '사회·축가', icon: '🎤', defaultRatio: 0.03 },
-  { id: 'honeymoon', name: '신혼여행', icon: '✈️', defaultRatio: 0.15 },
-  { id: 'dowry', name: '혼수', icon: '🏠', defaultRatio: 0.10 },
-  { id: 'etc', name: '기타', icon: '🎁', defaultRatio: 0.02 },
-  { id: 'reserve', name: '예비비', icon: '💰', defaultRatio: 0.03 },
+  { id: 'venue', name: '예식장·식대', defaultRatio: 0.46 },
+  { id: 'sdm', name: '스드메', defaultRatio: 0.16 },
+  { id: 'photo', name: '사진·영상', defaultRatio: 0.12 },
+  { id: 'honeymoon', name: '신혼여행', defaultRatio: 0.16 },
+  { id: 'dowry', name: '혼수', defaultRatio: 0.10 },
 ];
 
 export default function BudgetScreen({ navigation }) {
@@ -444,7 +440,6 @@ export default function BudgetScreen({ navigation }) {
           style={styles.actionButton}
           onPress={() => navigation.navigate('BudgetPriority')}
         >
-          <Text style={styles.actionButtonIcon}>🎯</Text>
           <Text style={styles.actionButtonText}>우선순위 조정</Text>
         </TouchableOpacity>
 
@@ -452,7 +447,6 @@ export default function BudgetScreen({ navigation }) {
           style={[styles.actionButton, styles.actionButtonPrimary]}
           onPress={() => navigation.navigate('BudgetWizard')}
         >
-          <Text style={styles.actionButtonIcon}>✨</Text>
           <Text style={[styles.actionButtonText, styles.actionButtonTextPrimary]}>
             예산 조정 마법사
           </Text>
@@ -823,10 +817,6 @@ const styles = StyleSheet.create({
   actionButtonPrimary: {
     backgroundColor: COLORS.darkPink,
     borderColor: COLORS.darkPink,
-  },
-  actionButtonIcon: {
-    fontSize: 18,
-    marginRight: 8,
   },
   actionButtonText: {
     fontSize: 14,
