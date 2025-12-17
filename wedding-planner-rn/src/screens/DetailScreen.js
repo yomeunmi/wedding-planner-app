@@ -207,13 +207,45 @@ export default function DetailScreen({ route, navigation, timeline }) {
   };
 
   const handleDateChange = async (event, selectedDate) => {
+    // Android에서는 event.type이 'set'일 때만 처리 (확인 버튼 클릭)
+    // iOS에서는 항상 처리
+    if (Platform.OS === 'android') {
+      setShowDatePicker(false);
+      if (event.type === 'set' && selectedDate) {
+        // 날짜가 실제로 변경되었는지 확인
+        const oldDate = currentItem.date.toDateString();
+        const newDate = selectedDate.toDateString();
+        if (oldDate !== newDate) {
+          setTempDate(selectedDate);
+          await timeline.updateItemDate(currentItem.id, selectedDate);
+          setCurrentItem({ ...currentItem, date: selectedDate });
+          Alert.alert('알림', '날짜가 변경되었습니다.\n타임라인 순서가 자동으로 조정됩니다.');
+        }
+      }
+    } else {
+      // iOS
+      if (selectedDate) {
+        setTempDate(selectedDate);
+      }
+    }
+  };
+
+  // iOS용 날짜 확인 핸들러
+  const handleIOSDateConfirm = async () => {
     setShowDatePicker(false);
-    if (selectedDate) {
-      setTempDate(selectedDate);
-      await timeline.updateItemDate(currentItem.id, selectedDate);
-      setCurrentItem({ ...currentItem, date: selectedDate });
+    const oldDate = currentItem.date.toDateString();
+    const newDate = tempDate.toDateString();
+    if (oldDate !== newDate) {
+      await timeline.updateItemDate(currentItem.id, tempDate);
+      setCurrentItem({ ...currentItem, date: tempDate });
       Alert.alert('알림', '날짜가 변경되었습니다.\n타임라인 순서가 자동으로 조정됩니다.');
     }
+  };
+
+  // iOS용 날짜 취소 핸들러
+  const handleIOSDateCancel = () => {
+    setShowDatePicker(false);
+    setTempDate(currentItem.date);
   };
 
   // 메모 저장
@@ -690,12 +722,39 @@ export default function DetailScreen({ route, navigation, timeline }) {
                 <Text style={styles.dateText}>{timeline.formatDate(currentItem.date)}</Text>
                 <Text style={styles.editIcon}>✎</Text>
               </TouchableOpacity>
-              {showDatePicker && (
+              {showDatePicker && Platform.OS === 'android' && (
                 <DateTimePicker
                   value={tempDate}
                   mode="date"
                   onChange={handleDateChange}
                 />
+              )}
+              {showDatePicker && Platform.OS === 'ios' && (
+                <Modal
+                  transparent
+                  animationType="slide"
+                  visible={showDatePicker}
+                  onRequestClose={handleIOSDateCancel}
+                >
+                  <View style={styles.iosDatePickerOverlay}>
+                    <View style={styles.iosDatePickerContainer}>
+                      <View style={styles.iosDatePickerHeader}>
+                        <TouchableOpacity onPress={handleIOSDateCancel}>
+                          <Text style={styles.iosDatePickerCancel}>취소</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={handleIOSDateConfirm}>
+                          <Text style={styles.iosDatePickerConfirm}>확인</Text>
+                        </TouchableOpacity>
+                      </View>
+                      <DateTimePicker
+                        value={tempDate}
+                        mode="date"
+                        display="spinner"
+                        onChange={handleDateChange}
+                      />
+                    </View>
+                  </View>
+                </Modal>
               )}
             </View>
           )}
@@ -785,9 +844,9 @@ export default function DetailScreen({ route, navigation, timeline }) {
 
         {/* 웨딩홀 투어 정보 입력 - wedding-hall-tour일 때만 표시 */}
         {currentItem.id === 'wedding-hall-tour' && (
-          <View style={styles.section}>
-            {/* 결혼식 날짜 변경 섹션 - 상단에 위치 */}
-            <View style={styles.weddingDateChangeSection}>
+          <>
+            {/* 결혼식 날짜 변경 섹션 - 별도 박스 */}
+            <View style={styles.weddingDateBox}>
               <Text style={styles.weddingDateChangeLabel}>💒 결혼식 날짜</Text>
               {!isEditingWeddingDate ? (
                 <View style={styles.weddingDateRow}>
@@ -845,8 +904,10 @@ export default function DetailScreen({ route, navigation, timeline }) {
               )}
             </View>
 
-            <Text style={styles.sectionTitle}>🏛️ 투어 웨딩홀 정보</Text>
-            {weddingHalls.map((hall, index) => (
+            {/* 투어 웨딩홀 정보 섹션 - 별도 박스 */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>🏛️ 투어 웨딩홀 정보</Text>
+              {weddingHalls.map((hall, index) => (
               <View key={hall.id} style={[
                 styles.hallCard,
                 hall.isSelected && styles.hallCardSelected,
@@ -953,9 +1014,10 @@ export default function DetailScreen({ route, navigation, timeline }) {
 
             {/* 웨딩홀 추가 버튼 */}
             <TouchableOpacity style={styles.addItemButton} onPress={addWeddingHall}>
-              <Text style={styles.addItemButtonText}>+ 웨딩홀 추가하기</Text>
-            </TouchableOpacity>
-          </View>
+                <Text style={styles.addItemButtonText}>+ 웨딩홀 추가하기</Text>
+              </TouchableOpacity>
+            </View>
+          </>
         )}
 
         {/* 드레스샵 투어 정보 입력 (간소화 버전) - dress-tour일 때만 표시 */}
@@ -1802,6 +1864,19 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+  },
+  weddingDateBox: {
+    backgroundColor: COLORS.white,
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    borderLeftWidth: 4,
+    borderLeftColor: COLORS.darkPink,
   },
   sectionTitle: {
     fontSize: 18,
@@ -2829,5 +2904,37 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontFamily: 'GowunDodum_400Regular',
     color: COLORS.textGray,
+  },
+  // iOS 날짜 선택기 스타일
+  iosDatePickerOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+  },
+  iosDatePickerContainer: {
+    backgroundColor: COLORS.white,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingBottom: 20,
+  },
+  iosDatePickerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+  },
+  iosDatePickerCancel: {
+    fontSize: 16,
+    fontFamily: 'GowunDodum_400Regular',
+    color: COLORS.textGray,
+  },
+  iosDatePickerConfirm: {
+    fontSize: 16,
+    fontFamily: 'GowunDodum_400Regular',
+    color: COLORS.darkPink,
+    fontWeight: 'bold',
   },
 });

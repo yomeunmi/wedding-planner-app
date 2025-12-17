@@ -9,7 +9,10 @@ import {
   Animated,
   PanResponder,
   Dimensions,
+  Modal,
+  TextInput,
 } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { COLORS } from '../constants/colors';
 
@@ -116,6 +119,11 @@ export default function TimelineScreen({ navigation, timeline }) {
   const [showOnlyPending, setShowOnlyPending] = useState(false);
   const [activeSwipeId, setActiveSwipeId] = useState(null);
   const [deletedItemIds, setDeletedItemIds] = useState([]);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newItemTitle, setNewItemTitle] = useState('');
+  const [newItemDate, setNewItemDate] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [customItems, setCustomItems] = useState([]);
 
   useEffect(() => {
     loadTimeline();
@@ -137,8 +145,17 @@ export default function TimelineScreen({ navigation, timeline }) {
     const deletedIds = savedDeletedIds ? JSON.parse(savedDeletedIds) : [];
     setDeletedItemIds(deletedIds);
 
+    // 커스텀 항목 로드
+    const savedCustomItems = await AsyncStorage.getItem('timeline-custom-items');
+    const customItemsList = savedCustomItems ? JSON.parse(savedCustomItems) : [];
+    setCustomItems(customItemsList);
+
+    // 기본 타임라인 + 커스텀 항목 병합 후 날짜순 정렬
+    const allItems = [...timeline.timeline, ...customItemsList];
+    allItems.sort((a, b) => new Date(a.date) - new Date(b.date));
+
     // 삭제된 항목 제외하고 표시
-    const filteredTimeline = timeline.timeline.filter(item => !deletedIds.includes(item.id));
+    const filteredTimeline = allItems.filter(item => !deletedIds.includes(item.id));
     setItems([...filteredTimeline]);
     setDDay(timeline.getDDay());
     setCompletedCount(filteredTimeline.filter(item => item.completed).length);
@@ -187,6 +204,46 @@ export default function TimelineScreen({ navigation, timeline }) {
         },
       ]
     );
+  };
+
+  // 새 항목 추가
+  const handleAddItem = async () => {
+    if (!newItemTitle.trim()) {
+      Alert.alert('알림', '항목 이름을 입력해주세요.');
+      return;
+    }
+
+    const newItem = {
+      id: `custom-${Date.now()}`,
+      title: newItemTitle.trim(),
+      date: newItemDate,
+      icon: '📌',
+      completed: false,
+      isCustom: true,
+    };
+
+    const updatedCustomItems = [...customItems, newItem];
+    setCustomItems(updatedCustomItems);
+    await AsyncStorage.setItem('timeline-custom-items', JSON.stringify(updatedCustomItems));
+
+    // 전체 목록 업데이트
+    const allItems = [...items, newItem];
+    allItems.sort((a, b) => new Date(a.date) - new Date(b.date));
+    setItems(allItems);
+
+    // 모달 닫기 및 초기화
+    setShowAddModal(false);
+    setNewItemTitle('');
+    setNewItemDate(new Date());
+    Alert.alert('완료', '새 항목이 추가되었습니다.');
+  };
+
+  // 날짜 선택 핸들러
+  const handleDatePickerChange = (event, selectedDate) => {
+    setShowDatePicker(false);
+    if (selectedDate) {
+      setNewItemDate(selectedDate);
+    }
   };
 
   // 아이템별 D-Day 계산
@@ -300,7 +357,7 @@ export default function TimelineScreen({ navigation, timeline }) {
         </View>
       </View>
 
-      {/* 필터 버튼 */}
+      {/* 필터 버튼 + 항목 추가 버튼 */}
       <View style={styles.filterContainer}>
         <TouchableOpacity
           style={[styles.filterButton, showOnlyPending && styles.filterButtonActive]}
@@ -310,7 +367,16 @@ export default function TimelineScreen({ navigation, timeline }) {
             {showOnlyPending ? '전체 보기' : '해야할 것만 보기'}
           </Text>
         </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.addItemButton}
+          onPress={() => setShowAddModal(true)}
+        >
+          <Text style={styles.addItemButtonText}>+ 항목 추가</Text>
+        </TouchableOpacity>
       </View>
+
+      {/* 스와이프 삭제 안내 */}
+      <Text style={styles.swipeHint}>← 항목을 좌측으로 밀어 삭제할 수 있어요</Text>
 
       {/* 타임라인 목록 */}
       <FlatList
@@ -320,6 +386,61 @@ export default function TimelineScreen({ navigation, timeline }) {
         contentContainerStyle={styles.listContent}
         onScrollBeginDrag={() => setActiveSwipeId(null)}
       />
+
+      {/* 항목 추가 모달 */}
+      <Modal
+        visible={showAddModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowAddModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>새 항목 추가</Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="항목 이름"
+              placeholderTextColor={COLORS.textLight}
+              value={newItemTitle}
+              onChangeText={setNewItemTitle}
+            />
+            <TouchableOpacity
+              style={styles.dateSelectButton}
+              onPress={() => setShowDatePicker(true)}
+            >
+              <Text style={styles.dateSelectLabel}>날짜</Text>
+              <Text style={styles.dateSelectValue}>
+                {timeline.formatDate(newItemDate)}
+              </Text>
+            </TouchableOpacity>
+            {showDatePicker && (
+              <DateTimePicker
+                value={newItemDate}
+                mode="date"
+                onChange={handleDatePickerChange}
+              />
+            )}
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.modalCancelButton}
+                onPress={() => {
+                  setShowAddModal(false);
+                  setNewItemTitle('');
+                  setNewItemDate(new Date());
+                }}
+              >
+                <Text style={styles.modalCancelText}>취소</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalConfirmButton}
+                onPress={handleAddItem}
+              >
+                <Text style={styles.modalConfirmText}>추가</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -505,6 +626,9 @@ const styles = StyleSheet.create({
     color: COLORS.textLight,
   },
   filterContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: 16,
     paddingTop: 0,
     paddingBottom: 8,
@@ -528,6 +652,107 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   filterButtonTextActive: {
+    color: COLORS.white,
+  },
+  addItemButton: {
+    backgroundColor: COLORS.darkPink,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  addItemButtonText: {
+    color: COLORS.white,
+    fontSize: 14,
+    fontFamily: 'GowunDodum_400Regular',
+    fontWeight: '600',
+  },
+  swipeHint: {
+    fontSize: 12,
+    fontFamily: 'GowunDodum_400Regular',
+    color: COLORS.textLight,
+    textAlign: 'center',
+    paddingVertical: 4,
+    backgroundColor: COLORS.background,
+  },
+  // 모달 스타일
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    width: SCREEN_WIDTH - 60,
+    backgroundColor: COLORS.white,
+    borderRadius: 16,
+    padding: 24,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    fontFamily: 'GowunDodum_400Regular',
+    color: COLORS.darkPink,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  modalInput: {
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: 10,
+    padding: 14,
+    fontSize: 15,
+    fontFamily: 'GowunDodum_400Regular',
+    marginBottom: 12,
+  },
+  dateSelectButton: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: 10,
+    padding: 14,
+    marginBottom: 12,
+  },
+  dateSelectLabel: {
+    fontSize: 15,
+    fontFamily: 'GowunDodum_400Regular',
+    color: COLORS.textGray,
+  },
+  dateSelectValue: {
+    fontSize: 15,
+    fontFamily: 'GowunDodum_400Regular',
+    color: COLORS.darkPink,
+    fontWeight: '600',
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 8,
+  },
+  modalCancelButton: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 10,
+    backgroundColor: COLORS.border,
+    alignItems: 'center',
+  },
+  modalCancelText: {
+    fontSize: 15,
+    fontFamily: 'GowunDodum_400Regular',
+    color: COLORS.textGray,
+  },
+  modalConfirmButton: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 10,
+    backgroundColor: COLORS.darkPink,
+    alignItems: 'center',
+  },
+  modalConfirmText: {
+    fontSize: 15,
+    fontWeight: 'bold',
+    fontFamily: 'GowunDodum_400Regular',
     color: COLORS.white,
   },
 });
