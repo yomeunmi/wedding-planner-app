@@ -357,7 +357,7 @@ export default function TimelineScreen({ navigation, timeline }) {
         </View>
       </View>
 
-      {/* 필터 버튼 + 항목 추가 버튼 */}
+      {/* 필터 버튼 */}
       <View style={styles.filterContainer}>
         <TouchableOpacity
           style={[styles.filterButton, showOnlyPending && styles.filterButtonActive]}
@@ -367,16 +367,18 @@ export default function TimelineScreen({ navigation, timeline }) {
             {showOnlyPending ? '전체 보기' : '해야할 것만 보기'}
           </Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.addItemButton}
-          onPress={() => setShowAddModal(true)}
-        >
-          <Text style={styles.addItemButtonText}>+ 항목 추가</Text>
-        </TouchableOpacity>
       </View>
 
-      {/* 스와이프 삭제 안내 */}
-      <Text style={styles.swipeHint}>← 항목을 좌측으로 밀어 삭제할 수 있어요</Text>
+      {/* 스와이프 삭제 안내 + 항목 추가 버튼 */}
+      <View style={styles.hintRow}>
+        <Text style={styles.swipeHint}>← 항목을 좌측으로 밀어 삭제할 수 있어요</Text>
+        <TouchableOpacity
+          style={styles.addItemFab}
+          onPress={() => setShowAddModal(true)}
+        >
+          <Text style={styles.addItemFabText}>+</Text>
+        </TouchableOpacity>
+      </View>
 
       {/* 타임라인 목록 */}
       <FlatList
@@ -626,9 +628,6 @@ const styles = StyleSheet.create({
     color: COLORS.textLight,
   },
   filterContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     paddingHorizontal: 16,
     paddingTop: 0,
     paddingBottom: 8,
@@ -654,25 +653,34 @@ const styles = StyleSheet.create({
   filterButtonTextActive: {
     color: COLORS.white,
   },
-  addItemButton: {
-    backgroundColor: COLORS.darkPink,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  addItemButtonText: {
-    color: COLORS.white,
-    fontSize: 14,
-    fontFamily: 'GowunDodum_400Regular',
-    fontWeight: '600',
+  hintRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 4,
+    backgroundColor: COLORS.background,
   },
   swipeHint: {
     fontSize: 12,
     fontFamily: 'GowunDodum_400Regular',
     color: COLORS.textLight,
-    textAlign: 'center',
-    paddingVertical: 4,
-    backgroundColor: COLORS.background,
+    flex: 1,
+  },
+  addItemFab: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: COLORS.darkPink,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 8,
+  },
+  addItemFabText: {
+    color: COLORS.white,
+    fontSize: 20,
+    fontWeight: 'bold',
+    lineHeight: 22,
   },
   // 모달 스타일
   modalOverlay: {
