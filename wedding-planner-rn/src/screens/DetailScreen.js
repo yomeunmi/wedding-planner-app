@@ -20,6 +20,19 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { COLORS } from '../constants/colors';
 import ZoomableImage from '../components/ZoomableImage';
 
+// 타임라인 항목과 예산 카테고리 매핑
+const BUDGET_CATEGORY_MAP = {
+  'wedding-hall-tour': { id: 'venue', name: '예식장·식대' },
+  'new-home': { id: 'dowry', name: '혼수' },
+  'dress-shop-selection': { id: 'sdm', name: '스드메' },
+  'dress-tour': { id: 'sdm', name: '스드메' },
+  'groom-suit': { id: 'sdm', name: '스드메' },
+  'honeymoon': { id: 'honeymoon', name: '신혼여행' },
+  'wedding-studio-booking': { id: 'photo', name: '사진·영상' },
+  'wedding-photo-day': { id: 'photo', name: '사진·영상' },
+  'makeup': { id: 'sdm', name: '스드메' },
+};
+
 export default function DetailScreen({ route, navigation, timeline }) {
   const { item } = route.params;
   // item.date가 문자열일 수 있으므로 Date 객체로 변환
@@ -1695,6 +1708,30 @@ export default function DetailScreen({ route, navigation, timeline }) {
           )}
         </View>
 
+        {/* 예산 연결 버튼 - 예산과 연계된 항목일 때만 표시 */}
+        {BUDGET_CATEGORY_MAP[currentItem.id] && (
+          <TouchableOpacity
+            style={styles.budgetLinkButton}
+            onPress={() => {
+              const budgetCategory = BUDGET_CATEGORY_MAP[currentItem.id];
+              navigation.navigate('Main', {
+                screen: '예산',
+                params: {
+                  screen: 'BudgetCategoryDetail',
+                  params: {
+                    categoryId: budgetCategory.id,
+                    categoryName: budgetCategory.name,
+                  },
+                },
+              });
+            }}
+          >
+            <Text style={styles.budgetLinkButtonText}>
+              💰 {BUDGET_CATEGORY_MAP[currentItem.id].name} 예산 보기
+            </Text>
+          </TouchableOpacity>
+        )}
+
         {/* 완료 버튼 */}
         <TouchableOpacity
           style={[
@@ -2297,6 +2334,22 @@ const styles = StyleSheet.create({
     color: COLORS.white,
     fontSize: 14,
     fontWeight: 'bold',
+  },
+  budgetLinkButton: {
+    backgroundColor: COLORS.white,
+    borderWidth: 2,
+    borderColor: COLORS.darkPink,
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  budgetLinkButtonText: {
+    color: COLORS.darkPink,
+    fontSize: 16,
+    fontWeight: 'bold',
+    fontFamily: 'GowunDodum_400Regular',
+    textAlign: 'center',
   },
   completedButton: {
     backgroundColor: COLORS.darkPink,

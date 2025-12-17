@@ -463,6 +463,19 @@ export default function BudgetScreen({ navigation }) {
       <View style={styles.categorySection}>
         <Text style={styles.sectionTitle}>카테고리별 예산</Text>
 
+        {/* 스와이프 삭제 안내 */}
+        <Text style={styles.swipeHint}>← 항목을 좌측으로 밀어 삭제할 수 있어요</Text>
+
+        {/* 항목 추가 버튼 */}
+        <View style={styles.addItemRow}>
+          <TouchableOpacity
+            style={styles.addItemSmallButton}
+            onPress={() => setShowAddModal(true)}
+          >
+            <Text style={styles.addItemSmallButtonText}>+ 항목추가</Text>
+          </TouchableOpacity>
+        </View>
+
         {getAllCategories().map((category) => {
           const catData = budgetData?.categories?.[category.id] || {};
           const budget = catData.budgetAmount || 0;
@@ -514,18 +527,6 @@ export default function BudgetScreen({ navigation }) {
           );
         })}
 
-        {/* 스와이프 삭제 안내 */}
-        <Text style={styles.swipeHint}>← 항목을 좌측으로 밀어 삭제할 수 있어요</Text>
-
-        {/* 항목 추가 버튼 */}
-        <View style={styles.addItemRow}>
-          <TouchableOpacity
-            style={styles.addItemSmallButton}
-            onPress={() => setShowAddModal(true)}
-          >
-            <Text style={styles.addItemSmallButtonText}>+ 항목추가</Text>
-          </TouchableOpacity>
-        </View>
       </View>
 
       {/* 액션 버튼 */}
@@ -983,7 +984,6 @@ const styles = StyleSheet.create({
     fontFamily: 'GowunDodum_400Regular',
     color: COLORS.textLight,
     textAlign: 'center',
-    marginTop: 8,
     marginBottom: 4,
   },
   addItemRow: {
