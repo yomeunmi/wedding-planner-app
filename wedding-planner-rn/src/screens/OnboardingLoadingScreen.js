@@ -11,9 +11,9 @@ import { COLORS } from '../constants/colors';
 const { width, height } = Dimensions.get('window');
 
 const LOADING_MESSAGES = [
-  { text: '웨딩 타임라인을 만들고 있어요 ✨', emoji: '📅' },
-  { text: '예산 계획을 세우고 있어요 💰', emoji: '💵' },
-  { text: '행복한 결혼 준비를 응원해요 💕', emoji: '💒' },
+  { text: '웨딩 타임라인을 만들고 있어요' },
+  { text: '예산 계획을 세우고 있어요' },
+  { text: '행복한 결혼 준비를 응원해요' },
 ];
 
 export default function OnboardingLoadingScreen({ navigation, route }) {
@@ -21,6 +21,7 @@ export default function OnboardingLoadingScreen({ navigation, route }) {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
   const progressAnim = useRef(new Animated.Value(0)).current;
+  const dotAnim = useRef(new Animated.Value(0)).current;
 
   const { onComplete, loadingType = 'timeline' } = route?.params || {};
 
@@ -66,6 +67,27 @@ export default function OnboardingLoadingScreen({ navigation, route }) {
     animateMessage();
   }, [currentMessageIndex]);
 
+  // 로딩 도트 애니메이션
+  useEffect(() => {
+    const animateDots = () => {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(dotAnim, {
+            toValue: 1,
+            duration: 500,
+            useNativeDriver: true,
+          }),
+          Animated.timing(dotAnim, {
+            toValue: 0,
+            duration: 500,
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
+    };
+    animateDots();
+  }, []);
+
   // 프로그레스 바 애니메이션
   useEffect(() => {
     Animated.timing(progressAnim, {
@@ -91,25 +113,25 @@ export default function OnboardingLoadingScreen({ navigation, route }) {
 
   return (
     <View style={styles.container}>
-      {/* 배경 하트 파티클 */}
-      <View style={styles.particlesContainer}>
-        {[...Array(6)].map((_, i) => (
-          <FloatingHeart key={i} delay={i * 300} />
-        ))}
+      {/* 로딩 인디케이터 */}
+      <View style={styles.loadingIndicator}>
+        <View style={styles.loadingDots}>
+          {[0, 1, 2].map((i) => (
+            <Animated.View
+              key={i}
+              style={[
+                styles.dot,
+                {
+                  opacity: dotAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: i === 1 ? [0.3, 1] : [1, 0.3],
+                  }),
+                },
+              ]}
+            />
+          ))}
+        </View>
       </View>
-
-      {/* 메인 아이콘 */}
-      <Animated.View
-        style={[
-          styles.iconContainer,
-          {
-            opacity: fadeAnim,
-            transform: [{ scale: scaleAnim }],
-          },
-        ]}
-      >
-        <Text style={styles.mainEmoji}>{currentMessage.emoji}</Text>
-      </Animated.View>
 
       {/* 메시지 텍스트 */}
       <Animated.View
@@ -146,75 +168,11 @@ export default function OnboardingLoadingScreen({ navigation, route }) {
 
       {/* 하단 브랜딩 */}
       <View style={styles.brandingContainer}>
-        <Text style={styles.brandingText}>♥ 웨딩플래너</Text>
+        <Text style={styles.brandingText}>웨딩플래너</Text>
       </View>
     </View>
   );
 }
-
-// 플로팅 하트 컴포넌트
-const FloatingHeart = ({ delay }) => {
-  const floatAnim = useRef(new Animated.Value(0)).current;
-  const opacityAnim = useRef(new Animated.Value(0)).current;
-  const randomX = useRef(Math.random() * width).current;
-
-  useEffect(() => {
-    const startAnimation = () => {
-      floatAnim.setValue(0);
-      opacityAnim.setValue(0);
-
-      Animated.sequence([
-        Animated.delay(delay),
-        Animated.parallel([
-          Animated.timing(floatAnim, {
-            toValue: 1,
-            duration: 3000,
-            useNativeDriver: true,
-          }),
-          Animated.sequence([
-            Animated.timing(opacityAnim, {
-              toValue: 0.6,
-              duration: 500,
-              useNativeDriver: true,
-            }),
-            Animated.delay(2000),
-            Animated.timing(opacityAnim, {
-              toValue: 0,
-              duration: 500,
-              useNativeDriver: true,
-            }),
-          ]),
-        ]),
-      ]).start(() => {
-        startAnimation();
-      });
-    };
-
-    startAnimation();
-  }, []);
-
-  return (
-    <Animated.Text
-      style={[
-        styles.floatingHeart,
-        {
-          left: randomX,
-          opacity: opacityAnim,
-          transform: [
-            {
-              translateY: floatAnim.interpolate({
-                inputRange: [0, 1],
-                outputRange: [height, -100],
-              }),
-            },
-          ],
-        },
-      ]}
-    >
-      ♥
-    </Animated.Text>
-  );
-};
 
 const styles = StyleSheet.create({
   container: {
@@ -223,20 +181,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  particlesContainer: {
-    ...StyleSheet.absoluteFillObject,
-    overflow: 'hidden',
+  loadingIndicator: {
+    marginBottom: 40,
   },
-  floatingHeart: {
-    position: 'absolute',
-    fontSize: 20,
-    color: COLORS.lightPink,
+  loadingDots: {
+    flexDirection: 'row',
+    gap: 12,
   },
-  iconContainer: {
-    marginBottom: 30,
-  },
-  mainEmoji: {
-    fontSize: 80,
+  dot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: COLORS.darkPink,
   },
   messageContainer: {
     paddingHorizontal: 40,

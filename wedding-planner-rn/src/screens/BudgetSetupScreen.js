@@ -26,6 +26,7 @@ const WEDDING_TYPE_RATIOS = {
   hall: { venue: 0.38, sdm: 0.14, photo: 0.10, flower: 0.05, ceremony: 0.03, honeymoon: 0.15, dowry: 0.10, etc: 0.02, reserve: 0.03 },
   house: { venue: 0.35, sdm: 0.14, photo: 0.12, flower: 0.08, ceremony: 0.03, honeymoon: 0.13, dowry: 0.10, etc: 0.02, reserve: 0.03 },
   small: { venue: 0.30, sdm: 0.16, photo: 0.14, flower: 0.06, ceremony: 0.04, honeymoon: 0.15, dowry: 0.10, etc: 0.02, reserve: 0.03 },
+  religious: { venue: 0.25, sdm: 0.15, photo: 0.12, flower: 0.05, ceremony: 0.08, honeymoon: 0.18, dowry: 0.12, etc: 0.02, reserve: 0.03 },
 };
 
 const WEDDING_TYPES = [
@@ -33,6 +34,7 @@ const WEDDING_TYPES = [
   { id: 'hall', name: '웨딩홀', icon: '🏛️', desc: '합리적인 선택' },
   { id: 'house', name: '하우스 웨딩', icon: '🏡', desc: '감성적인 분위기' },
   { id: 'small', name: '스몰 웨딩', icon: '💒', desc: '소규모·프라이빗' },
+  { id: 'religious', name: '종교기관', icon: '⛪', desc: '교회·성당·사찰' },
 ];
 
 const CATEGORIES = [
@@ -199,9 +201,9 @@ export default function BudgetSetupScreen({ navigation, route }) {
         <View style={styles.content}>
           {/* 총 예산 입력 */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>예식 당일 예산</Text>
+            <Text style={styles.sectionTitle}>총 진행 예산</Text>
             <Text style={styles.sectionDesc}>
-              예식 당일에 필요한 전체 예산을 입력해주세요
+              결혼 준비 전체에 필요한 예산을 입력해주세요
             </Text>
 
             <View style={styles.inputContainer}>

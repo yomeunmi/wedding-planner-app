@@ -7,7 +7,9 @@ import {
   TouchableOpacity,
   SafeAreaView,
   Alert,
+  Modal,
 } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { COLORS } from '../constants/colors';
 import StepIndicator from '../components/StepIndicator';
@@ -17,6 +19,9 @@ const TOTAL_STEPS = 4;
 
 export default function TimelineConfirmScreen({ navigation, timeline }) {
   const [items, setItems] = useState([]);
+  const [editingItem, setEditingItem] = useState(null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [tempDate, setTempDate] = useState(new Date());
 
   useEffect(() => {
     loadTimeline();
@@ -63,16 +68,41 @@ export default function TimelineConfirmScreen({ navigation, timeline }) {
     navigation.replace('OnboardingLoading');
   };
 
+  // 날짜 편집 시작
+  const startEditDate = (item) => {
+    setEditingItem(item);
+    setTempDate(new Date(item.date));
+    setShowDatePicker(true);
+  };
+
+  // 날짜 변경 처리
+  const handleDateChange = async (event, selectedDate) => {
+    setShowDatePicker(false);
+    if (selectedDate && editingItem) {
+      await timeline.updateItemDate(editingItem.id, selectedDate);
+      // 타임라인 다시 로드 (정렬된 상태로)
+      setItems([...timeline.timeline]);
+      setEditingItem(null);
+    }
+  };
+
   const renderItem = ({ item }) => (
-    <View style={styles.timelineItem}>
+    <TouchableOpacity
+      style={styles.timelineItem}
+      onPress={() => startEditDate(item)}
+      activeOpacity={0.7}
+    >
       <View style={styles.iconContainer}>
         <Text style={styles.icon}>{item.icon}</Text>
       </View>
       <View style={styles.itemContent}>
         <Text style={styles.itemTitle}>{item.title}</Text>
-        <Text style={styles.itemDate}>{timeline.formatDate(item.date)}</Text>
+        <View style={styles.dateRow}>
+          <Text style={styles.itemDate}>{timeline.formatDate(item.date)}</Text>
+          <Text style={styles.editHint}>탭하여 수정</Text>
+        </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 
   return (
@@ -89,7 +119,7 @@ export default function TimelineConfirmScreen({ navigation, timeline }) {
       <View style={styles.header}>
         <Text style={styles.title}>타임라인이 생성되었습니다!</Text>
         <Text style={styles.subtitle}>
-          아래 일정을 확인하고 다음 단계로 이동하세요
+          각 항목을 탭하여 날짜를 조정할 수 있어요
         </Text>
       </View>
 
@@ -103,9 +133,18 @@ export default function TimelineConfirmScreen({ navigation, timeline }) {
 
       <View style={styles.footer}>
         <TouchableOpacity style={styles.confirmButton} onPress={handleConfirm}>
-          <Text style={styles.confirmButtonText}>다음: 예산 설정하기 💰</Text>
+          <Text style={styles.confirmButtonText}>다음</Text>
         </TouchableOpacity>
       </View>
+
+      {/* 날짜 선택 피커 */}
+      {showDatePicker && (
+        <DateTimePicker
+          value={tempDate}
+          mode="date"
+          onChange={handleDateChange}
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -178,10 +217,20 @@ const styles = StyleSheet.create({
     color: COLORS.textDark,
     marginBottom: 4,
   },
+  dateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
   itemDate: {
     fontSize: 14,
     fontFamily: 'GowunDodum_400Regular',
     color: COLORS.textGray,
+  },
+  editHint: {
+    fontSize: 11,
+    fontFamily: 'GowunDodum_400Regular',
+    color: COLORS.darkPink,
   },
   footer: {
     padding: 16,
