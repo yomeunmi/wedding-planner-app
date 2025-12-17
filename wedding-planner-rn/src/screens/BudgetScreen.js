@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -9,12 +9,101 @@ import {
   Modal,
   TextInput,
   Alert,
+  Animated,
+  PanResponder,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { COLORS } from '../constants/colors';
 
 const { width } = Dimensions.get('window');
+const SWIPE_THRESHOLD = -80;
+
+// 스와이프 가능한 행 컴포넌트
+const SwipeableRow = ({ children, onDelete, itemId, activeSwipeId, setActiveSwipeId }) => {
+  const translateX = useRef(new Animated.Value(0)).current;
+  const isActive = activeSwipeId === itemId;
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => false,
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        return Math.abs(gestureState.dx) > 10 && Math.abs(gestureState.dy) < 10;
+      },
+      onPanResponderGrant: () => {
+        translateX.setOffset(translateX._value);
+        translateX.setValue(0);
+      },
+      onPanResponderMove: (_, gestureState) => {
+        if (gestureState.dx < 0) {
+          translateX.setValue(Math.max(gestureState.dx, -100));
+        } else if (gestureState.dx > 0) {
+          translateX.setValue(Math.min(gestureState.dx, 0));
+        }
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        translateX.flattenOffset();
+        if (gestureState.dx < SWIPE_THRESHOLD) {
+          Animated.spring(translateX, {
+            toValue: -80,
+            useNativeDriver: true,
+          }).start();
+          setActiveSwipeId(itemId);
+        } else {
+          Animated.spring(translateX, {
+            toValue: 0,
+            useNativeDriver: true,
+          }).start();
+          if (isActive) {
+            setActiveSwipeId(null);
+          }
+        }
+      },
+    })
+  ).current;
+
+  useEffect(() => {
+    if (activeSwipeId && activeSwipeId !== itemId) {
+      Animated.spring(translateX, {
+        toValue: 0,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [activeSwipeId]);
+
+  const closeSwipe = () => {
+    Animated.spring(translateX, {
+      toValue: 0,
+      useNativeDriver: true,
+    }).start();
+    setActiveSwipeId(null);
+  };
+
+  return (
+    <View style={styles.swipeContainer}>
+      <View style={styles.swipeDeleteButtonContainer}>
+        <TouchableOpacity
+          style={styles.swipeDeleteButton}
+          onPress={() => {
+            closeSwipe();
+            onDelete();
+          }}
+        >
+          <Text style={styles.swipeDeleteButtonText}>삭제</Text>
+        </TouchableOpacity>
+      </View>
+      <Animated.View
+        style={[
+          styles.swipeableContent,
+          { transform: [{ translateX }] },
+        ]}
+        {...panResponder.panHandlers}
+      >
+        {children}
+      </Animated.View>
+    </View>
+  );
+};
 
 // 카테고리 기본 데이터 (플라워/데코, 사회/축가는 예식장에 포함, 예비비/기타 제거)
 const DEFAULT_CATEGORIES = [
@@ -34,6 +123,7 @@ export default function BudgetScreen({ navigation }) {
   const [editingCategory, setEditingCategory] = useState(null);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newCategoryBudget, setNewCategoryBudget] = useState('');
+  const [activeSwipeId, setActiveSwipeId] = useState(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -393,7 +483,13 @@ export default function BudgetScreen({ navigation }) {
           }
 
           return (
-            <View key={category.id} style={styles.categoryCardWrapper}>
+            <SwipeableRow
+              key={category.id}
+              itemId={category.id}
+              onDelete={() => handleDeleteCategory(category)}
+              activeSwipeId={activeSwipeId}
+              setActiveSwipeId={setActiveSwipeId}
+            >
               <TouchableOpacity
                 style={styles.categoryCard}
                 onPress={() => navigation.navigate('BudgetCategoryDetail', {
@@ -422,24 +518,12 @@ export default function BudgetScreen({ navigation }) {
                   )}
                 </View>
               </TouchableOpacity>
-              {/* 편집/삭제 버튼 */}
-              <View style={styles.categoryActions}>
-                <TouchableOpacity
-                  style={styles.editCategoryButton}
-                  onPress={() => openEditModal(category, catData)}
-                >
-                  <Text style={styles.editCategoryText}>✎</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.deleteCategoryButton}
-                  onPress={() => handleDeleteCategory(category)}
-                >
-                  <Text style={styles.deleteCategoryText}>×</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
+            </SwipeableRow>
           );
         })}
+
+        {/* 스와이프 삭제 안내 */}
+        <Text style={styles.swipeHint}>← 항목을 좌측으로 밀어 삭제할 수 있어요</Text>
       </View>
 
       {/* 액션 버튼 */}
@@ -879,41 +963,45 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   // 카테고리 카드 래퍼
-  categoryCardWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 6,
+  // 스와이프 관련 스타일
+  swipeContainer: {
+    marginBottom: 8,
+    position: 'relative',
   },
-  categoryActions: {
-    flexDirection: 'row',
-    marginLeft: 6,
-    gap: 4,
-    flexShrink: 0,
+  swipeDeleteButtonContainer: {
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    bottom: 0,
+    width: 80,
+    justifyContent: 'center',
+    alignItems: 'flex-end',
+    paddingRight: 5,
   },
-  editCategoryButton: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: COLORS.border,
+  swipeDeleteButton: {
+    backgroundColor: '#FF4444',
+    width: 70,
+    height: '90%',
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  editCategoryText: {
-    fontSize: 12,
-    color: COLORS.textGray,
-  },
-  deleteCategoryButton: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: '#FF6B6B',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  deleteCategoryText: {
-    fontSize: 16,
+  swipeDeleteButtonText: {
     color: COLORS.white,
+    fontSize: 14,
+    fontFamily: 'GowunDodum_400Regular',
     fontWeight: 'bold',
+  },
+  swipeableContent: {
+    backgroundColor: COLORS.background,
+  },
+  swipeHint: {
+    fontSize: 12,
+    fontFamily: 'GowunDodum_400Regular',
+    color: COLORS.textLight,
+    textAlign: 'center',
+    marginTop: 8,
+    marginBottom: 4,
   },
   // 모달 스타일
   modalOverlay: {
