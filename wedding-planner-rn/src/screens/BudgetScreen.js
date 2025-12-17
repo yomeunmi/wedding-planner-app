@@ -239,9 +239,9 @@ export default function BudgetScreen({ navigation }) {
     const total = getTotalBudget();
     const ratio = remaining / total;
 
-    if (ratio >= 0.1) return { status: '안전', color: '#4CAF50', icon: '✅' };
-    if (ratio >= 0) return { status: '타이트', color: '#FF9800', icon: '⚠️' };
-    return { status: '초과', color: '#F44336', icon: '🚨' };
+    if (ratio >= 0.1) return { status: '여유', color: '#4CAF50' };
+    if (ratio >= 0) return { status: '타이트', color: '#FF9800' };
+    return { status: '초과', color: '#F44336' };
   };
 
   // 금액 포맷팅
@@ -316,14 +316,19 @@ export default function BudgetScreen({ navigation }) {
       {/* 상단 요약 영역 */}
       <View style={styles.summaryCard}>
         <View style={styles.summaryHeader}>
-          <Text style={styles.summaryLabel}>총 예산</Text>
+          <Text style={styles.summaryLabel}>총 가용 예산</Text>
           <View style={[styles.statusBadge, { backgroundColor: status.color }]}>
-            <Text style={styles.statusText}>{status.icon} {status.status}</Text>
+            <Text style={styles.statusText}>{status.status}</Text>
           </View>
         </View>
 
         <Text style={styles.totalBudgetText}>
           {formatMoney(getTotalBudget())}원
+        </Text>
+
+        {/* 자금 출처 표시 */}
+        <Text style={styles.fundSourceText}>
+          양가 지원금 {formatMoney(budgetData?.parentSupport || 0)}원 + 예비부부 자금 {formatMoney(budgetData?.ownSavings || 0)}원
         </Text>
 
         {/* 게이지 바 */}
@@ -343,17 +348,17 @@ export default function BudgetScreen({ navigation }) {
 
         <View style={styles.summaryRow}>
           <View style={styles.summaryItem}>
-            <Text style={styles.summaryItemLabel}>예상 지출</Text>
+            <Text style={styles.summaryItemLabel}>카테고리 합계</Text>
             <Text style={styles.summaryItemValue}>{formatMoney(getExpectedSpending())}원</Text>
           </View>
           <View style={styles.summaryDivider} />
           <View style={styles.summaryItem}>
-            <Text style={styles.summaryItemLabel}>여유</Text>
+            <Text style={styles.summaryItemLabel}>{getRemainingBudget() >= 0 ? '여유' : '초과'}</Text>
             <Text style={[
               styles.summaryItemValue,
-              { color: getRemainingBudget() >= 0 ? COLORS.darkPink : '#F44336' }
+              { color: getRemainingBudget() >= 0 ? '#4CAF50' : '#F44336' }
             ]}>
-              {getRemainingBudget() >= 0 ? '' : '-'}{formatMoney(Math.abs(getRemainingBudget()))}원
+              {getRemainingBudget() >= 0 ? '+' : '-'}{formatMoney(Math.abs(getRemainingBudget()))}원
             </Text>
           </View>
         </View>
@@ -703,7 +708,13 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontFamily: 'GowunDodum_400Regular',
     color: COLORS.textDark,
-    marginBottom: 16,
+    marginBottom: 4,
+  },
+  fundSourceText: {
+    fontSize: 12,
+    fontFamily: 'GowunDodum_400Regular',
+    color: COLORS.textGray,
+    marginBottom: 12,
   },
   gaugeContainer: {
     marginBottom: 16,

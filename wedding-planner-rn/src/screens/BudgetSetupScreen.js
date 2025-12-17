@@ -21,7 +21,7 @@ const { width } = Dimensions.get('window');
 const ONBOARDING_STEPS = ['날짜 설정', '타임라인', '예산 설정', '배경 선택'];
 const TOTAL_STEPS = 4;
 
-// 예식 타입별 기본 비율 (플라워/데코, 사회/축가, 예비비, 기타 제거됨)
+// 예식 타입별 기본 비율
 const WEDDING_TYPE_RATIOS = {
   hotel: { venue: 0.48, sdm: 0.14, photo: 0.12, honeymoon: 0.16, dowry: 0.10 },
   hall: { venue: 0.46, sdm: 0.16, photo: 0.12, honeymoon: 0.16, dowry: 0.10 },
@@ -38,7 +38,7 @@ const WEDDING_TYPES = [
   { id: 'religious', name: '종교기관', desc: '교회·성당·사찰' },
 ];
 
-// 카테고리 (플라워/데코, 사회/축가는 예식장에 포함, 예비비/기타 제거)
+// 카테고리
 const CATEGORIES = [
   { id: 'venue', name: '예식장·식대', color: '#FF6B6B' },
   { id: 'sdm', name: '스드메', color: '#4ECDC4' },
@@ -55,12 +55,11 @@ const QUICK_AMOUNTS = [
 ];
 
 export default function BudgetSetupScreen({ navigation, route }) {
-  const [totalBudget, setTotalBudget] = useState('');
   const [parentSupport, setParentSupport] = useState('');
   const [ownSavings, setOwnSavings] = useState('');
   const [includeHoneymoon, setIncludeHoneymoon] = useState(true);
   const [expectedGuests, setExpectedGuests] = useState('');
-  const [foodCostPerPerson, setFoodCostPerPerson] = useState('70000'); // 1인당 식대
+  const [foodCostPerPerson, setFoodCostPerPerson] = useState('70000');
   const [weddingType, setWeddingType] = useState('hall');
   const [categoryRatios, setCategoryRatios] = useState(WEDDING_TYPE_RATIOS.hall);
   const [isOnboarding, setIsOnboarding] = useState(false);
@@ -93,7 +92,6 @@ export default function BudgetSetupScreen({ navigation, route }) {
       const saved = await AsyncStorage.getItem('wedding-budget-data');
       if (saved) {
         const data = JSON.parse(saved);
-        if (data.totalBudget) setTotalBudget(String(data.totalBudget));
         if (data.parentSupport) setParentSupport(String(data.parentSupport));
         if (data.ownSavings) setOwnSavings(String(data.ownSavings));
         if (data.includeHoneymoon !== undefined) setIncludeHoneymoon(data.includeHoneymoon);
@@ -136,6 +134,13 @@ export default function BudgetSetupScreen({ navigation, route }) {
     setter(String(current + amount));
   };
 
+  // 총 가용 예산 계산 (양가 지원금 + 예비부부 자금)
+  const getTotalAvailable = () => {
+    const parent = parentSupport ? parseInt(parentSupport) : 0;
+    const own = ownSavings ? parseInt(ownSavings) : 0;
+    return parent + own;
+  };
+
   // 예식장 식대 계산 (하객수 × 1인당 식대)
   const calculateVenueFoodCost = () => {
     const guests = expectedGuests ? parseInt(expectedGuests) : 0;
@@ -144,18 +149,19 @@ export default function BudgetSetupScreen({ navigation, route }) {
   };
 
   const handleSave = async () => {
-    if (!totalBudget) {
-      alert('총 예산을 입력해주세요.');
+    const totalBudget = getTotalAvailable();
+
+    if (totalBudget <= 0) {
+      alert('양가 지원금 또는 예비부부 자금을 입력해주세요.');
       return;
     }
 
-    const budget = parseInt(totalBudget);
     const venueFoodCost = calculateVenueFoodCost();
 
     // 카테고리별 예산 계산
     const categories = {};
     CATEGORIES.forEach(cat => {
-      let budgetAmount = Math.round(budget * categoryRatios[cat.id]);
+      let budgetAmount = Math.round(totalBudget * categoryRatios[cat.id]);
 
       // 예식장·식대의 경우 최소한 식대 비용 반영
       if (cat.id === 'venue' && venueFoodCost > 0) {
@@ -170,7 +176,7 @@ export default function BudgetSetupScreen({ navigation, route }) {
     });
 
     const budgetData = {
-      totalBudget: budget,
+      totalBudget,
       parentSupport: parentSupport ? parseInt(parentSupport) : 0,
       ownSavings: ownSavings ? parseInt(ownSavings) : 0,
       includeHoneymoon,
@@ -193,8 +199,9 @@ export default function BudgetSetupScreen({ navigation, route }) {
     }
   };
 
-  const budget = totalBudget ? parseInt(totalBudget) : 0;
+  const totalBudget = getTotalAvailable();
   const selectedType = WEDDING_TYPES.find(t => t.id === weddingType);
+  const canProceed = totalBudget > 0;
 
   return (
     <KeyboardAvoidingView
@@ -228,74 +235,14 @@ export default function BudgetSetupScreen({ navigation, route }) {
         )}
 
         <View style={styles.content}>
-          {/* 총 예산 입력 */}
+          {/* 양가 지원금 */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>총 진행 예산</Text>
-            <Text style={styles.sectionDesc}>
-              결혼 준비 전체에 필요한 예산을 입력해주세요
-            </Text>
-
+            <Text style={styles.sectionTitle}>양가 지원금</Text>
+            <Text style={styles.sectionDesc}>양가에서 지원받는 금액을 입력해주세요</Text>
             <View style={styles.inputContainer}>
               <TextInput
                 style={styles.moneyInput}
                 placeholder="예: 30000000"
-                placeholderTextColor={COLORS.textLight}
-                value={displayMoney(totalBudget)}
-                onChangeText={(text) => setTotalBudget(formatInputMoney(text))}
-                keyboardType="numeric"
-              />
-              <Text style={styles.inputSuffix}>원</Text>
-            </View>
-
-            {/* 빠른 금액 입력 버튼 */}
-            <View style={styles.quickAmountContainer}>
-              {QUICK_AMOUNTS.map((item) => (
-                <TouchableOpacity
-                  key={item.label}
-                  style={styles.quickAmountButton}
-                  onPress={() => addQuickAmount(setTotalBudget, totalBudget, item.value)}
-                >
-                  <Text style={styles.quickAmountText}>{item.label}</Text>
-                </TouchableOpacity>
-              ))}
-              <TouchableOpacity
-                style={[styles.quickAmountButton, styles.quickAmountReset]}
-                onPress={() => setTotalBudget('')}
-              >
-                <Text style={styles.quickAmountResetText}>초기화</Text>
-              </TouchableOpacity>
-            </View>
-
-            {budget > 0 && (
-              <Text style={styles.budgetPreview}>
-                = {formatBudgetPreview(totalBudget)}원
-              </Text>
-            )}
-
-            <View style={styles.toggleRow}>
-              <Text style={styles.toggleLabel}>신혼여행/혼수 예산 별도 관리</Text>
-              <Switch
-                value={!includeHoneymoon}
-                onValueChange={(val) => setIncludeHoneymoon(!val)}
-                trackColor={{ false: COLORS.border, true: COLORS.lightPink }}
-                thumbColor={!includeHoneymoon ? COLORS.darkPink : '#f4f3f4'}
-              />
-            </View>
-            {!includeHoneymoon && (
-              <Text style={styles.toggleHint}>
-                * 별도 관리 시 예산 비율에서 제외됩니다
-              </Text>
-            )}
-          </View>
-
-          {/* 양가 지원금 */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>양가 지원금</Text>
-            <Text style={styles.sectionDesc}>선택 사항이에요</Text>
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={styles.moneyInput}
-                placeholder="0"
                 placeholderTextColor={COLORS.textLight}
                 value={displayMoney(parentSupport)}
                 onChangeText={(text) => setParentSupport(formatInputMoney(text))}
@@ -326,11 +273,11 @@ export default function BudgetSetupScreen({ navigation, route }) {
           {/* 예비부부 자금 */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>예비부부 자금</Text>
-            <Text style={styles.sectionDesc}>선택 사항이에요</Text>
+            <Text style={styles.sectionDesc}>직접 준비한 결혼 자금을 입력해주세요</Text>
             <View style={styles.inputContainer}>
               <TextInput
                 style={styles.moneyInput}
-                placeholder="0"
+                placeholder="예: 20000000"
                 placeholderTextColor={COLORS.textLight}
                 value={displayMoney(ownSavings)}
                 onChangeText={(text) => setOwnSavings(formatInputMoney(text))}
@@ -356,6 +303,35 @@ export default function BudgetSetupScreen({ navigation, route }) {
                 <Text style={styles.quickAmountResetText}>초기화</Text>
               </TouchableOpacity>
             </View>
+          </View>
+
+          {/* 총 가용 예산 표시 */}
+          {totalBudget > 0 && (
+            <View style={styles.totalBudgetCard}>
+              <Text style={styles.totalBudgetLabel}>총 가용 예산</Text>
+              <Text style={styles.totalBudgetValue}>{formatBudgetPreview(String(totalBudget))}원</Text>
+              <Text style={styles.totalBudgetDetail}>
+                양가 지원금 {formatBudgetPreview(parentSupport || '0')}원 + 예비부부 자금 {formatBudgetPreview(ownSavings || '0')}원
+              </Text>
+            </View>
+          )}
+
+          {/* 신혼여행/혼수 별도 관리 */}
+          <View style={styles.section}>
+            <View style={styles.toggleRow}>
+              <Text style={styles.toggleLabel}>신혼여행/혼수 예산 별도 관리</Text>
+              <Switch
+                value={!includeHoneymoon}
+                onValueChange={(val) => setIncludeHoneymoon(!val)}
+                trackColor={{ false: COLORS.border, true: COLORS.lightPink }}
+                thumbColor={!includeHoneymoon ? COLORS.darkPink : '#f4f3f4'}
+              />
+            </View>
+            {!includeHoneymoon && (
+              <Text style={styles.toggleHint}>
+                * 별도 관리 시 예산 비율에서 제외됩니다
+              </Text>
+            )}
           </View>
 
           {/* 예상 하객 수 및 1인당 식대 */}
@@ -416,7 +392,7 @@ export default function BudgetSetupScreen({ navigation, route }) {
           </View>
 
           {/* 예산 비율 미리보기 */}
-          {budget > 0 && (
+          {totalBudget > 0 && (
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>예산 배분 미리보기</Text>
               <Text style={styles.sectionDesc}>
@@ -426,7 +402,7 @@ export default function BudgetSetupScreen({ navigation, route }) {
               <View style={styles.chartContainer}>
                 {CATEGORIES.map((cat) => {
                   const ratio = categoryRatios[cat.id];
-                  let amount = Math.round(budget * ratio);
+                  let amount = Math.round(totalBudget * ratio);
 
                   // 예식장의 경우 식대 비용 표시
                   if (cat.id === 'venue') {
@@ -465,9 +441,9 @@ export default function BudgetSetupScreen({ navigation, route }) {
 
           {/* 다음 버튼 */}
           <TouchableOpacity
-            style={[styles.nextButton, !totalBudget && styles.nextButtonDisabled]}
+            style={[styles.nextButton, !canProceed && styles.nextButtonDisabled]}
             onPress={handleSave}
-            disabled={!totalBudget}
+            disabled={!canProceed}
           >
             <Text style={styles.nextButtonText}>다음 (우선순위 정하기)</Text>
           </TouchableOpacity>
@@ -629,21 +605,38 @@ const styles = StyleSheet.create({
     fontFamily: 'GowunDodum_400Regular',
     color: COLORS.textGray,
   },
-  budgetPreview: {
+  // 총 가용 예산 카드
+  totalBudgetCard: {
+    backgroundColor: COLORS.darkPink,
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
+    alignItems: 'center',
+  },
+  totalBudgetLabel: {
     fontSize: 14,
     fontFamily: 'GowunDodum_400Regular',
-    color: COLORS.darkPink,
-    marginTop: 8,
-    textAlign: 'right',
+    color: COLORS.white,
+    opacity: 0.9,
+    marginBottom: 4,
+  },
+  totalBudgetValue: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    fontFamily: 'GowunDodum_400Regular',
+    color: COLORS.white,
+    marginBottom: 8,
+  },
+  totalBudgetDetail: {
+    fontSize: 12,
+    fontFamily: 'GowunDodum_400Regular',
+    color: COLORS.white,
+    opacity: 0.8,
   },
   toggleRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 16,
-    paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.border,
   },
   toggleLabel: {
     fontSize: 14,

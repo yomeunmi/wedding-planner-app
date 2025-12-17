@@ -474,6 +474,9 @@ export class WeddingTimeline {
         return item;
       });
 
+      // 날짜순으로 재정렬
+      this.sortTimelineByDate();
+
       // 완료 상태 복원
       await this.loadCompletionStatus();
 
