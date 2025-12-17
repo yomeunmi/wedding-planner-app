@@ -145,9 +145,12 @@ export default function TimelineScreen({ navigation, timeline }) {
     const deletedIds = savedDeletedIds ? JSON.parse(savedDeletedIds) : [];
     setDeletedItemIds(deletedIds);
 
-    // 커스텀 항목 로드
+    // 커스텀 항목 로드 (날짜를 Date 객체로 변환)
     const savedCustomItems = await AsyncStorage.getItem('timeline-custom-items');
-    const customItemsList = savedCustomItems ? JSON.parse(savedCustomItems) : [];
+    const customItemsList = savedCustomItems ? JSON.parse(savedCustomItems).map(item => ({
+      ...item,
+      date: new Date(item.date),
+    })) : [];
     setCustomItems(customItemsList);
 
     // 기본 타임라인 + 커스텀 항목 병합 후 날짜순 정렬
@@ -369,14 +372,16 @@ export default function TimelineScreen({ navigation, timeline }) {
         </TouchableOpacity>
       </View>
 
-      {/* 스와이프 삭제 안내 + 항목 추가 버튼 */}
-      <View style={styles.hintRow}>
-        <Text style={styles.swipeHint}>← 항목을 좌측으로 밀어 삭제할 수 있어요</Text>
+      {/* 스와이프 삭제 안내 */}
+      <Text style={styles.swipeHint}>← 항목을 좌측으로 밀어 삭제할 수 있어요</Text>
+
+      {/* 항목 추가 버튼 */}
+      <View style={styles.addItemRow}>
         <TouchableOpacity
-          style={styles.addItemFab}
+          style={styles.addItemSmallButton}
           onPress={() => setShowAddModal(true)}
         >
-          <Text style={styles.addItemFabText}>+</Text>
+          <Text style={styles.addItemSmallButtonText}>+ 항목추가</Text>
         </TouchableOpacity>
       </View>
 
@@ -653,34 +658,28 @@ const styles = StyleSheet.create({
   filterButtonTextActive: {
     color: COLORS.white,
   },
-  hintRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 4,
-    backgroundColor: COLORS.background,
-  },
   swipeHint: {
     fontSize: 12,
     fontFamily: 'GowunDodum_400Regular',
     color: COLORS.textLight,
-    flex: 1,
+    textAlign: 'center',
+    paddingVertical: 4,
+    backgroundColor: COLORS.background,
   },
-  addItemFab: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: COLORS.darkPink,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginLeft: 8,
+  addItemRow: {
+    alignItems: 'flex-end',
+    paddingHorizontal: 16,
+    paddingBottom: 4,
+    backgroundColor: COLORS.background,
   },
-  addItemFabText: {
-    color: COLORS.white,
-    fontSize: 20,
-    fontWeight: 'bold',
-    lineHeight: 22,
+  addItemSmallButton: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  addItemSmallButtonText: {
+    fontSize: 11,
+    fontFamily: 'GowunDodum_400Regular',
+    color: COLORS.darkPink,
   },
   // 모달 스타일
   modalOverlay: {
