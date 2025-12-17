@@ -73,19 +73,27 @@ export default function BackgroundImageScreen({ navigation }) {
     // 배경사진 저장
     await AsyncStorage.setItem('wedding-background-image', selectedImage);
 
-    // 온보딩 완료
-    await completeOnboarding();
-
-    // 메인 화면(탭 네비게이션)으로 이동
-    navigation.replace('MainTabs');
+    if (isOnboarding) {
+      // 온보딩 중이면 로딩 화면으로 이동
+      navigation.replace('OnboardingLoading');
+    } else {
+      // 온보딩 완료
+      await completeOnboarding();
+      // 메인 화면(탭 네비게이션)으로 이동
+      navigation.replace('MainTabs');
+    }
   };
 
   const handleSkip = async () => {
-    // 온보딩 완료
-    await completeOnboarding();
-
-    // 나중에 설정하기
-    navigation.replace('MainTabs');
+    if (isOnboarding) {
+      // 온보딩 중이면 로딩 화면으로 이동
+      navigation.replace('OnboardingLoading');
+    } else {
+      // 온보딩 완료
+      await completeOnboarding();
+      // 나중에 설정하기
+      navigation.replace('MainTabs');
+    }
   };
 
   return (

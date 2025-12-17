@@ -165,20 +165,25 @@ export default function BudgetScreen({ navigation }) {
     }
   };
 
-  // 예산 카테고리 삭제 (커스텀 카테고리만 가능)
-  const handleDeleteCategory = (categoryId) => {
+  // 예산 카테고리 삭제
+  const handleDeleteCategory = (category) => {
+    const isDefault = DEFAULT_CATEGORIES.some(c => c.id === category.id);
+    const message = isDefault
+      ? '기본 예산 항목을 삭제하시겠습니까?\n(나중에 예산 설정에서 다시 추가할 수 있습니다)'
+      : '이 예산 항목을 삭제하시겠습니까?';
+
     Alert.alert(
       '예산 항목 삭제',
-      '이 예산 항목을 삭제하시겠습니까?',
+      message,
       [
         { text: '취소', style: 'cancel' },
         {
           text: '삭제',
           style: 'destructive',
           onPress: async () => {
-            const newCustomCategories = customCategories.filter(cat => cat.id !== categoryId);
+            const newCustomCategories = customCategories.filter(cat => cat.id !== category.id);
             const updatedCategories = { ...budgetData.categories };
-            delete updatedCategories[categoryId];
+            delete updatedCategories[category.id];
 
             const updatedData = {
               ...budgetData,
@@ -277,7 +282,7 @@ export default function BudgetScreen({ navigation }) {
               <Text style={styles.featureText}>총 예산 대비 지출 현황 한눈에</Text>
             </View>
             <View style={styles.featureItem}>
-              <Text style={styles.featureText}>우선순위에 따른 예산 배분</Text>
+              <Text style={styles.featureText}>카테고리별 예산 배분 및 관리</Text>
             </View>
             <View style={styles.featureItem}>
               <Text style={styles.featureText}>불필요한 옵션 걸러내기 & 플래너 팁</Text>
@@ -425,14 +430,12 @@ export default function BudgetScreen({ navigation }) {
                 >
                   <Text style={styles.editCategoryText}>✎</Text>
                 </TouchableOpacity>
-                {category.isCustom && (
-                  <TouchableOpacity
-                    style={styles.deleteCategoryButton}
-                    onPress={() => handleDeleteCategory(category.id)}
-                  >
-                    <Text style={styles.deleteCategoryText}>×</Text>
-                  </TouchableOpacity>
-                )}
+                <TouchableOpacity
+                  style={styles.deleteCategoryButton}
+                  onPress={() => handleDeleteCategory(category)}
+                >
+                  <Text style={styles.deleteCategoryText}>×</Text>
+                </TouchableOpacity>
               </View>
             </View>
           );
@@ -441,13 +444,6 @@ export default function BudgetScreen({ navigation }) {
 
       {/* 액션 버튼 */}
       <View style={styles.actionSection}>
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={() => navigation.navigate('BudgetPriority')}
-        >
-          <Text style={styles.actionButtonText}>우선순위 조정</Text>
-        </TouchableOpacity>
-
         <TouchableOpacity
           style={[styles.actionButton, styles.actionButtonPrimary]}
           onPress={() => navigation.navigate('BudgetWizard')}

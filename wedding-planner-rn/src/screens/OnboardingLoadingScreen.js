@@ -97,12 +97,14 @@ export default function OnboardingLoadingScreen({ navigation, route }) {
     }).start();
 
     // 5초 후 다음 화면으로 이동
-    const timer = setTimeout(() => {
+    const timer = setTimeout(async () => {
       if (onComplete) {
         onComplete();
       } else {
-        // 예산 설정 화면으로 이동
-        navigation.replace('BudgetSetup');
+        // 온보딩 완료 처리
+        await AsyncStorage.removeItem('onboarding-progress');
+        // 메인 화면으로 이동
+        navigation.replace('MainTabs');
       }
     }, 5000);
 

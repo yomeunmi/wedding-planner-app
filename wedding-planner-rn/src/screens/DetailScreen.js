@@ -2079,8 +2079,12 @@ const styles = StyleSheet.create({
   weddingDateChangeSection: {
     marginTop: 16,
     paddingTop: 16,
+    paddingBottom: 20,
+    marginBottom: 20,
     borderTopWidth: 1,
     borderTopColor: COLORS.lightPink,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.lightPink,
   },
   weddingDateChangeLabel: {
     fontSize: 16,

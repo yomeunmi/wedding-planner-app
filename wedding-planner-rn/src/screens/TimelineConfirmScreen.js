@@ -63,7 +63,7 @@ export default function TimelineConfirmScreen({ navigation, timeline }) {
     }
 
     await AsyncStorage.setItem('onboarding-progress', JSON.stringify({ step: 3 }));
-    navigation.replace('OnboardingLoading');
+    navigation.replace('BudgetSetup');
   };
 
   // 날짜 편집 시작

@@ -158,14 +158,15 @@ export default function BudgetSetupScreen({ navigation, route }) {
 
     const venueFoodCost = calculateVenueFoodCost();
 
-    // 카테고리별 예산 계산
+    // 카테고리별 예산 계산 (만원 단위로 절사)
     const categories = {};
     CATEGORIES.forEach(cat => {
-      let budgetAmount = Math.round(totalBudget * categoryRatios[cat.id]);
+      let budgetAmount = Math.floor((totalBudget * categoryRatios[cat.id]) / 10000) * 10000;
 
-      // 예식장·식대의 경우 최소한 식대 비용 반영
+      // 예식장·식대의 경우 최소한 식대 비용 반영 (만원 단위)
       if (cat.id === 'venue' && venueFoodCost > 0) {
-        budgetAmount = Math.max(budgetAmount, venueFoodCost);
+        const roundedVenueCost = Math.floor(venueFoodCost / 10000) * 10000;
+        budgetAmount = Math.max(budgetAmount, roundedVenueCost);
       }
 
       categories[cat.id] = {
@@ -192,7 +193,8 @@ export default function BudgetSetupScreen({ navigation, route }) {
 
     try {
       await AsyncStorage.setItem('wedding-budget-data', JSON.stringify(budgetData));
-      navigation.navigate('BudgetPriority');
+      await AsyncStorage.setItem('onboarding-progress', JSON.stringify({ step: 4 }));
+      navigation.navigate('BackgroundImage');
     } catch (error) {
       console.error('저장 실패:', error);
       alert('저장에 실패했습니다.');
@@ -434,7 +436,7 @@ export default function BudgetSetupScreen({ navigation, route }) {
               </View>
 
               <Text style={styles.chartNote}>
-                * 다음 단계에서 우선순위에 따라 세부 조정 가능해요
+                * 설정 완료 후 예산 화면에서 수정할 수 있어요
               </Text>
             </View>
           )}
@@ -445,7 +447,7 @@ export default function BudgetSetupScreen({ navigation, route }) {
             onPress={handleSave}
             disabled={!canProceed}
           >
-            <Text style={styles.nextButtonText}>다음 (우선순위 정하기)</Text>
+            <Text style={styles.nextButtonText}>다음</Text>
           </TouchableOpacity>
 
           <View style={styles.bottomSpacing} />
