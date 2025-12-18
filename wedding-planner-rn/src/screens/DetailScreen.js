@@ -371,12 +371,36 @@ export default function DetailScreen({ route, navigation, timeline }) {
   // 결혼식 날짜 저장
   const saveWeddingDate = async () => {
     try {
+      // 기존 타임라인 날짜 저장 (사용자가 수정한 날짜 유지를 위해)
+      const savedDates = {};
+      timeline.timeline.forEach(item => {
+        savedDates[item.id] = new Date(item.date);
+      });
+
       // WeddingTimeline의 weddingDate 업데이트
       await AsyncStorage.setItem('wedding-date', tempWeddingDate.toISOString());
       timeline.weddingDate = tempWeddingDate;
 
-      // 타임라인 재계산 (모든 날짜 업데이트 포함)
+      // 타임라인 재계산 (기본 날짜로 재계산됨)
       timeline.calculateTimeline();
+
+      // 기존에 사용자가 수정한 날짜 복원 (결혼식 당일은 제외 - 새 결혼식 날짜 사용)
+      timeline.timeline = timeline.timeline.map(item => {
+        if (item.id === 'wedding-day') {
+          // 결혼식 당일은 새로운 결혼식 날짜로 유지
+          return item;
+        }
+        if (savedDates[item.id]) {
+          return {
+            ...item,
+            date: savedDates[item.id]
+          };
+        }
+        return item;
+      });
+
+      // 날짜순으로 재정렬
+      timeline.sortTimelineByDate();
 
       // 완료 상태 복원
       await timeline.loadCompletionStatus();
@@ -390,7 +414,7 @@ export default function DetailScreen({ route, navigation, timeline }) {
 
       Alert.alert(
         '알림',
-        `결혼식 날짜가 ${timeline.formatDate(tempWeddingDate)}로 변경되었습니다. 🎉\n모든 타임라인 날짜가 업데이트되었습니다.`,
+        `결혼식 날짜가 ${timeline.formatDate(tempWeddingDate)}로 변경되었습니다. 🎉\n기존 타임라인 날짜는 유지됩니다.`,
         [
           {
             text: '확인',
