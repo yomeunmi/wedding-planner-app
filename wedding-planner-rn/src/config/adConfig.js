@@ -12,18 +12,17 @@ const TEST_AD_UNITS = {
   REWARDED: TestIds.REWARDED,
 };
 
-// 프로덕션 광고 단위 ID (AdMob에서 생성한 실제 ID로 교체 필요)
-// TODO: 실제 AdMob 광고 단위 ID로 교체하세요
+// 프로덕션 광고 단위 ID
 const PRODUCTION_AD_UNITS = {
   android: {
-    BANNER: 'ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX', // Android 배너 광고 ID
-    INTERSTITIAL: 'ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX', // Android 전면 광고 ID
-    REWARDED: 'ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX', // Android 보상형 광고 ID
+    BANNER: 'ca-app-pub-7269831011386790/4350883866', // Android 배너 광고 ID
+    INTERSTITIAL: 'ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX', // Android 전면 광고 ID (추후 생성)
+    REWARDED: 'ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX', // Android 보상형 광고 ID (추후 생성)
   },
   ios: {
-    BANNER: 'ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX', // iOS 배너 광고 ID
-    INTERSTITIAL: 'ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX', // iOS 전면 광고 ID
-    REWARDED: 'ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX', // iOS 보상형 광고 ID
+    BANNER: 'ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX', // iOS 배너 광고 ID (추후 생성)
+    INTERSTITIAL: 'ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX', // iOS 전면 광고 ID (추후 생성)
+    REWARDED: 'ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX', // iOS 보상형 광고 ID (추후 생성)
   },
 };
 
