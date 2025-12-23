@@ -17,7 +17,7 @@
       "buildNumber": "8",
       "infoPlist": {
         "UIBackgroundModes": ["remote-notification"],
-        "GADApplicationIdentifier": "ca-app-pub-3940256099942544~1458002511",
+        "GADApplicationIdentifier": "ca-app-pub-7269831011386790~3030703968",
         "SKAdNetworkItems": [
           { "SKAdNetworkIdentifier": "cstr6suwn9.skadnetwork" },
           { "SKAdNetworkIdentifier": "4fzdc2evr5.skadnetwork" },
