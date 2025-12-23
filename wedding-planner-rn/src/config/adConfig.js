@@ -16,12 +16,12 @@ const TEST_AD_UNITS = {
 const PRODUCTION_AD_UNITS = {
   android: {
     BANNER: 'ca-app-pub-7269831011386790/4350883866', // Android 배너 광고 ID
-    INTERSTITIAL: 'ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX', // Android 전면 광고 ID (추후 생성)
+    INTERSTITIAL: 'ca-app-pub-7269831011386790/6785475513', // Android 전면 광고 ID (추후 생성)
     REWARDED: 'ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX', // Android 보상형 광고 ID (추후 생성)
   },
   ios: {
-    BANNER: 'ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX', // iOS 배너 광고 ID (추후 생성)
-    INTERSTITIAL: 'ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX', // iOS 전면 광고 ID (추후 생성)
+    BANNER: 'ca-app-pub-7269831011386790/2570898330', // iOS 배너 광고 ID (추후 생성)
+    INTERSTITIAL: 'ca-app-pub-7269831011386790/5701099338', // iOS 전면 광고 ID (추후 생성)
     REWARDED: 'ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX', // iOS 보상형 광고 ID (추후 생성)
   },
 };
