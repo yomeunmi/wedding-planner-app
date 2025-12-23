@@ -19,6 +19,8 @@ import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { COLORS } from '../constants/colors';
 import ZoomableImage from '../components/ZoomableImage';
+import AdBanner from '../components/AdBanner';
+import adManager from '../utils/AdManager';
 
 // 타임라인 항목과 예산 카테고리 매핑
 const BUDGET_CATEGORY_MAP = {
@@ -96,6 +98,8 @@ export default function DetailScreen({ route, navigation, timeline }) {
   // 데이터 불러오기
   useEffect(() => {
     loadData();
+    // 화면 전환 시 전면 광고 표시 로직 실행
+    adManager.onScreenChange();
   }, []);
 
   // 데이터 저장
@@ -1769,6 +1773,11 @@ export default function DetailScreen({ route, navigation, timeline }) {
           </Text>
         </TouchableOpacity>
       </View>
+
+      {/* 광고 배너 */}
+      <View style={styles.adContainer}>
+        <AdBanner />
+      </View>
     </ScrollView>
 
     {/* 이미지 크게 보기 Modal */}
@@ -3013,5 +3022,10 @@ const styles = StyleSheet.create({
     fontFamily: 'GowunDodum_400Regular',
     color: COLORS.darkPink,
     fontWeight: 'bold',
+  },
+  adContainer: {
+    marginTop: 20,
+    marginBottom: 20,
+    alignItems: 'center',
   },
 });

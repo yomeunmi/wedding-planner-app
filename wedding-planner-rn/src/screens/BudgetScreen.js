@@ -15,6 +15,7 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { COLORS } from '../constants/colors';
+import AdBanner from '../components/AdBanner';
 
 const { width } = Dimensions.get('window');
 const SWIPE_THRESHOLD = -80;
@@ -550,6 +551,11 @@ export default function BudgetScreen({ navigation }) {
         </Text>
       </View>
 
+      {/* 광고 배너 */}
+      <View style={styles.adContainer}>
+        <AdBanner />
+      </View>
+
       <View style={styles.bottomSpacing} />
 
       {/* 예산 항목 추가 모달 */}
@@ -1076,5 +1082,10 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontFamily: 'GowunDodum_400Regular',
     color: COLORS.white,
+  },
+  adContainer: {
+    marginTop: 16,
+    marginHorizontal: 16,
+    alignItems: 'center',
   },
 });

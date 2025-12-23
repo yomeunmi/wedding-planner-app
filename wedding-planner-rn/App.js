@@ -8,6 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Notifications from 'expo-notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { WeddingTimeline } from './src/utils/WeddingTimeline';
+import adManager from './src/utils/AdManager';
 
 import DateInputScreen from './src/screens/DateInputScreen';
 import TimelineConfirmScreen from './src/screens/TimelineConfirmScreen';
@@ -129,6 +130,14 @@ export default function App() {
     } catch (error) {
       console.log('NotificationManager initialization failed:', error);
     }
+
+    try {
+      // AdManager 초기화 (전면 광고 사전 로드)
+      await adManager.initialize();
+    } catch (error) {
+      console.log('AdManager initialization failed:', error);
+    }
+
     await checkSavedData();
   };
 

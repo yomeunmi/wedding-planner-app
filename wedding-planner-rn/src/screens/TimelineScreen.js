@@ -15,6 +15,7 @@ import {
 import DateTimePicker from '@react-native-community/datetimepicker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { COLORS } from '../constants/colors';
+import AdBanner from '../components/AdBanner';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const SWIPE_THRESHOLD = -80;
@@ -392,6 +393,11 @@ export default function TimelineScreen({ navigation, timeline }) {
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
         onScrollBeginDrag={() => setActiveSwipeId(null)}
+        ListFooterComponent={
+          <View style={styles.adContainer}>
+            <AdBanner />
+          </View>
+        }
       />
 
       {/* 항목 추가 모달 */}
@@ -761,5 +767,10 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontFamily: 'GowunDodum_400Regular',
     color: COLORS.white,
+  },
+  adContainer: {
+    marginTop: 16,
+    marginBottom: 20,
+    alignItems: 'center',
   },
 });

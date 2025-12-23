@@ -11,6 +11,7 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { COLORS } from '../constants/colors';
+import AdBanner from '../components/AdBanner';
 
 export default function HomeScreen({ timeline }) {
   const [backgroundImage, setBackgroundImage] = useState(null);
@@ -124,6 +125,11 @@ export default function HomeScreen({ timeline }) {
             </Text>
           </TouchableOpacity>
         </View>
+
+        {/* 광고 배너 */}
+        <View style={styles.adContainer}>
+          <AdBanner />
+        </View>
       </View>
     </View>
   );
@@ -213,5 +219,9 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
     fontFamily: 'GowunDodum_400Regular',
+  },
+  adContainer: {
+    marginTop: 10,
+    alignItems: 'center',
   },
 });
