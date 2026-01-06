@@ -12,9 +12,9 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true,
+      "supportsTablet": false,
       "bundleIdentifier": "com.yomeunmi.weddingplanner",
-      "buildNumber": "9",
+      "buildNumber": "10",
       "infoPlist": {
         "UIBackgroundModes": ["remote-notification"],
         "GADApplicationIdentifier": "ca-app-pub-7269831011386790~3030703968",
