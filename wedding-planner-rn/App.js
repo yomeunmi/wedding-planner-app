@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { View, Text, StyleSheet, Animated, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Animated, ActivityIndicator, TouchableOpacity, Platform } from 'react-native';
 import { useFonts, GowunDodum_400Regular } from '@expo-google-fonts/gowun-dodum';
 import { Ionicons } from '@expo/vector-icons';
 import * as Notifications from 'expo-notifications';
@@ -125,12 +125,14 @@ export default function App() {
   }, []);
 
   const initializeApp = async () => {
-    try {
-      // ATT (App Tracking Transparency) 권한 요청 - 광고 추적 동의
-      const { status } = await requestTrackingPermissionsAsync();
-      console.log('Tracking permission status:', status);
-    } catch (error) {
-      console.log('Tracking permission request failed:', error);
+    // ATT (App Tracking Transparency) 권한 요청 - iOS에서만 실행
+    if (Platform.OS === 'ios') {
+      try {
+        const { status } = await requestTrackingPermissionsAsync();
+        console.log('Tracking permission status:', status);
+      } catch (error) {
+        console.log('Tracking permission request failed:', error);
+      }
     }
 
     try {
