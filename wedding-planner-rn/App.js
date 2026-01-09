@@ -6,7 +6,6 @@ import { View, Text, StyleSheet, Animated, ActivityIndicator, TouchableOpacity, 
 import { useFonts, GowunDodum_400Regular } from '@expo-google-fonts/gowun-dodum';
 import { Ionicons } from '@expo/vector-icons';
 import * as Notifications from 'expo-notifications';
-import { requestTrackingPermissionsAsync } from 'expo-tracking-transparency';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { WeddingTimeline } from './src/utils/WeddingTimeline';
 import adManager from './src/utils/AdManager';
@@ -125,16 +124,6 @@ export default function App() {
   }, []);
 
   const initializeApp = async () => {
-    // ATT (App Tracking Transparency) 권한 요청 - iOS에서만 실행
-    if (Platform.OS === 'ios') {
-      try {
-        const { status } = await requestTrackingPermissionsAsync();
-        console.log('Tracking permission status:', status);
-      } catch (error) {
-        console.log('Tracking permission request failed:', error);
-      }
-    }
-
     try {
       // NotificationManager 초기화
       await NotificationManager.initialize();
