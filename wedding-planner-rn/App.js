@@ -6,6 +6,7 @@ import { View, Text, StyleSheet, Animated, ActivityIndicator, TouchableOpacity, 
 import { useFonts, GowunDodum_400Regular } from '@expo-google-fonts/gowun-dodum';
 import { Ionicons } from '@expo/vector-icons';
 import * as Notifications from 'expo-notifications';
+import { requestTrackingPermissionsAsync } from 'expo-tracking-transparency';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { WeddingTimeline } from './src/utils/WeddingTimeline';
 import adManager from './src/utils/AdManager';
@@ -122,6 +123,23 @@ export default function App() {
       notificationResponseSubscription.remove();
     };
   }, []);
+
+  // 앱이 완전히 로드된 후 ATT 권한 요청 (iOS만)
+  useEffect(() => {
+    if (showApp && Platform.OS === 'ios') {
+      // 앱 표시 후 1초 지연 후 ATT 권한 요청
+      const timer = setTimeout(async () => {
+        try {
+          const { status } = await requestTrackingPermissionsAsync();
+          console.log('Tracking permission status:', status);
+        } catch (error) {
+          console.log('Tracking permission request failed:', error);
+        }
+      }, 1000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [showApp]);
 
   const initializeApp = async () => {
     try {
