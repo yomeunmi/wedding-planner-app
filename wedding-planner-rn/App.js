@@ -6,7 +6,6 @@ import { View, Text, StyleSheet, Animated, ActivityIndicator, TouchableOpacity, 
 import { useFonts, GowunDodum_400Regular } from '@expo-google-fonts/gowun-dodum';
 import { Ionicons } from '@expo/vector-icons';
 import * as Notifications from 'expo-notifications';
-import { requestTrackingPermissionsAsync } from 'expo-tracking-transparency';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { WeddingTimeline } from './src/utils/WeddingTimeline';
 import adManager from './src/utils/AdManager';
@@ -130,6 +129,7 @@ export default function App() {
       // 앱 표시 후 1초 지연 후 ATT 권한 요청
       const timer = setTimeout(async () => {
         try {
+          const { requestTrackingPermissionsAsync } = require('expo-tracking-transparency');
           const { status } = await requestTrackingPermissionsAsync();
           console.log('Tracking permission status:', status);
         } catch (error) {
