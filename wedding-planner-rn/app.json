@@ -14,7 +14,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.yomeunmi.weddingplanner",
-      "buildNumber": "16",
+      "buildNumber": "17",
       "infoPlist": {
         "UIBackgroundModes": ["remote-notification"],
         "GADApplicationIdentifier": "ca-app-pub-7269831011386790~3030703968",
@@ -89,7 +89,8 @@
           "androidAppId": "ca-app-pub-7269831011386790~1293475687",
           "iosAppId": "ca-app-pub-7269831011386790~3030703968"
         }
-      ]
+      ],
+      "expo-tracking-transparency"
     ]
   }
 }

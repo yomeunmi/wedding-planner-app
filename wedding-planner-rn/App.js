@@ -123,24 +123,6 @@ export default function App() {
     };
   }, []);
 
-  // 앱이 완전히 로드된 후 ATT 권한 요청 (iOS만)
-  useEffect(() => {
-    if (showApp && Platform.OS === 'ios') {
-      // 앱 표시 후 1초 지연 후 ATT 권한 요청
-      const timer = setTimeout(async () => {
-        try {
-          const { requestTrackingPermissionsAsync } = require('expo-tracking-transparency');
-          const { status } = await requestTrackingPermissionsAsync();
-          console.log('Tracking permission status:', status);
-        } catch (error) {
-          console.log('Tracking permission request failed:', error);
-        }
-      }, 1000);
-
-      return () => clearTimeout(timer);
-    }
-  }, [showApp]);
-
   const initializeApp = async () => {
     try {
       // NotificationManager 초기화
