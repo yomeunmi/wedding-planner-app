@@ -14,7 +14,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.yomeunmi.weddingplanner",
-      "buildNumber": "17",
+      "buildNumber": "18",
       "infoPlist": {
         "UIBackgroundModes": ["remote-notification"],
         "GADApplicationIdentifier": "ca-app-pub-7269831011386790~3030703968",
@@ -53,7 +53,7 @@
           { "SKAdNetworkIdentifier": "v9wttpbfk9.skadnetwork" },
           { "SKAdNetworkIdentifier": "n38lu8286q.skadnetwork" }
         ],
-        "NSUserTrackingUsageDescription": "맞춤형 광고를 제공하기 위해 사용자의 데이터에 접근하려고 합니다. 이 데이터는 더 관련성 높은 광고를 표시하는 데 사용됩니다."
+        "NSPhotoLibraryUsageDescription": "웨딩홀, 드레스 등 결혼 준비 관련 사진을 저장하고 스크랩하기 위해 사진 라이브러리에 접근합니다."
       }
     },
     "android": {
@@ -89,8 +89,7 @@
           "androidAppId": "ca-app-pub-7269831011386790~1293475687",
           "iosAppId": "ca-app-pub-7269831011386790~3030703968"
         }
-      ],
-      "expo-tracking-transparency"
+      ]
     ]
   }
 }
